@@ -31,17 +31,17 @@ app.use(morgan('dev'));
 // app.use(helmet());
 app.use(cors());
 
-app.use('/', (req, res) => {
-    res.status(200).json({ message: "Server running...." });
-});
+// app.use('/', (req, res) => {
+//     res.status(200).json({ message: "Server running...." });
+// });
 
 // APIs Routes
 app.use('/api/su/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
 app.use('/api/system/integrator', SystemInt);
 
-app.use('/api/srv-1', v1Router);
-app.use('/api/srv-1', entRouter);
+// app.use('/api/srv-1', v1Router);
+// app.use('/api/srv-1', entRouter);
 
 
 

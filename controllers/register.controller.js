@@ -3,9 +3,13 @@ const bcrypt = require('bcrypt');
 
 class UserController {
     static async register(req, res) {
+        return res.send({
+            message: 'Sorry! We are not accepting new registration!. contact webmaster',
+        });
         try {
-            const { username, email, role, password } = req.body;
-
+            const { username, email, role, password, type, permission, enterpriseUserId } = req.body;
+            // console.log(req.body);
+            // return;
             // Validate input
             if (!username || !email || !password) {
                 return res.status(400).send({ status: 400, message: 'Invalid input. Username, email, and password are required.' });
@@ -27,6 +31,9 @@ class UserController {
                 username,
                 email,
                 role,
+                type,
+                permission,
+                enterpriseUserId,
                 password: hashedPassword
             });
 

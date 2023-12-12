@@ -184,10 +184,12 @@ exports.ResetNewPassword = async (req, res) => {
         const result = await User.updateOne(filter, update);
 
         console.log(result);
-        return res.status(200).json({
-            success: true,
-            message: "Password reset successfully!",
-        });
+        // return res.status(200).json({
+        //     success: true,
+        //     message: "Password reset successfully!",
+        // });
+
+        return res.render("auth/success", {});
     } catch (error) {
         return res.status(500).json({
             success: false,

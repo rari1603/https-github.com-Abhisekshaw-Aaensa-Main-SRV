@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const Schema = mongoose.Schema; // Add this line to import Schema
 const EnterpriseUserSchema = new mongoose.Schema({
     EnterpriseID: {
         type: Schema.Types.ObjectId,

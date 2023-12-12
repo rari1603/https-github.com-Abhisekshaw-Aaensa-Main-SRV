@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const Schema = mongoose.Schema; // Add this line to import Schema
 const OptimizerSchema = new mongoose.Schema({
     OptimizerID: { type: String, unique: true },
     GatewayId: {

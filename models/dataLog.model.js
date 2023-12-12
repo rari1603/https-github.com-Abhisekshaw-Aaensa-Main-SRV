@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const Schema = mongoose.Schema; // Add this line to import Schema
 const DataLogSchema = new mongoose.Schema({
     Time: { type: Date, default: Date.now },
     EnterpriseUserID: {

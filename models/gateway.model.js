@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const Schema = mongoose.Schema; // Add this line to import Schema
 const GatewaySchema = new mongoose.Schema({
     GatewayID: { type: String },
     GatewayName: { type: String },

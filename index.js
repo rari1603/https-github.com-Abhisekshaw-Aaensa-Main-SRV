@@ -1,12 +1,14 @@
 const express = require('express');
 const { connectToDatabase } = require('./configs/database.config');
-const SuAdmin = require('./routes/user.routes');
+const Auth = require('./routes/auth.routes');
+const SuAdmin = require('./routes/super.admin.routes');
 const Enterprise = require('./routes/user.routes');
 const SystemInt = require('./routes/user.routes');
 
 const v1Router = require('./routes/v1.routes');
 const entRouter = require('./routes/enterprise.routes');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const path = require('path');
 // morgan Middleware: A logging middleware that logs information about incoming requests. 
 // It can be useful for debugging and monitoring.This logs incoming requests with additional information, 
@@ -31,11 +33,17 @@ app.use(morgan('dev'));
 // app.use(helmet());
 app.use(cors());
 
-// app.use('/', (req, res) => {
-//     res.status(200).json({ message: "Server running...." });
-// });
+// views
+app.set("view engine", "ejs");
+app.set("views", "views");
+
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 
 // APIs Routes
+app.use('/api/auth', Auth);
 app.use('/api/su/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
 app.use('/api/system/integrator', SystemInt);

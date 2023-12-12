@@ -1,14 +1,18 @@
 // roles.js
 const rolePermissions = {
-    Webmaster: {
+    SuAdmin: {
         allowedRoutes: ["*"],
     },
-    Admin: {
-        allowedRoutes: ["/", "/home", "/hi/bug"],
+    Enterprise: {
+        allowedRoutes: ["/", "get/enterprise/list"],
     },
-    Manager: {
-        allowedRoutes: ["/", "/hi/manager", "/add-ticket", "/list-ticket", "/edit-ticket/:id"],
+    EnterpriseUser: {
+        allowedRoutes: ["/", "get/enterprise/list"],
+    },
+    SystemInt: {
+        allowedRoutes: ["/"],
     },
 };
+
 
 module.exports = rolePermissions;

@@ -59,7 +59,10 @@ class UserController {
             // Log the error for debugging
             console.error(error);
             // Handle other errors and send a generic message
-            res.status(500).send('Internal Server Error');
+            res.status(500).send({
+                status: 500,
+                message: 'Server error!'
+            });
         }
     }
 }

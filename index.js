@@ -1,6 +1,9 @@
 const express = require('express');
 const { connectToDatabase } = require('./configs/database.config');
-const router = require('./routes/user.routes');
+const SuAdmin = require('./routes/user.routes');
+const Enterprise = require('./routes/user.routes');
+const SystemInt = require('./routes/user.routes');
+
 const v1Router = require('./routes/v1.routes');
 const entRouter = require('./routes/enterprise.routes');
 const cookieParser = require('cookie-parser');
@@ -28,9 +31,15 @@ app.use(morgan('dev'));
 // app.use(helmet());
 app.use(cors());
 
+app.use('/', (req, res) => {
+    res.status(200).json({ message: "Server running...." });
+});
 
 // APIs Routes
-app.use('/api', router);
+app.use('/api/su/admin', SuAdmin);
+app.use('/api/enterprise', Enterprise);
+app.use('/api/system/integrator', SystemInt);
+
 app.use('/api/srv-1', v1Router);
 app.use('/api/srv-1', entRouter);
 
@@ -39,7 +48,13 @@ app.use('/api/srv-1', entRouter);
 // Internal Server Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err);
-    res.status(500).sendFile(path.join(__dirname, 'pages', '500.html'));
+    res.status(500).json(
+        {
+            status: 500,
+            message: 'Server error!'
+        }
+    );
+    // res.status(500).sendFile(path.join(__dirname, 'pages', '500.html'));
 });
 
 
@@ -47,7 +62,13 @@ app.use((err, req, res, next) => {
 // Page Not Found middleware
 app.use((req, res, next) => {
     console.log(res.statusCode); // Corrected to res.statusCode
-    res.status(404).sendFile(path.join(__dirname, 'pages', '404.html'));
+    res.status(404).json(
+        {
+            status: 404,
+            message: 'Page not found!'
+        }
+    );
+    // res.status(404).sendFile(path.join(__dirname, 'pages', '404.html'));
 });
 
 

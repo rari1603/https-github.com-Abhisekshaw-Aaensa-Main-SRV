@@ -7,9 +7,10 @@ const verifyToken = require('../middleware/authentication.middleware');
 
 const router = express.Router();
 
-router.get('/hi', routeAccessMiddleware(), UserController.index);
-router.post('/register', RegisterController.register);
 router.post('/login', LoginController.login);
+router.post('/register', RegisterController.register);
+router.get('/test', UserController.index);
+// router.get('/hi', routeAccessMiddleware(), UserController.index);
 
 
 module.exports = router;

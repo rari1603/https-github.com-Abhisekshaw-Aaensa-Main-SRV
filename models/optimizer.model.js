@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const OptimizerSchema = new mongoose.Schema({
-    OptimizerID: { type: String },
+    OptimizerID: { type: String, unique: true },
     GatewayId: {
         type: Schema.Types.ObjectId,
         ref: 'Gateway',
@@ -9,7 +9,8 @@ const OptimizerSchema = new mongoose.Schema({
     },
     OptimizerName: { type: String },
     Description: { type: String },
-    Switch: { type: Boolean },
+    Switch: { type: Boolean }, // For bypass
+    NickName: { type: Array }
     // Other relevant fields for Optimizer entity
 });
 

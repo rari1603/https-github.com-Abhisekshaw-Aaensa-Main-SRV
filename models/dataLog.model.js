@@ -2,8 +2,21 @@ const mongoose = require('mongoose');
 
 const DataLogSchema = new mongoose.Schema({
     Time: { type: Date, default: Date.now },
-    OptimizerID: { type: String },
-    GatewayID: { type: String },
+    EnterpriseUserID: {
+        type: Schema.Types.ObjectId,
+        ref: "EnterpriseUser",
+        require: true
+    },
+    GatewayID: {
+        type: Schema.Types.ObjectId,
+        ref: "Gateway",
+        require: true
+    },
+    OptimizerID: {
+        type: Schema.Types.ObjectId,
+        ref: "Optimizer",
+        require: true
+    },
     OptimizerMode: { type: String },
     RoomTemperature: { type: Number },
     CoilTemperature: { type: Number },
@@ -37,10 +50,13 @@ const DataLogSchema = new mongoose.Schema({
     KWH: { type: Number },
     PF: { type: Number },
     CustomerName: { type: String },
-    Zone: { type: String },
+    State: { type: String },
     Location: { type: String },
 });
 
 const DataLogModel = mongoose.model('DataLog', DataLogSchema);
 
 module.exports = DataLogModel;
+
+
+// OK

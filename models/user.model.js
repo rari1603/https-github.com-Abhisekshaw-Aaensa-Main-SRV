@@ -4,9 +4,14 @@ const UserSchema = new mongoose.Schema({
     username: { type: String },
     email: { type: String },
     password: { type: String },
-    role: { type: String },
-    permission: { type: Array },
-    enterprise: { type: String }
+    role: { type: String }, // SuAdmin, Enterprise, SystemInt
+    type: { type: String }, // Webmaster, Enterprise, Enterprise-User, System-integrator
+    permission: { type: Array }, // Add, Edit, Delete, 
+    enterpriseUserId: {
+        type: Schema.Types.ObjectId,
+        ref: "EnterpriseUser",
+    }
+
 });
 
 const User = mongoose.model('User', UserSchema);

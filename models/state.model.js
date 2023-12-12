@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 
 const StateSchema = new mongoose.Schema({
     StateName: String,
-    Description: String,
     // Other relevant fields for State entity
 });
 

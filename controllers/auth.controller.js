@@ -96,7 +96,7 @@ exports.ForgetPassword = async (req, res) => {
     const { email } = req.body;
     try {
         // hashValue(email);
-        const url = process.env.HOST + ":" + process.env.PORT + "/api/auth/forget/password/" + hashValue(email);
+        const url = process.env.HOST + "/api/auth/forget/password/" + hashValue(email);
         const ExistingUser = await User.findOne({ email });
         const templatePath = path.resolve('./views/Email/forget_password.ejs');
         const templateContent = await fs.readFile(templatePath, 'utf8');
@@ -141,7 +141,7 @@ exports.ForgetPassword = async (req, res) => {
 
 exports.ForgetPasswordView = async (req, res) => {
     try {
-        const url = process.env.HOST + ":" + process.env.PORT;
+        const url = process.env.HOST;
         const decodedHashValue = decode("Bearer " + req.params.hashValue);
         let valid = true;
         let message = "";

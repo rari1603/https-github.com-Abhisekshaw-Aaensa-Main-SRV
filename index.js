@@ -44,9 +44,9 @@ app.use(bodyParser.json());
 
 // APIs Routes
 app.use('/api/auth', Auth);
-app.use('/api/su/admin', SuAdmin);
+app.use('/api/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
-app.use('/api/system/integrator', SystemInt);
+app.use('/api/system', SystemInt);
 
 // app.use('/api/srv-1', v1Router);
 // app.use('/api/srv-1', entRouter);

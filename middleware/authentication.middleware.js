@@ -4,7 +4,7 @@ const verifyToken = (req, res, next) => {
     const token = req.header('Authorization');
 
     if (!token) {
-        return res.status(401).json({ success: false, message: 'Access denied' });
+        return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
     try {
@@ -13,7 +13,7 @@ const verifyToken = (req, res, next) => {
         next();
     } catch (error) {
         console.log("verifyToken=>catch=====>", error.message);
-        return res.status(401).json({ success: false, message: 'Invalid token' });
+        return res.status(403).json({ success: false, message: 'Invalid token' });
     }
 };
 

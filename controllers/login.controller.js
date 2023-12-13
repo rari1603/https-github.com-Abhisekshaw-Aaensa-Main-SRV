@@ -50,7 +50,7 @@ class UserController {
             });
 
             // Send a success response
-            res.send({
+            res.status(200).json({
                 message: 'Login successful',
                 user: userWithoutPassword,
                 token

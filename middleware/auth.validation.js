@@ -6,13 +6,13 @@ exports.HandleLoginError = async (req, res, next) => {
 
     try {
         if (!email || !password) {
-            return res.status(401).send({ success: false, message: !email ? 'Email is required!' : 'Password is required!' });
+            return res.status(400).send({ success: false, message: !email ? 'Email is required!' : 'Password is required!' });
         }
 
         const user = await User.findOne({ email });
-        
+
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).send({ success: false, message: !user ? 'User not found!' : 'Invalid password!' });
+            return res.status(user ? 401 : 404).send({ success: false, message: !user ? 'User not found!' : 'Invalid password!' });
         }
 
         next();
@@ -27,13 +27,13 @@ exports.ForgetPasswordValidation = async (req, res, next) => {
 
     try {
         if (!email) {
-            return res.status(401).send({ success: false, message: 'Email is required!' });
+            return res.status(400).send({ success: false, message: 'Email is required!' });
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).send({ success: false, message: 'User not found!' });
+            return res.status(404).send({ success: false, message: 'User not found!' });
         }
 
         next();

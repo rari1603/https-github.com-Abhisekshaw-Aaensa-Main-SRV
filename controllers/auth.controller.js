@@ -48,11 +48,10 @@ exports.register = async (req, res) => {
 
     try {
         const { username, email, role, password, type, permission, enterpriseUserId } = req.body;
-        // console.log(req.body);
-        // return;
+
         // Validate input
         if (!username || !email || !password) {
-            return res.status(400).send({ status: 400, message: 'Invalid input. Username, email, and password are required.' });
+            return res.status(400).send({ success: false, message: 'Invalid input. Username, email, and password are required.' });
         }
 
         // Check if the email already exists
@@ -60,7 +59,7 @@ exports.register = async (req, res) => {
 
         // If the email already exists, return an error
         if (existingUser) {
-            return res.status(409).send({ status: 409, message: 'Email already exists' });
+            return res.status(409).send({ success: false, message: 'Email already exists' });
         }
 
         // Hash the password
@@ -88,7 +87,7 @@ exports.register = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send({ status: 500, message: 'Internal Server Error' });
+        res.status(500).send({ success: false, message: 'Internal Server Error' });
     }
 }
 
@@ -120,7 +119,7 @@ exports.ForgetPassword = async (req, res) => {
         });
 
         const mailOptions = {
-            form: "<no-reply@aaensa.com>",
+            from: "Software Support <no-reply@aaensa.com>",
             to: email,
             subject: "Password recovery mail",
             html: renderHTML
@@ -129,7 +128,7 @@ exports.ForgetPassword = async (req, res) => {
         transporter.sendMail(mailOptions, async (error, info) => {
             if (error) {
                 console.error("Error===>", error);
-                return res.status(500).json({ success: false, message: 'Error sending email' });
+                return res.status(503).json({ success: false, message: 'Service Unavailable: Error sending email' });
             }
             return res.status(200).json({ success: true, message: "Please check email." });
         });
@@ -167,7 +166,7 @@ exports.ForgetPasswordView = async (req, res) => {
             DATA
         });
     } catch (error) {
-        return res.send(error.message);
+        return res.send({ success: false, message: error.message });
     }
 }
 

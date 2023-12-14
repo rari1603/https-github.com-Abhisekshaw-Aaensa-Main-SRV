@@ -10,7 +10,7 @@ const EnterpriseSchema = new mongoose.Schema({
         // Other contact-related fields
     },
     // Other relevant fields for Enterprise entity
-});
+},{ timestamp: true });
 
 const EnterpriseModel = mongoose.model('Enterprise', EnterpriseSchema);
 

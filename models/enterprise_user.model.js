@@ -22,7 +22,7 @@ const EnterpriseUserSchema = new mongoose.Schema({
         require: true
     }
     // Other relevant fields for EnterpriseUser entity
-});
+}, { timestamp: true });
 
 const EnterpriseUserModel = mongoose.model('EnterpriseUser', EnterpriseUserSchema);
 

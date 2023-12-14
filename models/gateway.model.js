@@ -4,9 +4,14 @@ const GatewaySchema = new mongoose.Schema({
     GatewayID: { type: String },
     GatewayName: { type: String },
     Description: { type: String },
-    Switch: { type: Boolean },
-    // Other relevant fields for Gateway entity
-});
+    Switch: { type: Boolean, default: null },
+    Location: { type: String },
+    State: { type: String },
+    EnterpriseName: { type: String },
+    EnterpriseUserID: { type: String },
+    NetworkSSID: { type: String },
+    NetworkPassword: { type: String },
+},{ timestamp: true });
 
 const GatewayModel = mongoose.model('Gateway', GatewaySchema);
 

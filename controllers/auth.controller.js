@@ -197,9 +197,5 @@ exports.ResetNewPassword = async (req, res) => {
     }
 }
 
-exports.CreateUser = async (req, res) => {
-    console.log(req.body);
-    return res.send(req.body)
-}
 
 

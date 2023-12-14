@@ -6,9 +6,6 @@ const rolePermissions = {
     Enterprise: {
         allowedRoutes: ["/", "get/enterprise/list"],
     },
-    EnterpriseUser: {
-        allowedRoutes: ["/", "get/enterprise/list"],
-    },
     SystemInt: {
         allowedRoutes: ["/"],
     },

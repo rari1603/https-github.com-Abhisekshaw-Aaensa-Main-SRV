@@ -1,13 +1,12 @@
 const express = require('express');
-const UserController = require('../controllers/user.controller');
-const AuthController = require('../controllers/auth.controller');
+const ReportController = require('../controllers/SuAdmin/report.controller');
 const verifyToken = require('../middleware/authentication.middleware');
 const routeAccessMiddleware = require('../middleware/access.middleware');
 const router = express.Router();
 
-router.post('/create-enterprise', verifyToken, routeAccessMiddleware(), AuthController.CreateUser);
+router.get('/get/all/data', verifyToken, routeAccessMiddleware(), ReportController.AllDataLog);
 
-router.get('/test', UserController.index);
+
 // router.get('/hi', routeAccessMiddleware(), UserController.index);
 
 

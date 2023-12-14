@@ -1,21 +1,18 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
+
 const DataLogSchema = new mongoose.Schema({
+
     Time: { type: Date, default: Date.now },
-    EnterpriseUserID: {
-        type: Schema.Types.ObjectId,
-        ref: "EnterpriseUser",
-        require: true
-    },
     GatewayID: {
         type: Schema.Types.ObjectId,
         ref: "Gateway",
-        require: true
+        required: true
     },
     OptimizerID: {
         type: Schema.Types.ObjectId,
         ref: "Optimizer",
-        require: true
+        required: true
     },
     OptimizerMode: { type: String },
     RoomTemperature: { type: Number },
@@ -44,15 +41,12 @@ const DataLogSchema = new mongoose.Schema({
         },
     },
     Humidity: { type: Number },
-    AcOnTime: { type: Date, default: null },
-    AcOffTime: { type: Date, default: null },
     KVAH: { type: Number },
     KWH: { type: Number },
     PF: { type: Number },
-    CustomerName: { type: String },
-    State: { type: String },
-    Location: { type: String },
-});
+    ByPass: { type: Boolean },
+
+}, { timestamp: true });
 
 const DataLogModel = mongoose.model('DataLog', DataLogSchema);
 

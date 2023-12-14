@@ -2,8 +2,8 @@ const express = require('express');
 const { connectToDatabase } = require('./configs/database.config');
 const Auth = require('./routes/auth.routes');
 const SuAdmin = require('./routes/super.admin.routes');
-const Enterprise = require('./routes/user.routes');
-const SystemInt = require('./routes/user.routes');
+const Enterprise = require('./routes/enterprise.routes');
+const SystemInt = require('./routes/system.int.routes');
 
 const v1Router = require('./routes/v1.routes');
 const entRouter = require('./routes/enterprise.routes');
@@ -20,7 +20,10 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const app = express();
+const moment = require('moment-timezone');
 
+// Set the default time zone for the application (Asia/Kolkata in this example)
+moment.tz.setDefault('Asia/Kolkata');
 // Connect to the database
 connectToDatabase();
 
@@ -46,9 +49,11 @@ app.use(bodyParser.json());
 app.use('/api/auth', Auth);
 app.use('/api/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
-app.use('/api/system', SystemInt);
+// app.use('/api/system', SystemInt);
 
-// app.use('/api/srv-1', v1Router);
+
+
+app.use('/api/fake', v1Router);
 // app.use('/api/srv-1', entRouter);
 
 

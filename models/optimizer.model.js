@@ -7,12 +7,10 @@ const OptimizerSchema = new mongoose.Schema({
         ref: 'Gateway',
         required: true
     },
-    OptimizerName: { type: String },
+    OptimizerName: { type: String }, //NickName
     Description: { type: String },
     Switch: { type: Boolean }, // For bypass
-    NickName: { type: Array }
-    // Other relevant fields for Optimizer entity
-});
+},{ timestamp: true });
 
 const OptimizerModel = mongoose.model('Optimizer', OptimizerSchema);
 

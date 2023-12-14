@@ -87,8 +87,8 @@ app.use((req, res, next) => {
 
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || "http://localhost";
+const HOST = process.env.HOST || "http://localhost:3000";
 
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${HOST}:${PORT}`);
+    console.log(`Server listening on port ${HOST}`);
 });

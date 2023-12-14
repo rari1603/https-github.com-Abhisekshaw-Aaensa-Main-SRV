@@ -46,7 +46,7 @@ const DataLogSchema = new mongoose.Schema({
     PF: { type: Number },
     ByPass: { type: Boolean },
 
-}, { timestamp: true });
+}, { timestamps: true });
 
 const DataLogModel = mongoose.model('DataLog', DataLogSchema);
 

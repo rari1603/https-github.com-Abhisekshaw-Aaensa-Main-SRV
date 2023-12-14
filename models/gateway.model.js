@@ -11,7 +11,7 @@ const GatewaySchema = new mongoose.Schema({
     EnterpriseUserID: { type: String },
     NetworkSSID: { type: String },
     NetworkPassword: { type: String },
-},{ timestamp: true });
+}, { timestamps: true });
 
 const GatewayModel = mongoose.model('Gateway', GatewaySchema);
 

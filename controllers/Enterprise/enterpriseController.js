@@ -1,9 +1,9 @@
-const EnterpriseModel = require('../../models/enterprise.model');
+const EnterpriseAdminModel = require('../../models/enterprise.model');
 
 
 
 exports.list = async (req, res) => {
-    const AllEnt = await EnterpriseModel.find({});
+    const AllEnt = await EnterpriseAdminModel.find({});
     res.status(200).json({ message: "Hi enterprise list", AllEnt });
 }
 
@@ -27,7 +27,7 @@ exports.add = async (req, res) => {
             },
         };
 
-        const newEnterprise = new EnterpriseModel(enterpriseData);
+        const newEnterprise = new EnterpriseAdminModel(enterpriseData);
         await newEnterprise.save();
 
         return res.status(201).json({ message: "Enterprise added successfully!" });

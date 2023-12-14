@@ -4,7 +4,7 @@ const LocationSchema = new mongoose.Schema({
     LocationName: String,
     Address: String,
     // Other relevant fields for Location entity
-},{ timestamp: true });
+}, { timestamps: true });
 
 const LocationModel = mongoose.model('Location', LocationSchema);
 

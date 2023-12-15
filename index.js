@@ -49,7 +49,7 @@ app.use(bodyParser.json());
 app.use('/api/auth', Auth);
 app.use('/api/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
-// app.use('/api/system', SystemInt);
+app.use('/api/system', SystemInt);
 
 
 

@@ -2,6 +2,7 @@ const EnterpriseAdminModel = require('../../models/enterprise.model');
 const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const UserModel = require('../../models/user.model');
 const bcrypt = require('bcrypt');
+const { hashValue } = require('../../utility/CreateToken');
 
 
 exports.list = async (req, res) => {
@@ -13,7 +14,7 @@ exports.list = async (req, res) => {
 exports.addEnterprise = async (req, res) => {
     try {
         // Validate required fields
-        const requiredFields = ['EnterpriseName', 'Email', 'Name', 'Phone', 'Address'];
+        const requiredFields = ['EnterpriseName', 'Email', 'Name', 'Phone', 'Address', 'OnboardingDate'];
         const missingFields = requiredFields.filter(field => !req.body[field]);
 
         if (missingFields.length > 0) {
@@ -28,6 +29,7 @@ exports.addEnterprise = async (req, res) => {
                 Phone: req.body.Phone,
                 Address: req.body.Address,
             },
+            OnboardingDate: req.body.OnboardingDate
         });
         const SavedEnterprise = await newEnterprise.save();
 
@@ -44,7 +46,13 @@ exports.addEnterprise = async (req, res) => {
             enterpriseUserId: null
         });
 
-        await newEnterpriseAdmin.save();
+        const SavedEnterpriseAdmin = await newEnterpriseAdmin.save();
+        if (SavedEnterpriseAdmin) {
+            const expiresIn = "24h";
+            const HashValue = hashValue(SavedEnterpriseAdmin?.email, expiresIn);
+            console.log(HashValue);
+        }
+
         return res.status(201).json({ message: "Enterprise added successfully!" });
     } catch (error) {
         console.error('Error adding enterprise:', error);

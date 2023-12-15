@@ -3,9 +3,9 @@ const EnterpriseAdminModel = require('../../models/enterprise.model');
 
 // Check empty filed while adding data in EnterpriseAdmin 
 exports.adminEmptyCheck = async (req, res, next) => {
-    const { EnterpriseName, Email, Name, Phone, Address } = req.body;
+    const { EnterpriseName, Email, Name, Phone, Address, OnboardingDate } = req.body;
     try {
-        if (!(EnterpriseName && Email && Name && Phone && Address)) {
+        if (!(EnterpriseName && Email && Name && Phone && Address && OnboardingDate)) {
             return res.status(400).send({ success: false, message: 'All Fields Are required!' });
         }
         next();

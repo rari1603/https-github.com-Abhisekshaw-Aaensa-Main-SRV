@@ -8,9 +8,9 @@ const CreateToken = (user) => {
     return token;
 }
 
-const hashValue = (email) => {
+const hashValue = (email, expiresIn) => {
     const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
+        expiresIn: expiresIn ? expiresIn : '5m',
     });
 
     return token;

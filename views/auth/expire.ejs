@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Link Expired</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #e92424;
+            font-weight: bold;
+        }
+
+        .success-message {
+            color: #35e924;
+            font-weight: bold;
+        }
+
+        .back-to-login {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="updated">
+        <h2>Password Reset Link Expired</h2>
+        <p class="error-message">This password reset link has expired. Password reset links are typically valid for a
+            limited time for security reasons.</p>
+        <p>Please initiate a new password reset request if needed.</p>
+        <a href="#" class="back-to-login" id="resend-mail">Initiate Password Reset</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#resend-mail").on("click", function () {
+                var email = "<%= email %>"; // Replace with actual server-side value
+                var baseURL = "<%= url %>"; // Replace with actual server-side value
+
+                $.ajax({
+                    url: baseURL + '/api/auth/forget-password',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        email: email
+                    }),
+                    success: function (response) {
+                        console.log('Request successful:', response.message);
+                        $("#updated").empty();
+                        $("#updated").html(` <h2 class="success-message">${response.message}</h2>`);
+                    },
+                    error: function (error) {
+                        console.error('Error in request:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

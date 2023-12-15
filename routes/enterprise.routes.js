@@ -1,15 +1,18 @@
 const express = require('express');
 const EnterpriseController = require('../controllers/Enterprise/enterpriseController');
 const { adminEmptyCheck, duplicateAdminCheck, userEmptyCheck } = require('../middleware/enterprise/enterprise.middleware');
-const { emptyUserCheck, duplicateUserCheck } = require('../middleware/auth.validation');
+const { duplicateUserCheck } = require('../middleware/auth.validation');
 const router = express.Router();
 
 
 router.get('/get/enterprise/list', EnterpriseController.list).name = "EnterpriseList";
-
-router.post('/add/enterprise', [adminEmptyCheck, duplicateAdminCheck], EnterpriseController.addEnterprise);
-router.post('/add/enterprise/user', [userEmptyCheck], EnterpriseController.addEnterpriseUser);
-
+// enterprise admin
+router.post('/add/enterprise', [adminEmptyCheck, duplicateUserCheck], EnterpriseController.addEnterprise);
+// enterprise user
+router.post('/add/enterprise/user', [userEmptyCheck, duplicateUserCheck], EnterpriseController.addEnterpriseUser);
+// set password
+router.get('/set/new/password/:hashValue', EnterpriseController.SetNewPasswordView);
+router.post('/set/new/password/:hashValue', EnterpriseController.SetNewPassword);
 
 
 module.exports = router;

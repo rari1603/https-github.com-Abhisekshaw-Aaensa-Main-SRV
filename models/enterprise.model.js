@@ -9,7 +9,11 @@ const EnterpriseSchema = new mongoose.Schema({
         Address: { type: String },
         // Other contact-related fields
     },
-    OnboardingDate: { type: String }
+    OnboardingDate: { type: String },
+    isDelete: {
+        type: Boolean,
+        default: false
+    }
     // Other relevant fields for Enterprise entity
 }, { timestamps: true });
 

@@ -11,6 +11,10 @@ const GatewaySchema = new mongoose.Schema({
     EnterpriseUserID: { type: String },
     NetworkSSID: { type: String },
     NetworkPassword: { type: String },
+    isDelete: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 
 const GatewayModel = mongoose.model('Gateway', GatewaySchema);

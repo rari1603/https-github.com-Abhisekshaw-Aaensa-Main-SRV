@@ -15,7 +15,8 @@ exports.addSystemInt = async (req, res) => {
             role: role,
             type: type,
             permission: permission,
-            enterpriseUserId: enterpriseUserId
+            enterpriseUserId: enterpriseUserId,
+            isDelete:false
         });
 
         await newSystemInt.save();

@@ -7,4 +7,10 @@ function decode(params) {
 
 }
 
-module.exports = decode;
+function ExtractToken(token) {
+    // Decode the token
+    const decoded = jwt.decode(token);
+    return decoded;
+}
+
+module.exports = { decode, ExtractToken };

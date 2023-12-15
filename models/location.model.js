@@ -1,8 +1,12 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
 const LocationSchema = new mongoose.Schema({
-    LocationName: String,
-    Address: String,
+    LocationName: { type: String },
+    Address: { type: String },
+    isDelete: {
+        type: Boolean,
+        default: false
+    }
     // Other relevant fields for Location entity
 }, { timestamps: true });
 

@@ -1,11 +1,11 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const { CreateToken, hashValue } = require('../utility/CreateToken');
-const nodemailer = require('nodemailer');
+const { SendMail } = require('../utility/SendMail');
 const path = require('path');
 const ejs = require('ejs');
 const fs = require('fs').promises;
-const decode = require('../utility/JwtDecoder');
+const { decode, ExtractToken } = require('../utility/JwtDecoder');
 
 
 
@@ -44,6 +44,7 @@ exports.login = async (req, res) => {
     }
 }
 
+
 exports.register = async (req, res) => {
 
     try {
@@ -73,7 +74,8 @@ exports.register = async (req, res) => {
             type,
             permission,
             enterpriseUserId,
-            password: hashedPassword
+            password: hashedPassword,
+            isDelete: false
         });
 
         // Exclude password field from user object
@@ -91,6 +93,7 @@ exports.register = async (req, res) => {
     }
 }
 
+
 exports.ForgetPassword = async (req, res) => {
     const { email } = req.body;
     try {
@@ -106,37 +109,15 @@ exports.ForgetPassword = async (req, res) => {
             Url: url,
         });
 
-        // Initialize nodemailer
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: process.env.EMAIL_PORT,
-            secure: false,
-            requireTLS: true,
-            auth: {
-                user: process.env.EMAIL_ID,
-                pass: process.env.EMAIL_APP_PASSWORD,
-            },
-        });
-
-        const mailOptions = {
-            from: "Software Support <no-reply@aaensa.com>",
-            to: email,
-            subject: "Password recovery mail",
-            html: renderHTML
-        };
-
-        transporter.sendMail(mailOptions, async (error, info) => {
-            if (error) {
-                console.error("Error===>", error);
-                return res.status(503).json({ success: false, message: 'Service Unavailable: Error sending email' });
-            }
-            return res.status(200).json({ success: true, message: "Please check email." });
-        });
+        // Call the sendEmail function
+        const emailResult = await SendMail(email, "Password recovery mail", renderHTML);
+        return res.status(emailResult.success ? 200 : 503).json(emailResult);
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
 
 }
+
 
 exports.ForgetPasswordView = async (req, res) => {
     try {
@@ -157,24 +138,32 @@ exports.ForgetPasswordView = async (req, res) => {
             message,
             valid,
             token: req.params.hashValue,
-            backend_url: url + "/api/auth/forget/password/" + req.params.hashValue
+            backend_url: url + "/api/auth/forget/password/" + req.params.hashValue,
+            perpose: "Forget Password"
         }
         // return res.status(200).json(DATA);
         // return res.send(decodedHashValue);
         return res.render("auth/set_password", {
-            title: "Reset Password",
+            title: "Forgot Password",
             DATA
         });
     } catch (error) {
+        if (error.message === "jwt expired") {
+
+            const decoded = ExtractToken(req.params.hashValue);
+            return res.render("auth/expire", { email: decoded.email, url: process.env.HOST });
+        }
         return res.send({ success: false, message: error.message });
     }
 }
+
 
 exports.ResetNewPassword = async (req, res) => {
     const { _token, password } = req.body;
     try {
         const decodedHashValueEmail = decode("Bearer " + _token).email;
         // const user = await User.findOne({ email: decodedHashValueEmail });
+        // return console.log({ MM: decodedHashValueEmail })
         const hashedPassword = await bcrypt.hash(password, 10);
         const filter = { email: decodedHashValueEmail };
         const update = { password: hashedPassword };

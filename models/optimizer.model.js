@@ -10,6 +10,10 @@ const OptimizerSchema = new mongoose.Schema({
     OptimizerName: { type: String }, //NickName
     Description: { type: String },
     Switch: { type: Boolean }, // For bypass
+    isDelete: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 
 const OptimizerModel = mongoose.model('Optimizer', OptimizerSchema);

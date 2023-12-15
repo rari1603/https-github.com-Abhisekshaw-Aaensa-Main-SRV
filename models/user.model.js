@@ -11,6 +11,10 @@ const UserSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "EnterpriseUser",
         require: false
+    },
+    isDelete: {
+        type: Boolean,
+        default: false
     }
 
 }, { timestamps: true });

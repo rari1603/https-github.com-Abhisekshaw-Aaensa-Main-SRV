@@ -11,5 +11,6 @@ function fetchData() {
         });
 }
 
+
 // Call fetchData every 10 seconds
 setInterval(fetchData, 20000);

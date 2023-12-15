@@ -9,9 +9,10 @@ const EnterpriseSchema = new mongoose.Schema({
         Address: { type: String },
         // Other contact-related fields
     },
+    OnboardingDate: { type: String }
     // Other relevant fields for Enterprise entity
 }, { timestamps: true });
 
-const EnterpriseModel = mongoose.model('EnterpriseAdmin', EnterpriseSchema);
+const EnterpriseModel = mongoose.model('Enterprise', EnterpriseSchema);
 
 module.exports = EnterpriseModel;

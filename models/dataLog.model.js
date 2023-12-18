@@ -44,7 +44,7 @@ const DataLogSchema = new mongoose.Schema({
     KVAH: { type: Number },
     KWH: { type: Number },
     PF: { type: Number },
-    ByPass: { type: Boolean },
+    ByPass: { type: Boolean, default: false },
     isDelete: {
         type: Boolean,
         default: false

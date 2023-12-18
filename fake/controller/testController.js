@@ -6,7 +6,6 @@ const UserModel = require('../../models/user.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const StateModel = require('../../models/state.model');
-const LocationModel = require('../../models/location.model');
 
 exports.Optimizer = async (req, res) => {
     const fakeOptimizerData = {
@@ -131,6 +130,5 @@ exports.addManyDataDB = async (req, res) => {
     // await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });
     // await EnterpriseUserModel.updateMany({}, { $set: { isDelete: false } });
     await StateModel.updateMany({}, { $set: { isDelete: false } });
-    // await LocationModel.updateMany({}, { $set: { isDelete: false } });
     return res.send("Done...")
 }

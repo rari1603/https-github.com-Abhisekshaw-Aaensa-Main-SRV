@@ -68,7 +68,6 @@ exports.addEnterprise = async (req, res) => {
     }
 };
 
-
 // ADD ENTERPRISE USER
 exports.addEnterpriseUser = async (req, res) => {
     const { EnterpriseID, username, email, phone } = req.body;

@@ -8,9 +8,9 @@ const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/en
 const { emptyUserCheck, duplicateUserCheck, duplicateEnterpriseCheck } = require('../middleware/auth.validation');
 const router = express.Router();
 
-router.get('/get/all/data', verifyToken, routeAccessMiddleware(), ReportController.AllDataLog);
+router.get('/get/all/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 // enterprise list
-router.get('/get/enterprise/list', EnterpriseController.list).name = "EnterpriseList";
+router.get('/get/enterprise/list', [verifyToken], EnterpriseController.list).name = "EnterpriseList";
 // add enterprise admin
 router.post('/add/enterprise', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, duplicateEnterpriseCheck], UserCreateController.addEnterprise);
 // add enterprise user

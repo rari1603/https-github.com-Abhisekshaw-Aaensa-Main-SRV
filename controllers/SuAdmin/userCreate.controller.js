@@ -127,7 +127,7 @@ exports.addEnterpriseUser = async (req, res) => {
 
                 // Call the sendEmail function
                 await SendMail(SavedEnterpriseUser?.email, "Set New Password mail", renderHTML);
-                return res.status(201).json({ message: "Enterprise User added successfully!" });
+                return res.status(201).json({ success: true, message: "Enterprise User added successfully!" });
             }
         } else {
             return res.status(500).json({ success: false, message: "Failed to save enterprise user." });
@@ -138,3 +138,30 @@ exports.addEnterpriseUser = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };
+
+
+// Add System itigrator user
+exports.addSystemInt = async (req, res) => {
+    const { username, email, password, role, type, permission, enterpriseUserId } = req.body;
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newSystemInt = new UserModel({
+            username: username,
+            email: email,
+            password: hashedPassword,
+            role: role,
+            type: type,
+            permission: permission,
+            enterpriseUserId: enterpriseUserId,
+            isDelete: false
+        });
+
+        await newSystemInt.save();
+        return res.status(201).json({ success: true, message: "System intigrator added successfully!" });
+
+    } catch (error) {
+        console.error('Error adding system intigrator:', error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+}

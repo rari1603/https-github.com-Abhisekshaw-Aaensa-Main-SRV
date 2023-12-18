@@ -30,14 +30,14 @@ function checkRoles() {
             const routeName = req.route.name; // The name of the route (if you've set it)
 
             if (!userRole || !rolePermissions[userRole] || !checkPermission(requestedRoute, rolePermissions[userRole].allowedRoutes)) {
-                return res.status(403).json({ error: 'Access forbidden' });
+                return res.status(403).json({ success: false, error: 'Access forbidden' });
             }
 
             next();
 
         } catch (error) {
             console.log(error);
-            return res.status(500).json({ error: error.message });
+            return res.status(500).json({ success: false, error: error.message });
         }
     };
 }

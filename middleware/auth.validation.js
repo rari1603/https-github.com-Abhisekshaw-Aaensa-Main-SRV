@@ -19,7 +19,7 @@ exports.HandleLoginError = async (req, res, next) => {
         next();
     } catch (error) {
         console.error(error.message);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 };
 
@@ -41,7 +41,7 @@ exports.ForgetPasswordValidation = async (req, res, next) => {
         next();
     } catch (error) {
         console.error(error.message);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 }
 
@@ -67,6 +67,23 @@ exports.duplicateUserCheck = async (req, res, next) => {
     try {
         const existingEmail = await UserModel.findOne({ email });
 
+        if (existingEmail) {
+            return res.status(409).json({ success: false, message: 'This email address is already associated with an account. Please choose a different email.' });
+        }
+        next();
+
+    } catch (error) {
+        console.log("auth.validation.DuplicateCheck===>", error.message);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
+    }
+}
+
+
+// Check duplicate fields of User.
+exports.duplicateEnterpriseCheck = async (req, res, next) => {
+    const { Email } = req.body;
+    try {
+        const existingEmail = await UserModel.findOne({ email: Email });
         if (existingEmail) {
             return res.status(409).json({ success: false, message: 'This email address is already associated with an account. Please choose a different email.' });
         }

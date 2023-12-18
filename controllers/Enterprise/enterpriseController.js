@@ -12,7 +12,7 @@ const { SendMail } = require('../../utility/SendMail');
 
 exports.list = async (req, res) => {
     const AllEnt = await EnterpriseAdminModel.find({});
-    res.status(200).json({ message: "Hi enterprise list", AllEnt });
+    res.status(200).json({ success: true, message: "Hi enterprise list", data: AllEnt });
 }
 
 

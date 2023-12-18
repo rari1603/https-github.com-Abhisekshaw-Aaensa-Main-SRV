@@ -8,7 +8,7 @@ exports.adminEmptyCheck = async (req, res, next) => {
         next();
     } catch (error) {
         console.log("enterprise.middleware.adminEmptyCheck===>", error.message);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 }
 
@@ -24,6 +24,6 @@ exports.userEmptyCheck = async (req, res, next) => {
         next();
     } catch (error) {
         console.log("enterprise.middleware.userEmptyCheck===>", error.message);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 }

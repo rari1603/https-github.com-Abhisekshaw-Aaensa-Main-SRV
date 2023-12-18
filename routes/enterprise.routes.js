@@ -1,6 +1,6 @@
 const express = require('express');
 const EnterpriseController = require('../controllers/Enterprise/enterpriseController');
-const { adminEmptyCheck, duplicateAdminCheck, userEmptyCheck } = require('../middleware/enterprise/enterprise.middleware');
+const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/enterprise.middleware');
 const { duplicateUserCheck } = require('../middleware/auth.validation');
 const router = express.Router();
 

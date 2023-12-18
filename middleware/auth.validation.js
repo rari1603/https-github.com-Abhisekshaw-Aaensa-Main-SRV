@@ -56,7 +56,7 @@ exports.emptyUserCheck = async (req, res, next) => {
         next();
     } catch (error) {
         console.log("auth.validation.EmptyCheck===>", error.message);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 };
 
@@ -74,6 +74,6 @@ exports.duplicateUserCheck = async (req, res, next) => {
 
     } catch (error) {
         console.log("auth.validation.DuplicateCheck===>", error.message);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 }

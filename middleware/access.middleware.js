@@ -12,7 +12,7 @@ function checkRoles() {
     return (req, res, next) => {
         try {
             const token = req.header('Authorization');
-            const decodedData = jwtDecode(token);
+            const decodedData = jwtDecode.decode(token);
             // console.log(decodedData);
             if (decodedData === "jwt expired") {
                 return res.status(401).json({ success: false, message: 'The JSON Web Token (JWT) has expired.' });

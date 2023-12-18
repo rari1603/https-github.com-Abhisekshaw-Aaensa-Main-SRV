@@ -23,7 +23,7 @@ exports.addEnterprise = async (req, res) => {
         const missingFields = requiredFields.filter(field => !req.body[field]);
 
         if (missingFields.length > 0) {
-            return res.status(400).json({ message: `Missing required fields: ${missingFields.join(', ')}` });
+            return res.status(400).json({ success: false, message: `Missing required fields: ${missingFields.join(', ')}` });
         }
 
         const newEnterprise = new EnterpriseAdminModel({
@@ -39,42 +39,46 @@ exports.addEnterprise = async (req, res) => {
         });
         const SavedEnterprise = await newEnterprise.save();
 
-        const password = new Date().getTime().toString();
-        const hashedPassword = await bcrypt.hash(password, 10);
+        if (SavedEnterprise) {
+            const password = new Date().getTime().toString();
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newEnterpriseAdmin = new UserModel({
-            username: SavedEnterprise.ContactInfo.Name,
-            email: SavedEnterprise.ContactInfo.Email,
-            password: hashedPassword,
-            role: "Enterprise",
-            type: "Enterprise",
-            permission: ["Read"],
-            enterpriseUserId: null,
-            isDelete: false
-        });
-
-        const SavedEnterpriseAdmin = await newEnterpriseAdmin.save();
-        if (SavedEnterpriseAdmin) {
-            const expiresIn = "24h";
-            const HashValue = hashValue(SavedEnterpriseAdmin?.email, expiresIn);
-
-            const url = process.env.HOST + "/api/enterprise/set/new/password/" + HashValue;
-            const templatePath = path.resolve('./views/Email/set_password_email.ejs');
-            const templateContent = await fs.readFile(templatePath, 'utf8');
-            // console.log(url);
-            // return;
-            const renderHTML = ejs.render(templateContent, {
-                Name: SavedEnterpriseAdmin?.username,
-                Url: url,
+            const newEnterpriseAdmin = new UserModel({
+                username: SavedEnterprise.ContactInfo.Name,
+                email: SavedEnterprise.ContactInfo.Email,
+                password: hashedPassword,
+                role: "Enterprise",
+                type: "Enterprise",
+                permission: ["Read"],
+                enterpriseUserId: null,
+                isDelete: false
             });
 
-            // Call the sendEmail function
-            await SendMail(SavedEnterpriseAdmin?.email, "Set New Password mail", renderHTML);
-            return res.status(201).json({ message: "Enterprise added successfully!" });
+            const SavedEnterpriseAdmin = await newEnterpriseAdmin.save();
+            if (SavedEnterpriseAdmin) {
+                const expiresIn = "24h";
+                const HashValue = hashValue(SavedEnterpriseAdmin?.email, expiresIn);
+
+                const url = process.env.HOST + "/api/enterprise/set/new/password/" + HashValue;
+                const templatePath = path.resolve('./views/Email/set_password_email.ejs');
+                const templateContent = await fs.readFile(templatePath, 'utf8');
+                // console.log(url);
+                // return;
+                const renderHTML = ejs.render(templateContent, {
+                    Name: SavedEnterpriseAdmin?.username,
+                    Url: url,
+                });
+
+                // Call the sendEmail function
+                await SendMail(SavedEnterpriseAdmin?.email, "Set New Password mail", renderHTML);
+                return res.status(201).json({ success: true, message: "Enterprise added successfully!" });
+            }
+        } else {
+            return res.status(500).json({ success: false, message: "Failed to save enterprise admin." });
         }
     } catch (error) {
         console.error('Error adding enterprise:', error);
-        return res.status(500).json({ message: "Internal Server Error" });
+        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };
 
@@ -95,40 +99,43 @@ exports.addEnterpriseUser = async (req, res) => {
         });
 
         const savedEnterpriseUser = await EnterpriseUser.save();
+        if (savedEnterpriseUser) {
+            const password = new Date().getTime().toString();
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-        const password = new Date().getTime().toString();
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newEnterpriseUser = new UserModel({
-            username: savedEnterpriseUser.username,
-            email: savedEnterpriseUser.email,
-            password: hashedPassword,
-            role: "Enterprise",
-            type: "EnterpriseUser",
-            permission: ["Read"],
-            enterpriseUserId: savedEnterpriseUser._id,
-            isDelete: false
-        });
-
-        const SavedEnterpriseUser = await newEnterpriseUser.save();
-
-        if (SavedEnterpriseUser) {
-            const expiresIn = "24h";
-            const HashValue = hashValue(SavedEnterpriseUser?.email, expiresIn);
-
-            const url = process.env.HOST + "/api/enterprise/set/new/password/" + HashValue;
-            const templatePath = path.resolve('./views/Email/set_password_email.ejs');
-            const templateContent = await fs.readFile(templatePath, 'utf8');
-            // console.log(url);
-            // return;
-            const renderHTML = ejs.render(templateContent, {
-                Name: SavedEnterpriseUser?.username,
-                Url: url,
+            const newEnterpriseUser = new UserModel({
+                username: savedEnterpriseUser.username,
+                email: savedEnterpriseUser.email,
+                password: hashedPassword,
+                role: "Enterprise",
+                type: "EnterpriseUser",
+                permission: ["Read"],
+                enterpriseUserId: savedEnterpriseUser._id,
+                isDelete: false
             });
 
-            // Call the sendEmail function
-            await SendMail(SavedEnterpriseUser?.email, "Set New Password mail", renderHTML);
-            return res.status(201).json({ message: "Enterprise User added successfully!" });
+            const SavedEnterpriseUser = await newEnterpriseUser.save();
+
+            if (SavedEnterpriseUser) {
+                const expiresIn = "24h";
+                const HashValue = hashValue(SavedEnterpriseUser?.email, expiresIn);
+
+                const url = process.env.HOST + "/api/enterprise/set/new/password/" + HashValue;
+                const templatePath = path.resolve('./views/Email/set_password_email.ejs');
+                const templateContent = await fs.readFile(templatePath, 'utf8');
+                // console.log(url);
+                // return;
+                const renderHTML = ejs.render(templateContent, {
+                    Name: SavedEnterpriseUser?.username,
+                    Url: url,
+                });
+
+                // Call the sendEmail function
+                await SendMail(SavedEnterpriseUser?.email, "Set New Password mail", renderHTML);
+                return res.status(201).json({ message: "Enterprise User added successfully!" });
+            }
+        } else {
+            return res.status(500).json({ success: false, message: "Failed to save enterprise user." });
         }
 
     } catch (error) {

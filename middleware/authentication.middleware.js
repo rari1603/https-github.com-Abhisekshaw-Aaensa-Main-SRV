@@ -8,7 +8,7 @@ const verifyToken = (req, res, next) => {
     }
 
     try {
-        const decoded = jwtDecode(token);
+        const decoded = jwtDecode.decode(token);
         req.user = decoded;
         next();
     } catch (error) {

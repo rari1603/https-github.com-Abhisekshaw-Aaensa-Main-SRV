@@ -17,7 +17,7 @@ const TestController = require('../fake/controller/testController');
 router.get('/create-gateway', TestController.Gateway);
 router.get('/create-optimizer', TestController.Optimizer);
 router.get('/fake', TestController.processArray);
-router.get('/add/all', TestController.addManyDataDB);
+router.get('/alter/field', TestController.addManyDataDB);
 
 
 

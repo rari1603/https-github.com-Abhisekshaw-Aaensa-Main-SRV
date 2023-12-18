@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
-const EnterpriseUserSchema = new mongoose.Schema({
-    EnterpriseID: {
-        type: Schema.Types.ObjectId,
-        ref: "Enterprise",
-        require: true
-    },
+const SystemInitSchema = new mongoose.Schema({
     username: { type: String },
     email: { type: String },
     phone: { type: String },
@@ -16,6 +11,6 @@ const EnterpriseUserSchema = new mongoose.Schema({
     // Other relevant fields for EnterpriseUser entity
 }, { timestamps: true });
 
-const EnterpriseUserModel = mongoose.model('EnterpriseUser', EnterpriseUserSchema);
+const SystemInitModel = mongoose.model('SystemInit', SystemInitSchema);
 
-module.exports = EnterpriseUserModel;
+module.exports = SystemInitModel;

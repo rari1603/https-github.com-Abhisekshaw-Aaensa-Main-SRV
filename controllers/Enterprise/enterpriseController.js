@@ -1,13 +1,7 @@
 const EnterpriseAdminModel = require('../../models/enterprise.model');
-const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const UserModel = require('../../models/user.model');
 const bcrypt = require('bcrypt');
-const { hashValue } = require('../../utility/CreateToken');
-const path = require('path');
-const ejs = require('ejs');
-const fs = require('fs').promises;
-const decode = require('../../utility/JwtDecoder');
-const { SendMail } = require('../../utility/SendMail');
+const { decode } = require('../../utility/JwtDecoder');
 
 
 exports.list = async (req, res) => {

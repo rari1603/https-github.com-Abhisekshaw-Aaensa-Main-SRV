@@ -6,7 +6,7 @@ const EnterpriseSchema = new mongoose.Schema({
         Email: { type: String },
         Name: { type: String },
         Phone: { type: String },
-        Address: { type: String },
+        // Address: { type: String, default: null },
         // Other contact-related fields
     },
     OnboardingDate: { type: String },

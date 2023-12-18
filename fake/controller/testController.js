@@ -124,13 +124,13 @@ const generateRandomData = async (GatewayID, OptimizerID) => ({
 });
 
 exports.addManyDataDB = async (req, res) => {
-    await Gateway.updateMany({}, { $set: { isDelete: false } });
-    await Optimizer.updateMany({}, { $set: { isDelete: false } });
-    await DataLogModel.updateMany({}, { $set: { isDelete: false } });
-    await UserModel.updateMany({}, { $set: { isDelete: false } });
-    await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });
-    await EnterpriseUserModel.updateMany({}, { $set: { isDelete: false } });
+    // await Gateway.updateMany({}, { $set: { isDelete: false } });
+    // await Optimizer.updateMany({}, { $set: { isDelete: false } });
+    // await DataLogModel.updateMany({}, { $set: { isDelete: false } });
+    // await UserModel.updateMany({}, { $set: { isDelete: false } });
+    // await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });
+    // await EnterpriseUserModel.updateMany({}, { $set: { isDelete: false } });
     await StateModel.updateMany({}, { $set: { isDelete: false } });
-    await LocationModel.updateMany({}, { $set: { isDelete: false } });
+    // await LocationModel.updateMany({}, { $set: { isDelete: false } });
     return res.send("Done...")
 }

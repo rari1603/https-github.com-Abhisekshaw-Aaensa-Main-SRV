@@ -1,8 +1,8 @@
 // Check empty filed while adding data in EnterpriseAdmin 
 exports.adminEmptyCheck = async (req, res, next) => {
-    const { EnterpriseName, Email, Name, Phone, Address, OnboardingDate } = req.body;
+    const { EnterpriseName, Email, Name, Phone, OnboardingDate } = req.body;
     try {
-        if (!(EnterpriseName && Email && Name && Phone && Address && OnboardingDate)) {
+        if (!(EnterpriseName && Email && Name && Phone && OnboardingDate)) {
             return res.status(400).send({ success: false, message: 'All Fields Are required!' });
         }
         next();
@@ -15,10 +15,10 @@ exports.adminEmptyCheck = async (req, res, next) => {
 
 // Check empty filed while adding data in EnterpriseUser 
 exports.userEmptyCheck = async (req, res, next) => {
-    const { username, email, EnterpriseID, GatewayIDs, StateID, LocationID } = req.body;
+    const { username, email, EnterpriseID } = req.body;
 
     try {
-        if (!(username && email && EnterpriseID && GatewayIDs && StateID && LocationID)) {
+        if (!(username && email && EnterpriseID)) {
             return res.status(400).send({ success: false, message: 'All Fields Are required!' });
         }
         next();

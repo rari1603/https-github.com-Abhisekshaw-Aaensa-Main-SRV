@@ -1,5 +1,6 @@
 const EnterpriseAdminModel = require('../../models/enterprise.model');
 const EnterpriseStateModel = require('../../models/enterprise_state.model');
+const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UserModel = require('../../models/user.model');
 const bcrypt = require('bcrypt');
 const { decode } = require('../../utility/JwtDecoder');
@@ -71,6 +72,56 @@ exports.EnterpriseStateList = async (req, res) => {
             message: "Data fetched successfully",
             commonEnterpriseData: commonEnterpriseDataWithDoc,
             AllEntState
+        }
+    );
+}
+
+// EnterpriseStateList
+exports.EnterpriseStateLocationList = async (req, res) => {
+    const { enterprise_id, state_id } = req.body;
+
+    const AllEnterpriseStateLocation = await EnterpriseStateLocationModel.find({ Enterprise_ID: enterprise_id, State_ID: state_id }).populate({
+        path: 'Enterprise_ID'
+    }).populate({
+        path: 'State_ID'
+    });
+
+    if (AllEnterpriseStateLocation.length === 0) {
+        return res.status(404).send({ success: false, message: 'No data found for the given enterprise ID.' });
+    }
+
+    // Extract the common Enterprise_ID data from the first object
+    const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseStateLocation[0].Enterprise_ID;
+    const commonEnterpriseDataWithDoc = { ...commonEnterpriseData._doc };
+
+    const { State_ID, ...commonStateData } = AllEnterpriseStateLocation[0].State_ID;
+    const commonStateDataWithDoc = { ...commonStateData._doc };
+
+    // Map through the array and add the fields to each object
+    const AllEntStateLocation = AllEnterpriseStateLocation.map(ent => ({
+        ...ent._doc,
+        data: {
+            location: Math.round(Math.random() * (3 - 1) + 1),
+            gateway: Math.round(Math.random() * (5 - 1) + 1),
+            optimizer: Math.round(Math.random() * (5 - 1) + 1),
+            power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
+        },
+    }));
+
+    // Remove "Enterprise_ID" field from AllEntStateLocation
+    AllEntStateLocation.forEach(ent => {
+        delete ent.Enterprise_ID;
+        delete ent.State_ID;
+    });
+
+    // console.log(AllEntStateLocation);
+    return res.status(200).json(
+        {
+            success: true,
+            message: "Data fetched successfully",
+            commonEnterpriseData: commonEnterpriseDataWithDoc,
+            commonStateData: commonStateDataWithDoc,
+            AllEntStateLocation
         }
     );
 }

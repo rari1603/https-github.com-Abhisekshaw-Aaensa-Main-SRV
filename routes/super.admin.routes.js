@@ -20,6 +20,8 @@ router.get('/get/enterprise/list', [verifyToken], EnterpriseController.Enterpris
 
 // enterprise state list
 router.get('/get/enterprise/state/list', [verifyToken], EnterpriseController.EnterpriseStateList);
+// EnterpriseStateLocationList
+router.get('/get/enterprise/state/location/list', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
 
 
 // add enterprise admin

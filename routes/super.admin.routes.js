@@ -16,9 +16,16 @@ const router = express.Router();
 
 router.get('/get/all/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 // enterprise list
-router.get('/get/enterprise/list', [verifyToken], EnterpriseController.list);
+router.get('/get/enterprise/list', [verifyToken], EnterpriseController.EnterpriseList);
+
+// enterprise state list
+router.get('/get/enterprise/state/list', [verifyToken], EnterpriseController.EnterpriseStateList);
+
+
 // add enterprise admin
 router.post('/add/enterprise', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, duplicateEnterpriseCheck], UserController.addEnterprise);
+
+
 // add enterprise user
 router.post('/add/enterprise/user', [verifyToken, routeAccessMiddleware(), userEmptyCheck, duplicateUserCheck], UserController.addEnterpriseUser);
 // add system int

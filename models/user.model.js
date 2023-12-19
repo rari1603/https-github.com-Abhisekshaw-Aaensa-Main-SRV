@@ -10,7 +10,14 @@ const UserSchema = new mongoose.Schema({
     enterpriseUserId: {
         type: Schema.Types.ObjectId,
         ref: "EnterpriseUser",
-        require: false
+        require: false,
+        default: null
+    },
+    systemIntegratorId: {
+        type: Schema.Types.ObjectId,
+        ref: "SystemInit",
+        require: false,
+        default: null
     },
     isDelete: {
         type: Boolean,

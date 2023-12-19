@@ -193,7 +193,10 @@ exports.GetEnterpriseSystemIntUsers = async (req, res) => {
             populate: {
                 path: 'EnterpriseID'
             }
-        });
+        }).populate({
+            path: 'systemIntegratorId',
+
+        }).select('-password');
         return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllData });
     } catch (err) {
         console.error('Error:', err.message);

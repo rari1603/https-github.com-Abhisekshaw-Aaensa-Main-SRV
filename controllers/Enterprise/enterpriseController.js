@@ -6,7 +6,27 @@ const { decode } = require('../../utility/JwtDecoder');
 
 exports.list = async (req, res) => {
     const AllEnt = await EnterpriseAdminModel.find({});
-    return res.status(200).json({ success: true, message: "Hi enterprise list", data: AllEnt });
+    // Define the fields to add
+
+    // Map through the array and add the fields to each object
+    const updatedAllEnt = AllEnt.map(ent => {
+        const data = {
+            location: Math.round(Math.random() * (3 - 1) + 1),
+            gateway: Math.round(Math.random() * (5 - 1) + 1),
+            optimizer: Math.round(Math.random() * (5 - 1) + 1),
+            power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
+        };
+
+        // Use the spread operator (...) to create a new object with existing properties
+        // and add the new fields
+        return {
+            ...ent._doc,
+            data,
+        };
+    });
+
+    // console.log(updatedAllEnt);
+    return res.status(200).json({ success: true, message: "Hi enterprise list", data: updatedAllEnt });
 }
 
 

@@ -65,7 +65,7 @@ exports.CheckEntStateLocation = async (req, res, next) => {
 };
 
 // Add gateway empty field check
-exports.CheckEmptyFiledGateway = async (req, res, next) => {
+exports.CheckGateway = async (req, res, next) => {
     const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
     try {
 
@@ -93,6 +93,12 @@ exports.CheckEmptyFiledGateway = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Enterprise User is required!", key: "EnterpriseUser" });
 
         }
+
+        const ExsistingGateway = await GatewayModel.findOne({ GatewayID });
+        if (ExsistingGateway) {
+            return res.status(409).json({ success: false, message: 'A gateway with the provided ID already exists. Please choose a different ID.', key: 'GatewayID' });
+        }
+
         next();
 
     } catch (error) {

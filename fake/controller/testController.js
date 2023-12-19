@@ -3,6 +3,7 @@ const Gateway = require('../../models/gateway.model');
 const Optimizer = require('../../models/optimizer.model');
 const DataLogModel = require('../../models/dataLog.model');
 const UserModel = require('../../models/user.model');
+const SystemIntModel = require('../../models/systemInit.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const StateModel = require('../../models/state.model');
@@ -129,6 +130,14 @@ exports.addManyDataDB = async (req, res) => {
     // await UserModel.updateMany({}, { $set: { isDelete: false } });
     // await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });
     // await EnterpriseUserModel.updateMany({}, { $set: { isDelete: false } });
-    await StateModel.updateMany({}, { $set: { isDelete: false } });
+    // await StateModel.updateMany({}, { $set: { isDelete: false } });
+    // const allSystInt = await SystemIntModel.find({});
+    // for (let index = 0; index < allSystInt.length; index++) {
+    //     const element = allSystInt[index];
+    //     console.log(element);
+    //     await UserModel.updateMany({ email: element.email }, { $set: { systemIntegratorId: element._id } });
+
+    // }
+    // return res.send(allSystInt);
     return res.send("Done...")
 }

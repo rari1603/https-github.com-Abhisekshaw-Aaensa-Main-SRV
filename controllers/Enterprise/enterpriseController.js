@@ -26,7 +26,7 @@ exports.list = async (req, res) => {
     });
 
     // console.log(updatedAllEnt);
-    return res.status(200).json({ success: true, message: "Hi enterprise list", data: updatedAllEnt });
+    return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
 }
 
 

@@ -6,7 +6,7 @@ const { decode } = require('../../utility/JwtDecoder');
 
 exports.list = async (req, res) => {
     const AllEnt = await EnterpriseAdminModel.find({});
-    res.status(200).json({ success: true, message: "Hi enterprise list", data: AllEnt });
+    return res.status(200).json({ success: true, message: "Hi enterprise list", data: AllEnt });
 }
 
 

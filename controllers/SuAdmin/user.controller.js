@@ -122,11 +122,10 @@ exports.addEnterpriseUser = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Error adding enterprise:', error.message);
+        console.error('Error adding enterprise user:', error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };
-
 
 // Add System itigrator user
 exports.addSystemInt = async (req, res) => {
@@ -182,5 +181,22 @@ exports.addSystemInt = async (req, res) => {
     } catch (error) {
         console.error('Error adding system intigrator:', error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+}
+
+// Get Enterprise & System Integrator User
+exports.GetEnterpriseSystemIntUsers = async (req, res) => {
+    try {
+        const excludedTypes = ["Webmaster", "Enterprise"];
+        const AllData = await UserModel.find({ type: { $nin: excludedTypes } }).populate({
+            path: 'enterpriseUserId',
+            populate: {
+                path: 'EnterpriseID'
+            }
+        });
+        return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllData });
+    } catch (err) {
+        console.error('Error:', err.message);
+        return res.status(500).json({ success: false, message: "Something Went wrong please try again later.", error: err.message });
     }
 }

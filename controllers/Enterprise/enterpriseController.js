@@ -40,24 +40,39 @@ exports.EnterpriseStateList = async (req, res) => {
     });
 
 
+    if (AllEnterpriseState.length === 0) {
+        return res.status(404).send({ success: false, message: 'No data found for the given enterprise ID.' });
+    }
+
+    // Extract the common Enterprise_ID data from the first object
+    const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseState[0].Enterprise_ID;
+    const commonEnterpriseDataWithDoc = { ...commonEnterpriseData._doc };
+
     // Map through the array and add the fields to each object
-    const updatedAllEntState = AllEnterpriseState.map(ent => {
-        const data = {
+    const AllEntState = AllEnterpriseState.map(ent => ({
+        ...ent._doc,
+        data: {
             location: Math.round(Math.random() * (3 - 1) + 1),
             gateway: Math.round(Math.random() * (5 - 1) + 1),
             optimizer: Math.round(Math.random() * (5 - 1) + 1),
             power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
-        };
-        return {
-            ...ent._doc,
-            data,
-        };
+        },
+    }));
+
+    // Remove "Enterprise_ID" field from AllEntState
+    AllEntState.forEach(ent => {
+        delete ent.Enterprise_ID;
     });
 
-    return res.send(updatedAllEntState);
-
-    // console.log(updatedAllEntState);
-    return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEntState });
+    // console.log(AllEntState);
+    return res.status(200).json(
+        {
+            success: true,
+            message: "Data fetched successfully",
+            commonEnterpriseData: commonEnterpriseDataWithDoc,
+            AllEntState
+        }
+    );
 }
 
 // SET PASSWORD VIEW

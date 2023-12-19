@@ -1,5 +1,6 @@
 const EnterpriseStateModel = require('../../models/enterprise_state.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
+const GatewayModel = require('../../models/gateway.model');
 
 
 // AddEnterpriseState
@@ -29,5 +30,27 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
     } catch (error) {
         console.error('Error adding enterprise:', error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+}
+
+// Add gateway
+exports.AddGateway = async (req, res) => {
+    const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
+    try {
+        const NewGateway = new GatewayModel({
+            EnterpriseInfo,
+            OnboardingDate,
+            GatewayID,
+            NetworkSSID,
+            NetworkPassword,
+            EnterpriseUserID
+        });
+
+        await NewGateway.save();
+        return res.status(201).json({ success: true, message: "Gateway added successfully." });
+
+    } catch (err) {
+        console.error('Error adding enterprise:', err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 }

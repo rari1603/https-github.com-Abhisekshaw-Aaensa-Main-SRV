@@ -11,10 +11,11 @@ const GatewaySchema = new mongoose.Schema({
     GatewayID: { type: String, unique: true },
     NetworkSSID: { type: String },
     NetworkPassword: { type: String },
-    EnterpriseUserID: {
+    EnterpriseUserID: { // primary _id of EnterpriseUser schema/model
         type: Schema.Types.ObjectId,
         ref: "EnterpriseUser"
     },
+    Switch: { type: Boolean, default: false },
     isDelete: {
         type: Boolean,
         default: false

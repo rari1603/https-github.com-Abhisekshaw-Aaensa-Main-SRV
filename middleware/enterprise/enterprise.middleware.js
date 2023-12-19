@@ -1,13 +1,21 @@
-const EnterpriseStateModel = require('../../models/enterprise_state.model');
-const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
-
-
 // Check empty filed while adding data in EnterpriseAdmin 
 exports.adminEmptyCheck = async (req, res, next) => {
     const { EnterpriseName, Email, Name, Phone, OnboardingDate } = req.body;
     try {
-        if (!(EnterpriseName && Email && Name && Phone && OnboardingDate)) {
-            return res.status(400).send({ success: false, message: 'All Fields Are required!' });
+        if (!EnterpriseName) {
+            return res.status(400).send({ success: false, message: 'Enterprise name is required!', key: "EnterpriseName" });
+        }
+        if (!Email) {
+            return res.status(400).send({ success: false, message: 'Email address is required!', key: "Email" });
+        }
+        if (!Name) {
+            return res.status(400).send({ success: false, message: 'Name is required!', key: "Name" });
+        }
+        if (!Phone) {
+            return res.status(400).send({ success: false, message: 'Phone number is required!', key: "Phone" });
+        }
+        if (!OnboardingDate) {
+            return res.status(400).send({ success: false, message: 'Onboarding date is required!', key: "OnboardingDate" });
         }
         next();
     } catch (error) {
@@ -19,76 +27,19 @@ exports.adminEmptyCheck = async (req, res, next) => {
 // Check empty filed while adding data in EnterpriseUser 
 exports.userEmptyCheck = async (req, res, next) => {
     const { username, email, EnterpriseID } = req.body;
-
     try {
-        if (!(username && email && EnterpriseID)) {
-            return res.status(400).send({ success: false, message: 'All Fields Are required!' });
+        if (!username) {
+            return res.status(400).send({ success: false, message: 'Username is required!', key: "username" });
+        }
+        if (!email) {
+            return res.status(400).send({ success: false, message: 'Email is required!', key: "email" });
+        }
+        if (!EnterpriseID) {
+            return res.status(400).send({ success: false, message: 'Enterprise is required!', key: "EnterpriseID" });
         }
         next();
     } catch (error) {
         console.log("enterprise.middleware.userEmptyCheck===>", error.message);
         return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
-    }
-}
-
-// check enterprise state
-exports.CheckEntState = async (req, res, next) => {
-    const { Enterprise_ID, State_ID } = req.body;
-    try {
-
-        if (!Enterprise_ID) {
-            return res.status(401).json({ success: false, message: "Enterprise is required!" });
-
-        }
-        if (!State_ID) {
-            return res.status(401).json({ success: false, message: "State is required!" });
-
-        }
-        const existingEntState = await EnterpriseStateModel.findOne({ Enterprise_ID, State_ID });
-        if (existingEntState) {
-            return res.status(401).json({ success: false, message: "State already added under this enterprise!" });
-        }
-        next();
-
-    } catch (error) {
-        console.error('Error adding enterprise:', error.message);
-        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
-    }
-}
-
-// check enterprise state location
-exports.CheckEntStateLocation = async (req, res, next) => {
-    const { Enterprise_ID, State_ID, LocationName } = req.body;
-    try {
-
-        if (!Enterprise_ID) {
-            return res.status(401).json({ success: false, message: "Enterprise is required!" });
-
-        }
-        if (!State_ID) {
-            return res.status(401).json({ success: false, message: "State is required!" });
-
-        }
-        if (!LocationName) {
-            return res.status(401).json({ success: false, message: "Location name is required!" });
-
-        }
-
-        const lowerCaseLocationName = LocationName.toLowerCase();
-        // Assuming EnterpriseStateLocationModel is your Mongoose model
-        const allLocations = await EnterpriseStateLocationModel.find({});
-        // Check for existing records with the lowercase location name
-        for (const location of allLocations) {
-            const dbLocationName = location.LocationName.toLowerCase();
-            if (lowerCaseLocationName === dbLocationName) {
-                return res.status(401).json({ success: false, message: "Location already added under this state." });
-            }
-        }
-
-        next();
-
-    } catch (error) {
-        console.error('Error adding enterprise:', error.message);
-        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 }

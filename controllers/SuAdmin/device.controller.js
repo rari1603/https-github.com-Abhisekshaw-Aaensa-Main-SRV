@@ -1,6 +1,7 @@
 const EnterpriseStateModel = require('../../models/enterprise_state.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const GatewayModel = require('../../models/gateway.model');
+const OptimizerModel = require('../../models/optimizer.model');
 
 
 // AddEnterpriseState
@@ -13,7 +14,7 @@ exports.AddEnterpriseState = async (req, res) => {
         return res.status(201).json({ success: true, message: "Enterprise state added successfully." });
 
     } catch (error) {
-        console.error('Error adding enterprise:', error.message);
+        console.error(error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };
@@ -28,7 +29,7 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
         return res.status(201).json({ success: true, message: "Enterprise Location added successfully." });
 
     } catch (error) {
-        console.error('Error adding enterprise:', error.message);
+        console.error(error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 }
@@ -50,7 +51,26 @@ exports.AddGateway = async (req, res) => {
         return res.status(201).json({ success: true, message: "Gateway added successfully." });
 
     } catch (err) {
-        console.error('Error adding enterprise:', err.message);
+        console.error(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+}
+
+// Add Optimizer
+exports.AddOptimizer = async (req, res) => {
+    const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    try {
+        const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
+        const NewOptimizer = new OptimizerModel({
+            GatewayId: GATEWAY._id, // primary _id of that Gateway
+            OptimizerID,
+            OptimizerName
+        });
+
+        await NewOptimizer.save();
+        return res.status(201).json({ success: true, message: "Optimizer added successfully." });
+    } catch (err) {
+        console.error(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 }

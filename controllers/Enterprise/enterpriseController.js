@@ -6,6 +6,8 @@ const UserModel = require('../../models/user.model');
 const bcrypt = require('bcrypt');
 const { decode } = require('../../utility/JwtDecoder');
 
+
+
 // EnterpriseList
 exports.EnterpriseListData = async (req, res) => {
     // return console.log(req.params);
@@ -131,7 +133,6 @@ exports.EnterpriseStateLocationList = async (req, res) => {
     );
 }
 
-
 // EnterpriseStateLocationGatewayList
 exports.EnterpriseStateLocationGatewayList = async (req, res) => {
     const { enterpriseInfo_id } = req.body;
@@ -200,7 +201,6 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
     );
 }
 
-
 // SET PASSWORD VIEW
 exports.SetNewPasswordView = async (req, res) => {
     try {
@@ -235,7 +235,6 @@ exports.SetNewPasswordView = async (req, res) => {
         return res.send({ success: false, message: error.message });
     }
 }
-
 
 // SET PASSWORD
 exports.SetNewPassword = async (req, res) => {

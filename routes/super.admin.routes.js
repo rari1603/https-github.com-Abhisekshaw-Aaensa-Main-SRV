@@ -7,7 +7,7 @@ const DeviceController = require('../controllers/SuAdmin/device.controller');
 const verifyToken = require('../middleware/authentication.middleware');
 const routeAccessMiddleware = require('../middleware/access.middleware');
 const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/enterprise.middleware');
-const { CheckEntState, CheckEntStateLocation, CheckGateway } = require('../middleware/device/device.middleware');
+const { CheckEntState, CheckEntStateLocation, CheckGateway, CheckOptimizer } = require('../middleware/device/device.middleware');
 const { systemInitEmptyCheck } = require('../middleware/systemInt/systemInt.middleware');
 const { duplicateUserCheck, duplicateEnterpriseCheck } = require('../middleware/auth.validation');
 const router = express.Router();
@@ -43,6 +43,8 @@ router.post('/add/enterprise/state', [verifyToken, routeAccessMiddleware(), Chec
 router.post('/add/enterprise/state/location', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation], DeviceController.AddEnterpriseStateLocation);
 // AddGateway
 router.post('/add/gateway', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.AddGateway);
+// AddOptimizer
+router.post('/add/optimizer', [verifyToken, routeAccessMiddleware(), CheckOptimizer], DeviceController.AddOptimizer);
 
 // Get all enterprise & system integrator user
 router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIntUsers);

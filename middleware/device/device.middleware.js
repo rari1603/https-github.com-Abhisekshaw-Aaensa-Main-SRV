@@ -1,6 +1,7 @@
 const EnterpriseStateModel = require('../../models/enterprise_state.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const GatewayModel = require('../../models/gateway.model');
+const OptimizerModel = require('../../models/optimizer.model');
 
 
 // check enterprise state
@@ -23,7 +24,7 @@ exports.CheckEntState = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error('Error adding enterprise:', error.message);
+        console.error(error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };
@@ -59,7 +60,7 @@ exports.CheckEntStateLocation = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error('Error adding enterprise:', error.message);
+        console.error(error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };
@@ -78,7 +79,7 @@ exports.CheckGateway = async (req, res, next) => {
 
         }
         if (!GatewayID) {
-            return res.status(401).json({ success: false, message: "GatewayID Date is required!", key: "GatewayID" });
+            return res.status(401).json({ success: false, message: "GatewayID is required!", key: "GatewayID" });
 
         }
         if (!NetworkSSID) {
@@ -102,7 +103,38 @@ exports.CheckGateway = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error('Error adding enterprise:', error.message);
+        console.error(error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+};
+
+// Add optimizer empty field check
+exports.CheckOptimizer = async (req, res, next) => {
+    const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    try {
+
+        if (!GatewayId) {
+            return res.status(401).json({ success: false, message: "GatewayId is required!", key: "GatewayId" });
+
+        }
+        if (!OptimizerID) {
+            return res.status(401).json({ success: false, message: "OptimizerID is required!", key: "OptimizerID" });
+
+        }
+        if (!OptimizerName) {
+            return res.status(401).json({ success: false, message: "Optimizer name is required!", key: "OptimizerName" });
+
+        }
+
+        const ExsistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
+        if (ExsistingOptimizer) {
+            return res.status(409).json({ success: false, message: 'A optimizer with the provided ID already exists. Please choose a different ID.', key: 'OptimizerID' });
+        }
+
+        next();
+
+    } catch (error) {
+        console.error(error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 };

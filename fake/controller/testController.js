@@ -124,7 +124,7 @@ const generateRandomData = async (GatewayID, OptimizerID) => ({
 });
 
 exports.addManyDataDB = async (req, res) => {
-    // await Gateway.updateMany({}, { $set: { isDelete: false } });
+    await Gateway.updateMany({}, { $set: { isConfigure: false } });
     // await Optimizer.updateMany({}, { $set: { isDelete: false } });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });
     // await UserModel.updateMany({}, { $set: { isDelete: false } });

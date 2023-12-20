@@ -19,7 +19,8 @@ const GatewaySchema = new mongoose.Schema({
     isDelete: {
         type: Boolean,
         default: false
-    }
+    },
+    isConfigure: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const GatewayModel = mongoose.model('Gateway', GatewaySchema);

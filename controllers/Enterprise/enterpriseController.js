@@ -7,35 +7,31 @@ const { decode } = require('../../utility/JwtDecoder');
 
 // EnterpriseList
 exports.EnterpriseListData = async (req, res) => {
+    // return console.log(req.params);
     const AllEnt = await EnterpriseAdminModel.find({});
-    // Define the fields to add
+    if (req.params.flag === 'name') {
+        return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
+    }
+    if (req.params.flag === 'data') {
+        // Map through the array and add the fields to each object
+        const updatedAllEnt = AllEnt.map(ent => {
+            const data = {
+                location: Math.round(Math.random() * (3 - 1) + 1),
+                gateway: Math.round(Math.random() * (5 - 1) + 1),
+                optimizer: Math.round(Math.random() * (5 - 1) + 1),
+                power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
+            };
 
-    // Map through the array and add the fields to each object
-    const updatedAllEnt = AllEnt.map(ent => {
-        const data = {
-            location: Math.round(Math.random() * (3 - 1) + 1),
-            gateway: Math.round(Math.random() * (5 - 1) + 1),
-            optimizer: Math.round(Math.random() * (5 - 1) + 1),
-            power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
-        };
+            return {
+                ...ent._doc,
+                data,
+            };
+        });
 
-        // Use the spread operator (...) to create a new object with existing properties
-        // and add the new fields
-        return {
-            ...ent._doc,
-            data,
-        };
-    });
+        // console.log(updatedAllEnt);
+        return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
 
-    // console.log(updatedAllEnt);
-    return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
-}
-
-exports.EnterpriseList = async (req, res) => {
-    const AllEnt = await EnterpriseAdminModel.find({});
-    // Define the fields to add
-    // console.log(updatedAllEnt);
-    return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
+    }
 }
 
 // EnterpriseStateList

@@ -117,7 +117,7 @@ exports.EnterpriseStateLocationList = async (req, res) => {
         delete ent.Enterprise_ID;
         delete ent.State_ID;
     });
-    
+
 
     // console.log(AllEntStateLocation);
     return res.status(200).json(
@@ -160,10 +160,15 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
     const { State_ID, ...commonStateData } = AllEnterpriseStateLocationGateway[0].EnterpriseInfo.State_ID;
     const commonStateDataWithDoc = { ...commonStateData._doc };
 
-    const { _id, LocationName, isDelete, createdAt, updatedAt, __v } = AllEnterpriseStateLocationGateway[0].EnterpriseInfo;
-    const commonLocationData = { _id, LocationName, isDelete, createdAt, updatedAt, __v };
-
-    // return res.send(commonLocationData);
+    // Dynamic extraction of fields for commonLocationData
+    const LocationData = { ...AllEnterpriseStateLocationGateway[0].EnterpriseInfo };
+    const commonLocationData = { ...LocationData._doc };
+    if (commonLocationData.Enterprise_ID && commonLocationData.State_ID) {
+        delete commonLocationData.Enterprise_ID;
+        delete commonLocationData.State_ID;
+    } else {
+        return commonLocationData;
+    };
 
     // Map through the array and add the fields to each object
     const AllEntStateLocationGateway = AllEnterpriseStateLocationGateway.map(ent => ({

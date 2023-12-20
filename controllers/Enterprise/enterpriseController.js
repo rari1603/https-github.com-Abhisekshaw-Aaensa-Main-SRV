@@ -18,12 +18,63 @@ exports.EnterpriseListData = async (req, res) => {
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
         }
         if (req.params.flag === 'data') {
+
+            const getAllEnterpriseState = async (entId) => {
+                return await EnterpriseStateModel.find({ Enterprise_ID: entId })
+                    .populate({
+                        path: 'State_ID'
+                    })
+                    .lean();
+            };
+
+            const getAllEnterpriseStateLocation = async (entId, stateID) => {
+                return await EnterpriseStateLocationModel.find({ Enterprise_ID: entId, State_ID: stateID }).exec();
+            };
+
+            const getAllEnterpriseStateLocationGateway = async (entInfoID) => {
+                return await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
+            };
+
+            const getAllEnterpriseStateLocationGatewayOptimizer = async (gatewayID) => {
+                return await OptimizerModel.findOne({ GatewayID: gatewayID }).exec();
+            };
+
             // Map through the array and add the fields to each object
-            const updatedAllEnt = AllEnt.map(ent => {
+            const updatedAllEnt = await Promise.all(AllEnt.map(async (ent) => {
+                const AllEnterpriseState = await getAllEnterpriseState(ent._id);
+                const LocationData = await Promise.all(AllEnterpriseState.map(async (state) => {
+                    const Location = await getAllEnterpriseStateLocation(ent._id, state.State_ID._id);
+
+                    const GatewayData = await Promise.all(Location.map(async (location) => {
+                        const Gateway = await getAllEnterpriseStateLocationGateway(location._id);
+
+                        const OptimizerData = await Promise.all(Gateway.map(async (gateway) => {
+                            return await getAllEnterpriseStateLocationGatewayOptimizer(gateway._id);
+                        }));
+
+                        // Filter out null values before returning the object
+                        const filteredGatewayData = {
+                            Gateway: Gateway.filter((g) => g !== null),
+                            OptimizerData: OptimizerData.filter((opt) => opt !== null),
+                        };
+
+                        return filteredGatewayData;
+                    }));
+
+                    return { Location, GatewayData };
+                }));
+
+                const TotalGateways = LocationData.reduce((acc, curr) => acc + curr.GatewayData.reduce((count, location) => count + location.Gateway.length, 0), 0);
+
+                const TotalOptimizers = LocationData.reduce((acc, curr) =>
+                    acc + curr.GatewayData.reduce((count, location) =>
+                        count + location.OptimizerData.reduce((optCount, optimizer) =>
+                            optCount + optimizer.length, 0), 0), 0);
+
                 const data = {
-                    location: Math.round(Math.random() * (3 - 1) + 1),
-                    gateway: Math.round(Math.random() * (5 - 1) + 1),
-                    optimizer: Math.round(Math.random() * (5 - 1) + 1),
+                    location: LocationData.length,
+                    gateway: TotalGateways,
+                    optimizer: TotalOptimizers,
                     power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
                 };
 
@@ -31,9 +82,8 @@ exports.EnterpriseListData = async (req, res) => {
                     ...ent._doc,
                     data,
                 };
-            });
+            }));
 
-            // console.log(updatedAllEnt);
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
 
         }

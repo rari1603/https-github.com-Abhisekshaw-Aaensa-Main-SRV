@@ -16,6 +16,7 @@ const router = express.Router();
 
 router.get('/get/all/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 // enterprise list
+router.get('/get/enterprise/list/data', [verifyToken], EnterpriseController.EnterpriseListData);
 router.get('/get/enterprise/list', [verifyToken], EnterpriseController.EnterpriseList);
 
 // enterprise state list

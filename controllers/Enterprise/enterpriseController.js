@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 const { decode } = require('../../utility/JwtDecoder');
 
 // EnterpriseList
-exports.EnterpriseList = async (req, res) => {
+exports.EnterpriseListData = async (req, res) => {
     const AllEnt = await EnterpriseAdminModel.find({});
     // Define the fields to add
 
@@ -29,6 +29,13 @@ exports.EnterpriseList = async (req, res) => {
 
     // console.log(updatedAllEnt);
     return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
+}
+
+exports.EnterpriseList = async (req, res) => {
+    const AllEnt = await EnterpriseAdminModel.find({});
+    // Define the fields to add
+    // console.log(updatedAllEnt);
+    return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
 }
 
 // EnterpriseStateList

@@ -11,6 +11,9 @@ exports.systemInitEmptyCheck = async (req, res, next) => {
         if (!phone) {
             return res.status(400).send({ success: false, message: 'Phone number is required!', key: "phone" });
         }
+        if (phone.length !== 10) {
+            return res.status(400).send({ success: false, message: 'Phone number should be 10 digits!', key: "phone" });
+        }
         next();
     } catch (error) {
         console.log("systemInt.middleware===>", error.message);

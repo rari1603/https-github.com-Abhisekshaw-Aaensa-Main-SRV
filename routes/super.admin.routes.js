@@ -16,12 +16,14 @@ const router = express.Router();
 
 router.get('/get/all/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 // enterprise list
-router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.EnterpriseListData);
+router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.EnterpriseListData); // flag should be "data"/"name"
 
 // enterprise state list
 router.get('/get/enterprise/state/list', [verifyToken], EnterpriseController.EnterpriseStateList);
 // EnterpriseStateLocationList
 router.get('/get/enterprise/state/location/list', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
+// EnterpriseStateLocationGatewayList
+router.get('/get/enterprise/state/location/gateway/list', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayList);
 
 
 // add enterprise admin

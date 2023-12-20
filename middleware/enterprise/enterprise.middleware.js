@@ -14,6 +14,9 @@ exports.adminEmptyCheck = async (req, res, next) => {
         if (!Phone) {
             return res.status(400).send({ success: false, message: 'Phone number is required!', key: "Phone" });
         }
+        if (Phone.length !== 10) {
+            return res.status(400).send({ success: false, message: 'Phone number should be 10 digits!', key: "Phone" });
+        }
         if (!OnboardingDate) {
             return res.status(400).send({ success: false, message: 'Onboarding date is required!', key: "OnboardingDate" });
         }
@@ -26,7 +29,7 @@ exports.adminEmptyCheck = async (req, res, next) => {
 
 // Check empty filed while adding data in EnterpriseUser 
 exports.userEmptyCheck = async (req, res, next) => {
-    const { username, email, EnterpriseID } = req.body;
+    const { username, email, EnterpriseID, phone } = req.body;
     try {
         if (!username) {
             return res.status(400).send({ success: false, message: 'Username is required!', key: "username" });
@@ -36,6 +39,12 @@ exports.userEmptyCheck = async (req, res, next) => {
         }
         if (!EnterpriseID) {
             return res.status(400).send({ success: false, message: 'Enterprise is required!', key: "EnterpriseID" });
+        }
+        if (!phone) {
+            return res.status(400).send({ success: false, message: 'Phone number is required!', key: "phone" });
+        }
+        if (phone.length !== 10) {
+            return res.status(400).send({ success: false, message: 'Phone number should be 10 digits!', key: "phone" });
         }
         next();
     } catch (error) {

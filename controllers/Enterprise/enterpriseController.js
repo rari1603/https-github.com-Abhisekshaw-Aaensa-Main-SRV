@@ -1,6 +1,7 @@
 const EnterpriseAdminModel = require('../../models/enterprise.model');
 const EnterpriseStateModel = require('../../models/enterprise_state.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
+const GatewayModel = require('../../models/gateway.model');
 const UserModel = require('../../models/user.model');
 const bcrypt = require('bcrypt');
 const { decode } = require('../../utility/JwtDecoder');
@@ -79,7 +80,7 @@ exports.EnterpriseStateList = async (req, res) => {
     );
 }
 
-// EnterpriseStateList
+// EnterpriseStateLocationList
 exports.EnterpriseStateLocationList = async (req, res) => {
     const { enterprise_id, state_id } = req.body;
 
@@ -116,6 +117,7 @@ exports.EnterpriseStateLocationList = async (req, res) => {
         delete ent.Enterprise_ID;
         delete ent.State_ID;
     });
+    
 
     // console.log(AllEntStateLocation);
     return res.status(200).json(
@@ -128,6 +130,71 @@ exports.EnterpriseStateLocationList = async (req, res) => {
         }
     );
 }
+
+
+// EnterpriseStateLocationGatewayList
+exports.EnterpriseStateLocationGatewayList = async (req, res) => {
+    const { enterpriseInfo_id } = req.body;
+
+    const AllEnterpriseStateLocationGateway = await GatewayModel.find({ EnterpriseInfo: enterpriseInfo_id }).populate({
+        path: 'EnterpriseInfo',
+        populate: [
+            {
+                path: 'Enterprise_ID',
+            },
+            {
+                path: 'State_ID',
+            },
+        ]
+    });
+
+
+    if (AllEnterpriseStateLocationGateway.length === 0) {
+        return res.status(404).send({ success: false, message: 'No data found for the given enterprise ID.' });
+    }
+
+    // Extract the common Enterprise_ID data from the first object
+    const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseStateLocationGateway[0].EnterpriseInfo.Enterprise_ID;
+    const commonEnterpriseDataWithDoc = { ...commonEnterpriseData._doc };
+
+    const { State_ID, ...commonStateData } = AllEnterpriseStateLocationGateway[0].EnterpriseInfo.State_ID;
+    const commonStateDataWithDoc = { ...commonStateData._doc };
+
+    const { _id, LocationName, isDelete, createdAt, updatedAt, __v } = AllEnterpriseStateLocationGateway[0].EnterpriseInfo;
+    const commonLocationData = { _id, LocationName, isDelete, createdAt, updatedAt, __v };
+
+    // return res.send(commonLocationData);
+
+    // Map through the array and add the fields to each object
+    const AllEntStateLocationGateway = AllEnterpriseStateLocationGateway.map(ent => ({
+        ...ent._doc,
+        data: {
+            location: Math.round(Math.random() * (3 - 1) + 1),
+            gateway: Math.round(Math.random() * (5 - 1) + 1),
+            optimizer: Math.round(Math.random() * (5 - 1) + 1),
+            power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
+        },
+    }));
+
+    // Remove "Enterprise_ID" field from AllEntStateLocationGateway
+    AllEntStateLocationGateway.forEach(ent => {
+        delete ent.EnterpriseInfo;
+    });
+
+    // return res.send(AllEnterpriseStateLocationGateway[0].EnterpriseInfo._id;);
+
+    return res.status(200).json(
+        {
+            success: true,
+            message: "Data fetched successfully",
+            commonEnterpriseData: commonEnterpriseDataWithDoc,
+            commonStateData: commonStateDataWithDoc,
+            commonLocationData: commonLocationData,
+            AllEntStateLocationGateway
+        }
+    );
+}
+
 
 // SET PASSWORD VIEW
 exports.SetNewPasswordView = async (req, res) => {

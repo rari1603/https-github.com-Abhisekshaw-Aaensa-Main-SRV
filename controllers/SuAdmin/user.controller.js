@@ -150,7 +150,7 @@ exports.addSystemInt = async (req, res) => {
                 role: "SystemInt",
                 type: "System-integrator",
                 permission: ["Read"],
-                enterpriseUserId: null,
+                enterpriseUserId: SyetmInit._id,
                 isDelete: false
             });
 

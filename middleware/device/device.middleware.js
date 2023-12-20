@@ -52,7 +52,7 @@ exports.CheckEntStateLocation = async (req, res, next) => {
         for (const location of allLocations) {
             const dbLocationName = location.LocationName.toLowerCase();
             if (lowerCaseLocationName === dbLocationName) {
-                return res.status(401).json({ success: false, message: "Location already added under this state." });
+                return res.status(401).json({ success: false, message: "Same location name already added under this state.", key: "LocationName" });
             }
         }
 

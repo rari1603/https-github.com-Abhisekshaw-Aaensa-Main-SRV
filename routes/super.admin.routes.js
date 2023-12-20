@@ -22,6 +22,8 @@ router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.Ent
 router.get('/get/enterprise/state/list', [verifyToken], EnterpriseController.EnterpriseStateList);
 // EnterpriseStateLocationList
 router.get('/get/enterprise/state/location/list', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
+// EnterpriseStateLocationGatewayList
+router.get('/get/enterprise/state/location/gateway/list', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayList);
 
 
 // add enterprise admin

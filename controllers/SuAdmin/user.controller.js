@@ -154,6 +154,7 @@ exports.addSystemInt = async (req, res) => {
                 systemIntegratorId: savedSyetmInit._id,
                 isDelete: false
             });
+            
 
             const SavedSyetmInit = await newSyetmInit.save();
 

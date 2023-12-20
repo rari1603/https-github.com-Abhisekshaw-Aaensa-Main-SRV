@@ -44,7 +44,9 @@ exports.AddGateway = async (req, res) => {
             GatewayID,
             NetworkSSID,
             NetworkPassword,
-            EnterpriseUserID
+            EnterpriseUserID,
+            isDelete: false,
+            isConfigure: false,
         });
 
         await NewGateway.save();
@@ -64,7 +66,9 @@ exports.AddOptimizer = async (req, res) => {
         const NewOptimizer = new OptimizerModel({
             GatewayId: GATEWAY._id, // primary _id of that Gateway
             OptimizerID,
-            OptimizerName
+            OptimizerName,
+            Switch: false,
+            isDelete: false,
         });
 
         await NewOptimizer.save();

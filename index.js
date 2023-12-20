@@ -4,6 +4,7 @@ const Auth = require('./routes/auth.routes');
 const SuAdmin = require('./routes/super.admin.routes');
 const Enterprise = require('./routes/enterprise.routes');
 const SystemInt = require('./routes/system.int.routes');
+const Hardware = require('./routes/hardware.routes');
 
 const v1Router = require('./routes/v1.routes');
 const entRouter = require('./routes/enterprise.routes');
@@ -51,6 +52,7 @@ app.use('/api/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
 app.use('/api/system', SystemInt);
 
+app.use('/api/hardware', Hardware);
 
 
 app.use('/api/fake', v1Router);

@@ -1,0 +1,22 @@
+{
+    "gatewayID": "GTW132123654",
+    "config": {
+        "flag": true,
+        "ssid": "One Net 5G",
+        "password": "ans4563@#!123"
+    },
+    "optimizer": [
+        {
+            "optimizer_id": "OPT0123154",
+            "is_bypass": false
+        },
+        {
+            "optimizer_id": "OPT0123200",
+            "is_bypass": true
+        },
+        {
+            "optimizer_id": "OPT0123250",
+            "is_bypass": true
+        }
+    ]
+}

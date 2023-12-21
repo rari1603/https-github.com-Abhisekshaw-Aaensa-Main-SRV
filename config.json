@@ -1,22 +1,25 @@
 {
-    "gatewayID": "GTW132123654",
+    "gatewayID": "MDOP9825671203",
     "config": {
-        "flag": true,
-        "ssid": "One Net 5G",
-        "password": "ans4563@#!123"
+        "flag": true
     },
     "optimizer": [
         {
-            "optimizer_id": "OPT0123154",
-            "is_bypass": false
-        },
-        {
-            "optimizer_id": "OPT0123200",
-            "is_bypass": true
-        },
-        {
-            "optimizer_id": "OPT0123250",
-            "is_bypass": true
+            "optimizer_id": "OPTID22122024",
+            "is_bypass": false,
+            "settings": {
+                "FIRST POWERON OBSERVATION": "",
+                "MAX COMPRESSOR TURNOFF COUNT PER HOUR": "",
+                "OPTIMIZATION TIME": "",
+                "STEADY STATEROOM TEMPERATURE TOLERANCE": "",
+                "STEADY STATECOIL TEMPERATURE TOLERANCE": "",
+                "STEADY STATE SAMPLING DURATION": "",
+                "MIN AIR CONDITIONER OFF DURATION": "",
+                "AIR CONDITIONER OFF DECLARATION MINPERIOD": "",
+                "MAX OBSERVATION TIME": "",
+                "THERMO STATE TIME INCREASE": "",
+                "THERMO STATE INTERVAL": ""
+            }
         }
     ]
 }

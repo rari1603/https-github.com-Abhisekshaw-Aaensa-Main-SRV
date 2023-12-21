@@ -11,87 +11,88 @@ const OptimizerModel = require('../../models/optimizer.model');
 
 // EnterpriseList
 exports.EnterpriseListData = async (req, res) => {
-    // return console.log(req.params);
     try {
         const AllEnt = await EnterpriseAdminModel.find({});
+
         if (req.params.flag === 'name') {
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
         }
-        if (req.params.flag === 'data') {
 
+        if (req.params.flag === 'data') {
             const getAllEnterpriseState = async (entId) => {
-                return await EnterpriseStateModel.find({ Enterprise_ID: entId })
-                    .populate({
-                        path: 'State_ID'
-                    })
-                    .lean();
+                const data = await EnterpriseStateModel.find({ Enterprise_ID: entId }).populate({ path: 'State_ID' }).lean();
+                // console.log("State=>", data);
+                return data;
             };
 
-            const getAllEnterpriseStateLocation = async (entId, stateID) => {
-                return await EnterpriseStateLocationModel.find({ Enterprise_ID: entId, State_ID: stateID }).exec();
+            const getAllEnterpriseStateLocation = async (entId) => {
+                const data = await EnterpriseStateLocationModel.find({ Enterprise_ID: entId }).exec();
+                // console.log("Location=>", data);
+                return data;
             };
 
             const getAllEnterpriseStateLocationGateway = async (entInfoID) => {
-                return await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
+                const data = await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
+                // console.log("Gateway=>", data);
+                return data;
             };
 
             const getAllEnterpriseStateLocationGatewayOptimizer = async (gatewayID) => {
-                return await OptimizerModel.findOne({ GatewayID: gatewayID }).exec();
+                const data = await OptimizerModel.findOne({ GatewayID: gatewayID }).exec();
+                // console.log(data);
+                return data;
             };
 
-            // Map through the array and add the fields to each object
             const updatedAllEnt = await Promise.all(AllEnt.map(async (ent) => {
                 const AllEnterpriseState = await getAllEnterpriseState(ent._id);
-                const LocationData = await Promise.all(AllEnterpriseState.map(async (state) => {
-                    const Location = await getAllEnterpriseStateLocation(ent._id, state.State_ID._id);
 
-                    const GatewayData = await Promise.all(Location.map(async (location) => {
-                        const Gateway = await getAllEnterpriseStateLocationGateway(location._id);
+                const LocationData = await getAllEnterpriseStateLocation(ent._id);
+                // const LocationData = await Promise.all(AllEnterpriseState.map(async (state) => {
 
-                        const OptimizerData = await Promise.all(Gateway.map(async (gateway) => {
-                            return await getAllEnterpriseStateLocationGatewayOptimizer(gateway._id);
-                        }));
+                //     const GatewayData = await Promise.all(Location.map(async (location) => {
+                //         const Gateway = await getAllEnterpriseStateLocationGateway(location._id);
 
-                        // Filter out null values before returning the object
-                        const filteredGatewayData = {
-                            Gateway: Gateway.filter((g) => g !== null),
-                            OptimizerData: OptimizerData.filter((opt) => opt !== null),
-                        };
+                //         const OptimizerData = await Promise.all(Gateway.map(async (gateway) => {
+                //             return await getAllEnterpriseStateLocationGatewayOptimizer(gateway._id);
+                //         }));
 
-                        return filteredGatewayData;
-                    }));
+                //         const filteredGatewayData = {
+                //             Gateway: Gateway.filter((g) => g !== null),
+                //             OptimizerData: OptimizerData.filter((opt) => opt !== null),
+                //         };
 
-                    return { Location, GatewayData };
-                }));
+                //         return filteredGatewayData;
+                //     }));
 
-                const TotalGateways = LocationData.reduce((acc, curr) => acc + curr.GatewayData.reduce((count, location) => count + location.Gateway.length, 0), 0);
+                //     return { Location, GatewayData };
+                // }));
 
-                const TotalOptimizers = LocationData.reduce((acc, curr) =>
-                    acc + curr.GatewayData.reduce((count, location) =>
-                        count + location.OptimizerData.reduce((optCount, optimizer) =>
-                            optCount + optimizer.length, 0), 0), 0);
+                console.log("LocationData=>", LocationData);
+
+                // const TotalGateways = LocationData.reduce((acc, curr) => acc + curr.GatewayData.reduce((count, location) => count + location.Gateway.length, 0), 0);
+
+                // const TotalOptimizers = LocationData.reduce((acc, curr) =>
+                //     acc + curr.GatewayData.reduce((count, location) =>
+                //         count + location.OptimizerData.reduce((optCount, optimizer) =>
+                //             optCount + optimizer.length, 0), 0), 0);
 
                 const data = {
                     location: LocationData.length,
-                    gateway: TotalGateways,
-                    optimizer: TotalOptimizers,
+                    gateway: 0,
+                    optimizer: 0,
                     power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
                 };
 
-                return {
-                    ...ent._doc,
-                    data,
-                };
+                return { ...ent._doc, data };
             }));
 
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
-
         }
     } catch (err) {
         console.log(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
-}
+};
 
 // EnterpriseStateList
 exports.EnterpriseStateList = async (req, res) => {

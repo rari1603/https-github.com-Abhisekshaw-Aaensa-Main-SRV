@@ -32,23 +32,32 @@ exports.EnterpriseListData = async (req, res) => {
             };
 
             const getAllEnterpriseOptimizer = async (gatewayID) => {
-                const data = await OptimizerModel.findOne({ GatewayID: gatewayID }).exec();
-                // console.log(data);
+                const data = await OptimizerModel.find({ GatewayId: gatewayID }).exec();
+                // console.log("Optimizer=>", data);
                 return data;
             };
 
             const updatedAllEnt = await Promise.all(AllEnt.map(async (ent) => {
+                // Getting all the locations
                 const LocationData = await getAllEnterpriseLocation(ent._id);
+
+                // Getting all the gateways
                 const GatewayData = await Promise.all(LocationData.map(async (location) => {
                     return await getAllEnterpriseGateway(location._id);
                 }));
-
                 const FlattenedGatewayData = GatewayData.flat(); // Use flat to flatten the array
+
+                // Getting all the optimizers
+                const OptimizerData = await Promise.all(FlattenedGatewayData.map(async (gateway) => {
+                    return await getAllEnterpriseOptimizer(gateway._id);
+                }));
+                const FlattenedOptimizerData = OptimizerData.flat();
+
 
                 const data = {
                     location: LocationData.length,
                     gateway: FlattenedGatewayData.length,
-                    optimizer: 0,
+                    optimizer: FlattenedOptimizerData.length,
                     power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
                 };
 

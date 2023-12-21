@@ -19,66 +19,35 @@ exports.EnterpriseListData = async (req, res) => {
         }
 
         if (req.params.flag === 'data') {
-            const getAllEnterpriseState = async (entId) => {
-                const data = await EnterpriseStateModel.find({ Enterprise_ID: entId }).populate({ path: 'State_ID' }).lean();
-                // console.log("State=>", data);
-                return data;
-            };
-
-            const getAllEnterpriseStateLocation = async (entId) => {
+            const getAllEnterpriseLocation = async (entId) => {
                 const data = await EnterpriseStateLocationModel.find({ Enterprise_ID: entId }).exec();
                 // console.log("Location=>", data);
                 return data;
             };
 
-            const getAllEnterpriseStateLocationGateway = async (entInfoID) => {
+            const getAllEnterpriseGateway = async (entInfoID) => {
                 const data = await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
                 // console.log("Gateway=>", data);
                 return data;
             };
 
-            const getAllEnterpriseStateLocationGatewayOptimizer = async (gatewayID) => {
+            const getAllEnterpriseOptimizer = async (gatewayID) => {
                 const data = await OptimizerModel.findOne({ GatewayID: gatewayID }).exec();
                 // console.log(data);
                 return data;
             };
 
             const updatedAllEnt = await Promise.all(AllEnt.map(async (ent) => {
-                const AllEnterpriseState = await getAllEnterpriseState(ent._id);
+                const LocationData = await getAllEnterpriseLocation(ent._id);
+                const GatewayData = await Promise.all(LocationData.map(async (location) => {
+                    return await getAllEnterpriseGateway(location._id);
+                }));
 
-                const LocationData = await getAllEnterpriseStateLocation(ent._id);
-                // const LocationData = await Promise.all(AllEnterpriseState.map(async (state) => {
-
-                //     const GatewayData = await Promise.all(Location.map(async (location) => {
-                //         const Gateway = await getAllEnterpriseStateLocationGateway(location._id);
-
-                //         const OptimizerData = await Promise.all(Gateway.map(async (gateway) => {
-                //             return await getAllEnterpriseStateLocationGatewayOptimizer(gateway._id);
-                //         }));
-
-                //         const filteredGatewayData = {
-                //             Gateway: Gateway.filter((g) => g !== null),
-                //             OptimizerData: OptimizerData.filter((opt) => opt !== null),
-                //         };
-
-                //         return filteredGatewayData;
-                //     }));
-
-                //     return { Location, GatewayData };
-                // }));
-
-                console.log("LocationData=>", LocationData);
-
-                // const TotalGateways = LocationData.reduce((acc, curr) => acc + curr.GatewayData.reduce((count, location) => count + location.Gateway.length, 0), 0);
-
-                // const TotalOptimizers = LocationData.reduce((acc, curr) =>
-                //     acc + curr.GatewayData.reduce((count, location) =>
-                //         count + location.OptimizerData.reduce((optCount, optimizer) =>
-                //             optCount + optimizer.length, 0), 0), 0);
+                const FlattenedGatewayData = GatewayData.flat(); // Use flat to flatten the array
 
                 const data = {
                     location: LocationData.length,
-                    gateway: 0,
+                    gateway: FlattenedGatewayData.length,
                     optimizer: 0,
                     power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
                 };

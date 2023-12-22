@@ -68,6 +68,8 @@ exports.CheckEntStateLocation = async (req, res, next) => {
 // Add gateway empty field check
 exports.CheckGateway = async (req, res, next) => {
     const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
+    const { gateway_id } = req.params;
+
     try {
 
         if (!EnterpriseInfo) {
@@ -95,9 +97,11 @@ exports.CheckGateway = async (req, res, next) => {
 
         }
 
-        const ExsistingGateway = await GatewayModel.findOne({ GatewayID });
-        if (ExsistingGateway) {
-            return res.status(409).json({ success: false, message: 'A gateway with the provided ID already exists. Please choose a different ID.', key: 'GatewayID' });
+        if (!gateway_id) {
+            const ExsistingGateway = await GatewayModel.findOne({ GatewayID });
+            if (ExsistingGateway) {
+                return res.status(409).json({ success: false, message: 'A gateway with the provided ID already exists. Please choose a different ID.', key: 'GatewayID' });
+            }
         }
 
         next();

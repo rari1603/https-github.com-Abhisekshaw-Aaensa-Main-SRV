@@ -6,6 +6,7 @@ exports.Config = async (req, res) => {
     const { gateway_id } = req.params;
 
     const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+
     // const GatewayUniqueID = Gateway._id;
     const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
     const optObject = Optimizers.map(element => ({
@@ -26,21 +27,35 @@ exports.Config = async (req, res) => {
         }
     }));
 
+    var property;
+
+    if (Gateway.isConfigure) {
+        property = {
+            "flag": Gateway.isConfigure,
+            "ssid": Gateway.NetworkSSID,
+            "password": Gateway.NetworkPassword
+        };
+    } else {
+        property = {
+            "flag": Gateway.isConfigure,
+            "ssid": null,
+            "password": null
+        };
+    }
     const NewObj = {
         "gatewayID": Gateway.GatewayID,
         "config": {
-            "flag": Gateway.isConfigure,
-            // "ssid": Gateway.NetworkSSID,
-            // "password": Gateway.NetworkPassword
+            ...property
         },
         "optimizer": optObject
 
     };
-    res.send(NewObj);
-    return;
+    return res.send(NewObj);
 
 }
 
+
+// not in use
 exports.Property = async (req, res) => {
     const { gateway_id } = req.params;
 

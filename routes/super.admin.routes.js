@@ -23,9 +23,9 @@ router.get('/get/enterprise/state/list/:enterprise_id', [verifyToken], Enterpris
 // EnterpriseStateLocationList
 router.get('/get/enterprise/state/location/list/:enterprise_id/:state_id', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
 // EnterpriseStateLocationGatewayList
-router.get('/get/enterprise/state/location/gateway/list', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayList);
+router.get('/get/enterprise/state/location/gateway/list/:enterpriseInfo_id', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayList);
 // EnterpriseStateLocationGatewayOptimizerList
-router.get('/get/enterprise/state/location/gateway/optimizer/list', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayOptimizerList);
+router.get('/get/enterprise/state/location/gateway/optimizer/list/:gateway_id', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayOptimizerList);
 
 
 // add enterprise admin

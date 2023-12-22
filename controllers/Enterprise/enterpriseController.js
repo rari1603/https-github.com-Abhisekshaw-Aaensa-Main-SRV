@@ -240,7 +240,7 @@ exports.EnterpriseStateLocationList = async (req, res) => {
 
 // EnterpriseStateLocationGatewayList
 exports.EnterpriseStateLocationGatewayList = async (req, res) => {
-    const { enterpriseInfo_id } = req.body;
+    const { enterpriseInfo_id } = req.params;
 
     try {
         const AllEnterpriseStateLocationGateway = await GatewayModel.find({ EnterpriseInfo: enterpriseInfo_id }).populate({
@@ -322,7 +322,8 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
 
 // EnterpriseStateLocationGatewayOptimizerList
 exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
-    const { gateway_id } = req.body;
+    const { gateway_id } = req.params;
+    
     try {
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
         const AllEnterpriseStateLocationGatewayOptimizer = await OptimizerModel.find({ GatewayId: Gateway._id }).populate({

@@ -74,7 +74,7 @@ exports.EnterpriseListData = async (req, res) => {
 
 // EnterpriseStateList
 exports.EnterpriseStateList = async (req, res) => {
-    const { enterprise_id } = req.body;
+    const { enterprise_id } = req.params;
 
     try {
         const AllEnterpriseState = await EnterpriseStateModel.find({ Enterprise_ID: enterprise_id }).populate({
@@ -161,7 +161,7 @@ exports.EnterpriseStateList = async (req, res) => {
 
 // EnterpriseStateLocationList
 exports.EnterpriseStateLocationList = async (req, res) => {
-    const { enterprise_id, state_id } = req.body;
+    const { enterprise_id, state_id } = req.params;
 
     try {
         const AllEnterpriseStateLocation = await EnterpriseStateLocationModel.find({ Enterprise_ID: enterprise_id, State_ID: state_id }).populate({

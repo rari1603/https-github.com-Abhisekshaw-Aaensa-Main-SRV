@@ -19,9 +19,9 @@ router.get('/get/all/data', [verifyToken, routeAccessMiddleware()], ReportContro
 router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.EnterpriseListData); // flag should be "data"/"name"
 
 // enterprise state list
-router.get('/get/enterprise/state/list', [verifyToken], EnterpriseController.EnterpriseStateList);
+router.get('/get/enterprise/state/list/:enterprise_id', [verifyToken], EnterpriseController.EnterpriseStateList);
 // EnterpriseStateLocationList
-router.get('/get/enterprise/state/location/list', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
+router.get('/get/enterprise/state/location/list/:enterprise_id/:state_id', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
 // EnterpriseStateLocationGatewayList
 router.get('/get/enterprise/state/location/gateway/list', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayList);
 // EnterpriseStateLocationGatewayOptimizerList

@@ -74,7 +74,7 @@ exports.EnterpriseListData = async (req, res) => {
 
 // EnterpriseStateList
 exports.EnterpriseStateList = async (req, res) => {
-    const { enterprise_id } = req.body;
+    const { enterprise_id } = req.params;
 
     try {
         const AllEnterpriseState = await EnterpriseStateModel.find({ Enterprise_ID: enterprise_id }).populate({
@@ -92,20 +92,55 @@ exports.EnterpriseStateList = async (req, res) => {
         const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseState[0].Enterprise_ID;
         const commonEnterpriseDataWithDoc = { ...commonEnterpriseData._doc };
 
+        const getAllEnterpriseLocation = async (entId, stateId) => {
+            const data = await EnterpriseStateLocationModel.find({ Enterprise_ID: entId, State_ID: stateId }).exec();
+            // console.log("Location=>", data);
+            return data;
+        };
+
+        const getAllEnterpriseGateway = async (entInfoID) => {
+            const data = await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
+            // console.log("Gateway=>", data);
+            return data;
+        };
+
+        const getAllEnterpriseOptimizer = async (gatewayID) => {
+            const data = await OptimizerModel.find({ GatewayId: gatewayID }).exec();
+            // console.log("Optimizer=>", data);
+            return data;
+        };
+
         // Map through the array and add the fields to each object
-        const AllEntState = AllEnterpriseState.map(ent => ({
-            ...ent._doc,
-            data: {
-                location: Math.round(Math.random() * (3 - 1) + 1),
-                gateway: Math.round(Math.random() * (5 - 1) + 1),
-                optimizer: Math.round(Math.random() * (5 - 1) + 1),
+        const AllEntState = await Promise.all(AllEnterpriseState.map(async (item) => {
+            // Getting all the locations
+            const LocationData = await getAllEnterpriseLocation(item.Enterprise_ID._id, item.State_ID._id);
+
+            // Getting all the gateways
+            const GatewayData = await Promise.all(LocationData.map(async (location) => {
+                return await getAllEnterpriseGateway(location._id);
+            }));
+            const FlattenedGatewayData = GatewayData.flat(); // Use flat to flatten the array
+
+            // Getting all the optimizers
+            const OptimizerData = await Promise.all(FlattenedGatewayData.map(async (gateway) => {
+                return await getAllEnterpriseOptimizer(gateway._id);
+            }));
+            const FlattenedOptimizerData = OptimizerData.flat();
+
+
+            const data = {
+                location: LocationData.length,
+                gateway: FlattenedGatewayData.length,
+                optimizer: FlattenedOptimizerData.length,
                 power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
-            },
+            };
+
+            return { ...item._doc, data };
         }));
 
         // Remove "Enterprise_ID" field from AllEntState
-        AllEntState.forEach(ent => {
-            delete ent.Enterprise_ID;
+        AllEntState.forEach(state => {
+            delete state.Enterprise_ID;
         });
 
         // console.log(AllEntState);
@@ -126,7 +161,7 @@ exports.EnterpriseStateList = async (req, res) => {
 
 // EnterpriseStateLocationList
 exports.EnterpriseStateLocationList = async (req, res) => {
-    const { enterprise_id, state_id } = req.body;
+    const { enterprise_id, state_id } = req.params;
 
     try {
         const AllEnterpriseStateLocation = await EnterpriseStateLocationModel.find({ Enterprise_ID: enterprise_id, State_ID: state_id }).populate({
@@ -147,14 +182,37 @@ exports.EnterpriseStateLocationList = async (req, res) => {
         const { State_ID, ...commonStateData } = AllEnterpriseStateLocation[0].State_ID;
         const commonStateDataWithDoc = { ...commonStateData._doc };
 
+        const getAllEnterpriseGateway = async (entInfoID) => {
+            const data = await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
+            // console.log("Gateway=>", data);
+            return data;
+        };
+
+        const getAllEnterpriseOptimizer = async (gatewayID) => {
+            const data = await OptimizerModel.find({ GatewayId: gatewayID }).exec();
+            // console.log("Optimizer=>", data);
+            return data;
+        };
+
         // Map through the array and add the fields to each object
-        const AllEntStateLocation = AllEnterpriseStateLocation.map(ent => ({
-            ...ent._doc,
-            data: {
-                gateway: Math.round(Math.random() * (5 - 1) + 1),
-                optimizer: Math.round(Math.random() * (5 - 1) + 1),
+        const AllEntStateLocation = await Promise.all(AllEnterpriseStateLocation.map(async (location) => {
+            // Getting all the gateways
+            const GatewayData = await getAllEnterpriseGateway(location._id);
+            const FlattenedGatewayData = GatewayData.flat(); // Use flat to flatten the array
+
+            // Getting all the optimizers
+            const OptimizerData = await Promise.all(FlattenedGatewayData.map(async (gateway) => {
+                return await getAllEnterpriseOptimizer(gateway._id);
+            }));
+            const FlattenedOptimizerData = OptimizerData.flat();
+
+            const data = {
+                gateway: FlattenedGatewayData.length,
+                optimizer: FlattenedOptimizerData.length,
                 power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
-            },
+            };
+
+            return { ...location._doc, data };
         }));
 
         // Remove "Enterprise_ID" & "State_ID" fields from AllEntStateLocation
@@ -219,13 +277,24 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
             return commonLocationDataDoc;
         };
 
+        const getAllEnterpriseOptimizer = async (gatewayID) => {
+            const data = await OptimizerModel.find({ GatewayId: gatewayID }).exec();
+            // console.log("Optimizer=>", data);
+            return data;
+        };
+
         // Map through the array and add the fields to each object
-        const AllEntStateLocationGateway = AllEnterpriseStateLocationGateway.map(ent => ({
-            ...ent._doc,
-            data: {
-                optimizer: Math.round(Math.random() * (5 - 1) + 1),
+        const AllEntStateLocationGateway = await Promise.all(AllEnterpriseStateLocationGateway.map(async (gateway) => {
+            // Getting all the optimizers
+            const OptimizerData = await getAllEnterpriseOptimizer(gateway._id);
+            const FlattenedOptimizerData = OptimizerData.flat();
+
+            const data = {
+                optimizer: FlattenedOptimizerData.length,
                 power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
-            },
+            };
+
+            return { ...gateway._doc, data };
         }));
 
         // Remove "EnterpriseInfo" field from AllEntStateLocationGateway

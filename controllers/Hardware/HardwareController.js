@@ -70,13 +70,18 @@ exports.Store = async (req, res) => {
             throw new Error(`Optimizer with ID ${req.body.OptimizerID} not found`);
         }
 
+        if (!GET_Optimizer.GatewayId.equals(GET_Gateway._id)) {
+            throw new Error(`The Optimizer with ID ${req.body.OptimizerID} is not associated with the Gateway with ID ${req.body.GatewayID}. Please check with the system administrator.`);
+        }
+
+
         let GT_ID = GET_Gateway._id;
         let OPT_ID = GET_Optimizer._id;
 
-        data.GatewayID = GT_ID;
-        data.OptimizerID = OPT_ID;
+        // data.GatewayID = GT_ID;
+        // data.OptimizerID = OPT_ID;
         // const DataLog = await DataLogModel(data).save();
-        // res.status(404).send({ success: true, message: "" });
+        // res.status(200).send({ success: true, message: "" });
 
         const DataLog = await DataLogModel({ ...data, GatewayID: GT_ID, OptimizerID: OPT_ID }).save();
 

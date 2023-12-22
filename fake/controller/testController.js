@@ -61,6 +61,7 @@ exports.processArray = async (req, res) => {
             "GatewayId": "6579818f943b8692984fc0d4"
         }
     ];
+    
     let dataLogEntry;
     for (let index = 0; index < array.length; index++) {
         const element = array[index];

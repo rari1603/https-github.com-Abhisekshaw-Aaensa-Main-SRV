@@ -1,3 +1,4 @@
+const DataLogModel = require('../../models/dataLog.model');
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 
@@ -51,9 +52,42 @@ exports.Config = async (req, res) => {
 
     };
     return res.send(NewObj);
-
 }
 
+
+exports.Store = async (req, res) => {
+    const data = req.body;
+
+    try {
+        const GET_Gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
+        const GET_Optimizer = await OptimizerModel.findOne({ OptimizerID: req.body.OptimizerID });
+
+        if (!GET_Gateway) {
+            throw new Error(`Gateway with ID ${req.body.GatewayID} not found`);
+        }
+
+        if (!GET_Optimizer) {
+            throw new Error(`Optimizer with ID ${req.body.OptimizerID} not found`);
+        }
+
+        let GT_ID = GET_Gateway._id;
+        let OPT_ID = GET_Optimizer._id;
+
+        data.GatewayID = GT_ID;
+        data.OptimizerID = OPT_ID;
+        // const DataLog = await DataLogModel(data).save();
+        // res.status(404).send({ success: true, message: "" });
+
+        const DataLog = await DataLogModel({ ...data, GatewayID: GT_ID, OptimizerID: OPT_ID }).save();
+
+        res.status(200).send({ success: true, message: "DataLog created successfully", DataLog });
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(404).send({ success: false, message: error.message });
+    }
+
+}
 
 // not in use
 exports.Property = async (req, res) => {

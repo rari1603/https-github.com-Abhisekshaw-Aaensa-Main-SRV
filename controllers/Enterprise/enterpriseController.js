@@ -411,9 +411,10 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 exports.OptimizerDetails = async (req, res) => {
     const { optimizer_id } = req.params;
     const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizer_id });
+    const Gateway = await GatewayModel.findOne({ _id: Optimizer.GatewayId });
     const STATIC_DATA = {
-        optimizerID: Optimizer.OptimizerID,
-        gatewayID: Optimizer.GatewayId,
+        optimizer: Optimizer,
+        gateway: Gateway,
         optimizer_mode: "NON-OPTIMIZATION",
         outside_temp: "29",
         outside_humidity: "20",

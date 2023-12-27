@@ -1,4 +1,4 @@
-const DataLog = require('../../models/dataLog.model');
+const DataLog = require('../../models/GatewayLog.model');
 
 
 exports.AllDataLog = async (req, res) => {

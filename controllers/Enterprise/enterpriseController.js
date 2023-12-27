@@ -326,6 +326,9 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
     
     try {
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        if (!Gateway) {
+            return res.status(401).json({ success: false, message: "Gateway ID not found" });
+        }
         const AllEnterpriseStateLocationGatewayOptimizer = await OptimizerModel.find({ GatewayId: Gateway._id }).populate({
             path: 'GatewayId',
             populate:

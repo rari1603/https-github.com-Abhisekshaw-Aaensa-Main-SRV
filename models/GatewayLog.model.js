@@ -1,22 +1,13 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
 
-const DataLogSchema = new mongoose.Schema({
+const GatewayLogSchema = new mongoose.Schema({
 
-    Time: { type: Date, default: Date.now },
     GatewayID: {
         type: Schema.Types.ObjectId,
         ref: "Gateway",
         required: true
     },
-    OptimizerID: {
-        type: Schema.Types.ObjectId,
-        ref: "Optimizer",
-        required: true
-    },
-    OptimizerMode: { type: String },
-    RoomTemperature: { type: Number },
-    CoilTemperature: { type: Number },
     Phases: {
         Ph1: {
             Voltage: { type: Number },
@@ -40,11 +31,9 @@ const DataLogSchema = new mongoose.Schema({
             ApparentPower: { type: Number },
         },
     },
-    Humidity: { type: Number },
     KVAH: { type: Number },
     KWH: { type: Number },
     PF: { type: Number },
-    ByPass: { type: Boolean, default: false },
     isDelete: {
         type: Boolean,
         default: false
@@ -52,9 +41,10 @@ const DataLogSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-const DataLogModel = mongoose.model('DataLog', DataLogSchema);
+// const DataLogModel = mongoose.model('DataLog', DataLogSchema);
+const GatewayLogModel = mongoose.model('GatewayLog', GatewayLogSchema);
 
-module.exports = DataLogModel;
+module.exports = GatewayLogModel;
 
 
 // OK

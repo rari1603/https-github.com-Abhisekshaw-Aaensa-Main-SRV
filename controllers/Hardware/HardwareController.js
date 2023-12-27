@@ -1,4 +1,5 @@
-const DataLogModel = require('../../models/dataLog.model');
+const GatewayLogModel = require('../../models/GatewayLog.model');
+const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 
@@ -57,42 +58,57 @@ exports.Config = async (req, res) => {
 
 exports.Store = async (req, res) => {
     const data = req.body;
+    const optimizers = req.body.OptimizerDetails;
 
     try {
-        const GET_Gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
-        const GET_Optimizer = await OptimizerModel.findOne({ OptimizerID: req.body.OptimizerID });
+        const gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
 
-        if (!GET_Gateway) {
+        if (!gateway) {
             throw new Error(`Gateway with ID ${req.body.GatewayID} not found`);
         }
 
-        if (!GET_Optimizer) {
-            throw new Error(`Optimizer with ID ${req.body.OptimizerID} not found`);
-        }
+        const gatewayId = gateway._id;
+        const { Phases, KVAH, KWH, PF } = data;
 
-        if (!GET_Optimizer.GatewayId.equals(GET_Gateway._id)) {
-            throw new Error(`The Optimizer with ID ${req.body.OptimizerID} is not associated with the Gateway with ID ${req.body.GatewayID}. Please check with the system administrator.`);
-        }
+        const gatewayLog = await GatewayLogModel({
+            GatewayID: gatewayId,
+            Phases,
+            KVAH,
+            KWH,
+            PF
+        }).save();
 
+        const optimizerLogPromises = optimizers.map(async element => {
+            const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
+            // if (!optimizer) {
+            //     console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
+            // }
 
-        let GT_ID = GET_Gateway._id;
-        let OPT_ID = GET_Optimizer._id;
+            // if (!optimizer.GatewayId.equals(gateway._id)) {
+            //     console.log(`The Optimizer with ID ${req.body.OptimizerID} is not associated with the Gateway with ID ${req.body.GatewayID}. Please verify with the system administrator.`);
+            // }
+            return OptimizerLogModel({
+                OptimizerID: optimizer._id,
+                GatewayID: gatewayId,
+                GatewayLogID: gatewayLog._id,
+                TimeStamp: element.TimeStamp,
+                RoomTemperature: element.RoomTemperature,
+                Humidity: element.Humidity,
+                CoilTemperature: element.CoilTemperature,
+                OptimizerMode: element.OptimizerMode,
+            }).save();
+        });
 
-        // data.GatewayID = GT_ID;
-        // data.OptimizerID = OPT_ID;
-        // const DataLog = await DataLogModel(data).save();
-        // res.status(200).send({ success: true, message: "" });
+        await Promise.all(optimizerLogPromises);
 
-        const DataLog = await DataLogModel({ ...data, GatewayID: GT_ID, OptimizerID: OPT_ID }).save();
-
-        res.status(200).send({ success: true, message: "DataLog created successfully", DataLog });
+        res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
         console.error(error.message);
         res.status(404).send({ success: false, message: error.message });
     }
+};
 
-}
 
 // not in use
 exports.Property = async (req, res) => {

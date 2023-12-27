@@ -1,7 +1,7 @@
 const { faker } = require('@faker-js/faker');
 const Gateway = require('../../models/gateway.model');
 const Optimizer = require('../../models/optimizer.model');
-const DataLogModel = require('../../models/dataLog.model');
+const DataLogModel = require('../../models/GatewayLog.model');
 const UserModel = require('../../models/user.model');
 const SystemIntModel = require('../../models/systemInit.model');
 const EnterpriseModel = require('../../models/enterprise.model');

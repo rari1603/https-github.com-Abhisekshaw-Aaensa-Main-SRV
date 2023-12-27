@@ -323,7 +323,7 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
 // EnterpriseStateLocationGatewayOptimizerList
 exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
     const { gateway_id } = req.params;
-    
+
     try {
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
         if (!Gateway) {
@@ -405,6 +405,51 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         console.log(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
+}
+
+// OptimizerDetails
+exports.OptimizerDetails = async (req, res) => {
+    const { optimizer_id } = req.params;
+    const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizer_id });
+    const STATIC_DATA = {
+        optimizerID: Optimizer.OptimizerID,
+        gatewayID: Optimizer.GatewayId,
+        optimizer_mode: "NON-OPTIMIZATION",
+        outside_temp: "29",
+        outside_humidity: "20",
+        room_temp: "23.8",
+        coil_temp: "22.3",
+        humidity_percentage: "65",
+        unit: {
+            temperature: "C",
+            voltage: "V",
+            current: "A",
+            active_power: "kW",
+            apartment_power: "kVA",
+        },
+        PH1: {
+            voltage: "253.974503",
+            current: "6.210000",
+            active_power: "-0.995000",
+            power_factor: "1185.000000",
+            apartment_power: "1579.000000",
+        },
+        PH2: {
+            voltage: "254.018997",
+            current: "5.880000",
+            active_power: "0.961000",
+            power_factor: "1341.000000",
+            apartment_power: "1496.000000",
+        },
+        PH3: {
+            voltage: "254.386505",
+            current: "9.950001",
+            active_power: "0.999000",
+            power_factor: "1591.000000",
+            apartment_power: "1075.000000",
+        },
+    }
+    return res.status(201).json({ success: true, message: "Data fetched successfully", data: STATIC_DATA });
 }
 
 // SET PASSWORD VIEW

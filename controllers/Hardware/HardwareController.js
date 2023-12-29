@@ -62,7 +62,7 @@ exports.Store = async (req, res) => {
 
     try {
         const gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
-
+        // return console.log(gateway);
         if (!gateway) {
             throw new Error(`Gateway with ID ${req.body.GatewayID} not found`);
         }
@@ -80,23 +80,26 @@ exports.Store = async (req, res) => {
 
         const optimizerLogPromises = optimizers.map(async element => {
             const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
-            // if (!optimizer) {
-            //     console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
-            // }
+            // return console.log(optimizer);
+            if (!optimizer) {
+                console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
+            }
 
             // if (!optimizer.GatewayId.equals(gateway._id)) {
             //     console.log(`The Optimizer with ID ${req.body.OptimizerID} is not associated with the Gateway with ID ${req.body.GatewayID}. Please verify with the system administrator.`);
             // }
-            return OptimizerLogModel({
-                OptimizerID: optimizer._id,
-                GatewayID: gatewayId,
-                GatewayLogID: gatewayLog._id,
-                TimeStamp: element.TimeStamp,
-                RoomTemperature: element.RoomTemperature,
-                Humidity: element.Humidity,
-                CoilTemperature: element.CoilTemperature,
-                OptimizerMode: element.OptimizerMode,
-            }).save();
+            if (optimizer) {
+                return OptimizerLogModel({
+                    OptimizerID: optimizer._id,
+                    GatewayID: gatewayId,
+                    GatewayLogID: gatewayLog._id,
+                    TimeStamp: element.TimeStamp,
+                    RoomTemperature: element.RoomTemperature,
+                    Humidity: element.Humidity,
+                    CoilTemperature: element.CoilTemperature,
+                    OptimizerMode: element.OptimizerMode,
+                }).save();
+            }
         });
 
         await Promise.all(optimizerLogPromises);
@@ -104,7 +107,7 @@ exports.Store = async (req, res) => {
         res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
-        console.error(error.message);
+        console.error(error);
         res.status(404).send({ success: false, message: error.message });
     }
 };

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
 
-const GatewayLogSchema = new mongoose.Schema({
+const DataLogSchema = new mongoose.Schema({
+// const GatewayLogSchema = new mongoose.Schema({
 
     Time: { type: Date, default: Date.now },
     GatewayID: {
@@ -52,10 +53,11 @@ const GatewayLogSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// const DataLogModel = mongoose.model('DataLog', DataLogSchema);
-const GatewayLogModel = mongoose.model('GatewayLog', GatewayLogSchema);
+const DataLogModel = mongoose.model('DataLog', DataLogSchema);
+// const GatewayLogModel = mongoose.model('GatewayLog', GatewayLogSchema);
 
-module.exports = GatewayLogModel;
+module.exports = DataLogModel;
+// module.exports = GatewayLogModel;
 
 
 // OK

@@ -1,15 +1,49 @@
-const DataLog = require('../../models/GatewayLog.model');
+const GatewayModel = require('../../models/gateway.model');
+const OptimizerLogModel = require('../../models/OptimizerLog.model');
+const GatewayLogModel = require('../../models/GatewayLog.model');
 
 
 exports.AllDataLog = async (req, res) => {
     try {
-        const allData = await DataLog.find({})
-            .sort({ createdAt: -1 })  // Sort by createdAt field in descending order
-            .limit(100);  // Limit the result to 100 records
-        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: allData });
-
+        const OptimizerLogDetails = await OptimizerLogModel.find();
+        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: OptimizerLogDetails });
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
+
+exports.AllDataLogDemo = async (req, res) => {
+    try {
+        const AllGetway = await GatewayModel.find();
+        const GatewaysWithOptimizerLogs = await Promise.all(AllGetway.map(async (gateway) => {
+            const GatewayLogs = await GatewayLogModel.findOne(
+                { GatewayID: gateway._id },
+                { Phases: 1, KVAH: 1, KWH: 1, PF: 1, _id: 0 }
+            );
+
+            const OptimizerLogsForGateway = await OptimizerLogModel.find(
+                { GatewayID: gateway._id },
+                { TimeStamp: 1, RoomTemperature: 1, Humidity: 1, CoilTemperature: 1, OptimizerID: 1, OptimizerMode: 1, _id: 0 }
+            );
+
+            // Transform OptimizerLogsForGateway array to include only specific fields
+            const TransformedOptimizerLogs = OptimizerLogsForGateway.map(log => ({
+                TimeStamp: log.TimeStamp,
+                RoomTemperature: log.RoomTemperature,
+                Humidity: log.Humidity,
+                CoilTemperature: log.CoilTemperature,
+                OptimizerID: log.OptimizerID,
+                OptimizerMode: log.OptimizerMode
+            }));
+
+            return { GatewayID: gateway.GatewayID, OptimizerLogDetails: TransformedOptimizerLogs, GatewayLogDetails: GatewayLogs };
+        }));
+
+        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: GatewaysWithOptimizerLogs });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
+    }
+};
+

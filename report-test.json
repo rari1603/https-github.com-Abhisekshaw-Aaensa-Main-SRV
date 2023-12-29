@@ -1,0 +1,96 @@
+[
+    {
+        "GatewayID": "MDOP9825671203",
+        "OptimizerDetails": [
+            {
+                "TimeStamp": "2023-12-26 12:32:56",
+                "RoomTemperature": 26.9,
+                "Humidity": null,
+                "CoilTemperature": 25.6,
+                "OptimizerID": "OPTID22122023",
+                "OptimizerMode": "NON-OPTIMIZATION"
+            },
+            {
+                "TimeStamp": "2023-12-26 12:32:56",
+                "RoomTemperature": 26.9,
+                "Humidity": null,
+                "CoilTemperature": 25.6,
+                "OptimizerID": "NGCSE555FB9030",
+                "OptimizerMode": "NON-OPTIMIZATION"
+            }
+        ],
+        "Phases": {
+            "Ph1": {
+                "Voltage": "0.000000",
+                "Current": "0.000000",
+                "ActivePower": "0.000000",
+                "PowerFactor": "0.000000",
+                "ApparentPower": "0.000000"
+            },
+            "Ph2": {
+                "Voltage": "0.000000",
+                "Current": "0.000000",
+                "ActivePower": "0.000000",
+                "PowerFactor": "0.000000",
+                "ApparentPower": "0.000000"
+            },
+            "Ph3": {
+                "Voltage": "0.000000",
+                "Current": "0.000000",
+                "ActivePower": "0.000000",
+                "PowerFactor": "0.000000",
+                "ApparentPower": "0.000000"
+            }
+        },
+        "KVAH": "21",
+        "KWH": "0.000000",
+        "PF": "0.000000"
+    },
+    {
+        "GatewayID": "MDOP9825671203",
+        "OptimizerDetails": [
+            {
+                "TimeStamp": "2023-12-26 12:32:56",
+                "RoomTemperature": 26.9,
+                "Humidity": null,
+                "CoilTemperature": 25.6,
+                "OptimizerID": "OPTID22122023",
+                "OptimizerMode": "NON-OPTIMIZATION"
+            },
+            {
+                "TimeStamp": "2023-12-26 12:32:56",
+                "RoomTemperature": 26.9,
+                "Humidity": null,
+                "CoilTemperature": 25.6,
+                "OptimizerID": "NGCSE555FB9030",
+                "OptimizerMode": "NON-OPTIMIZATION"
+            }
+        ],
+        "Phases": {
+            "Ph1": {
+                "Voltage": "0.000000",
+                "Current": "0.000000",
+                "ActivePower": "0.000000",
+                "PowerFactor": "0.000000",
+                "ApparentPower": "0.000000"
+            },
+            "Ph2": {
+                "Voltage": "0.000000",
+                "Current": "0.000000",
+                "ActivePower": "0.000000",
+                "PowerFactor": "0.000000",
+                "ApparentPower": "0.000000"
+            },
+            "Ph3": {
+                "Voltage": "0.000000",
+                "Current": "0.000000",
+                "ActivePower": "0.000000",
+                "PowerFactor": "0.000000",
+                "ApparentPower": "0.000000"
+            }
+        },
+        "KVAH": "21",
+        "KWH": "0.000000",
+        "PF": "0.000000"
+    }
+]

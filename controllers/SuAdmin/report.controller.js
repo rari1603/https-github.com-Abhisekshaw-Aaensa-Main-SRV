@@ -1,12 +1,19 @@
+const EnterpriseModel = require('../../models/enterprise.model');
+const EnterpriseStateModel = require('../../models/enterprise_state.model');
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const GatewayLogModel = require('../../models/GatewayLog.model');
 
 
 exports.AllDataLog = async (req, res) => {
+    const { enterprise_id, state_id } = req.body;
     try {
+        const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
+        const EnterpriseState = await EnterpriseStateModel.findOne({ _id: state_id }, { State_ID: 1 }).populate({
+            path: "State_ID"
+        });
         const OptimizerLogDetails = await OptimizerLogModel.find();
-        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: OptimizerLogDetails });
+        return res.status(200).json({ success: true, message: 'Data fetched successfully', EnterpriseState });
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
@@ -37,10 +44,13 @@ exports.AllDataLogDemo = async (req, res) => {
                 OptimizerMode: log.OptimizerMode
             }));
 
-            return { GatewayID: gateway.GatewayID, OptimizerLogDetails: TransformedOptimizerLogs, GatewayLogDetails: GatewayLogs };
+            const gatewayData = { GatewayID: gateway.GatewayID, OptimizerLogDetails: TransformedOptimizerLogs, ...GatewayLogs?._doc };
+            return gatewayData;
         }));
 
-        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: GatewaysWithOptimizerLogs });
+        // Filter out gateways without OptimizerLogDetails and GatewayLogs._doc
+        const filteredGateways = GatewaysWithOptimizerLogs.filter(gateway => gateway.OptimizerLogDetails.length > 0);
+        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: filteredGateways });
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });

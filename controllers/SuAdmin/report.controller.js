@@ -1,19 +1,23 @@
 const EnterpriseModel = require('../../models/enterprise.model');
+const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const EnterpriseStateModel = require('../../models/enterprise_state.model');
+const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const GatewayLogModel = require('../../models/GatewayLog.model');
 
 
 exports.AllDataLog = async (req, res) => {
-    const { enterprise_id, state_id } = req.body;
+    const { enterprise_id, TimeStamp } = req.body;
     try {
-        const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
-        const EnterpriseState = await EnterpriseStateModel.findOne({ _id: state_id }, { State_ID: 1 }).populate({
-            path: "State_ID"
-        });
-        const OptimizerLogDetails = await OptimizerLogModel.find();
-        return res.status(200).json({ success: true, message: 'Data fetched successfully', EnterpriseState });
+        if (enterprise_id) {
+            const EnterpriseUser = await EnterpriseUserModel.find({ EnterpriseID: enterprise_id });
+            return res.status(200).json({ success: true, message: 'Data fetched successfully', data: EnterpriseUser });
+        }
+        if (TimeStamp) {
+            const OptimizerLogData = await OptimizerLogModel.find({ TimeStamp: TimeStamp });
+            return res.status(200).json({ success: true, message: 'Data fetched successfully', data: OptimizerLogData });
+        }
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });

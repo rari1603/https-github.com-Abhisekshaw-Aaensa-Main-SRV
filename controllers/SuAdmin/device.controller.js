@@ -101,7 +101,7 @@ exports.UpdateGateway = async (req, res) => {
             return res.status(404).json({ success: false, message: "Gateway not found." });
         }
 
-        return res.status(200).json({ success: true, message: "Gateway updated successfully." });
+        return res.status(204).json({ success: true, message: "Gateway updated successfully." });
 
     } catch (err) {
         console.error(err.message);

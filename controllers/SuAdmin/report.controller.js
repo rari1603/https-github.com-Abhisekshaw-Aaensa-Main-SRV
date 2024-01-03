@@ -8,7 +8,8 @@ const GatewayLogModel = require('../../models/GatewayLog.model');
 
 
 exports.AllDataLog = async (req, res) => {
-    const { enterprise_id, gateway_id, state_id, location_id, time_stamp } = req.body;
+    const { enterprise_id, gateway_id, state_id, location_id, time_stamp, time_interval } = req.body;
+    
     try {
         if (enterprise_id) {
             const Enterprise = await EnterpriseModel.find({ _id: enterprise_id });
@@ -32,10 +33,22 @@ exports.AllDataLog = async (req, res) => {
                     { Phases: 1, KVAH: 1, KWH: 1, PF: 1, _id: 0 }
                 );
 
+                let timeFilter = {};
+                if (time_interval === '1s') {
+                    timeFilter = { TimeStamp: { $gte: new Date(Date.now() - 1000) } };
+                } else if (time_interval === '5s') {
+                    timeFilter = { TimeStamp: { $gte: new Date(Date.now() - 5000) } };
+                } else if (time_interval === '1h') {
+                    timeFilter = { TimeStamp: { $gte: new Date(Date.now() - 3600000) } };
+                } else if (time_interval === '2h') {
+                    timeFilter = { TimeStamp: { $gte: new Date(Date.now() - 7200000) } };
+                }
+
                 const OptimizerLogsForGateway = await OptimizerLogModel.find(
                     {
                         GatewayID: gateway._id,
-                        ...(time_stamp ? { TimeStamp: time_stamp } : {})
+                        ...(time_stamp ? { TimeStamp: time_stamp } : {}),
+                        ...timeFilter
                     },
                     { TimeStamp: 1, RoomTemperature: 1, Humidity: 1, CoilTemperature: 1, OptimizerID: 1, OptimizerMode: 1, _id: 0 }
                 );

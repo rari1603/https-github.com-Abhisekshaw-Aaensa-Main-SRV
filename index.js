@@ -1,5 +1,7 @@
 const express = require('express');
 const { connectToDatabase } = require('./configs/database.config');
+// Connect to the database
+connectToDatabase();
 const Auth = require('./routes/auth.routes');
 const SuAdmin = require('./routes/super.admin.routes');
 const Enterprise = require('./routes/enterprise.routes');
@@ -25,8 +27,7 @@ const moment = require('moment-timezone');
 
 // Set the default time zone for the application (Asia/Kolkata in this example)
 moment.tz.setDefault('Asia/Kolkata');
-// Connect to the database
-connectToDatabase();
+
 
 // Middleware
 app.use(express.json());

@@ -9,7 +9,7 @@ const GatewayLogModel = require('../../models/GatewayLog.model');
 
 exports.AllDataLog = async (req, res) => {
     const { enterprise_id, gateway_id, state_id, location_id, time_stamp, time_interval } = req.body;
-    
+
     try {
         if (enterprise_id) {
             const Enterprise = await EnterpriseModel.find({ _id: enterprise_id });
@@ -79,38 +79,53 @@ exports.AllDataLog = async (req, res) => {
 
 exports.AllDataLogDemo = async (req, res) => {
     try {
-        const AllGetway = await GatewayModel.find();
-        const GatewaysWithOptimizerLogs = await Promise.all(AllGetway.map(async (gateway) => {
-            const GatewayLogs = await GatewayLogModel.findOne(
-                { GatewayID: gateway._id },
-                { Phases: 1, KVAH: 1, KWH: 1, PF: 1, _id: 0 }
-            );
-
-            const OptimizerLogsForGateway = await OptimizerLogModel.find(
-                { GatewayID: gateway._id },
-                { TimeStamp: 1, RoomTemperature: 1, Humidity: 1, CoilTemperature: 1, OptimizerID: 1, OptimizerMode: 1, _id: 0 }
-            );
-
-            // Transform OptimizerLogsForGateway array to include only specific fields
-            const TransformedOptimizerLogs = OptimizerLogsForGateway.map(log => ({
-                TimeStamp: log.TimeStamp,
-                RoomTemperature: log.RoomTemperature,
-                Humidity: log.Humidity,
-                CoilTemperature: log.CoilTemperature,
-                OptimizerID: log.OptimizerID,
-                OptimizerMode: log.OptimizerMode
-            }));
-
-            const gatewayData = { GatewayID: gateway.GatewayID, OptimizerLogDetails: TransformedOptimizerLogs, ...GatewayLogs?._doc };
+        const GatewayLogData = await GatewayLogModel.find({});
+        const allData = await Promise.all(GatewayLogData.map(async (item) => {
+            const gateLogID = item._id;
+            const optimizerData = await OptimizerLogModel.find({ GatewayLogID: gateLogID });
+            const gatewayData = { Gateway: item, OptimizerLogDetails: optimizerData };
             return gatewayData;
         }));
 
-        // Filter out gateways without OptimizerLogDetails and GatewayLogs._doc
-        const filteredGateways = GatewaysWithOptimizerLogs.filter(gateway => gateway.OptimizerLogDetails.length > 0);
-        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: filteredGateways });
+        return res.status(200).json({ success: true, message: 'Data fetched successfully', data: allData });
     } catch (error) {
-        console.error(error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
+
+    // try {
+    //     const AllGetway = await GatewayModel.find();
+    //     const GatewaysWithOptimizerLogs = await Promise.all(AllGetway.map(async (gateway) => {
+    //         const GatewayLogs = await GatewayLogModel.findOne(
+    //             { GatewayID: gateway._id },
+    //             { Phases: 1, KVAH: 1, KWH: 1, PF: 1, _id: 0 }
+    //         );
+
+    //         const OptimizerLogsForGateway = await OptimizerLogModel.find(
+    //             { GatewayID: gateway._id },
+    //             { TimeStamp: 1, RoomTemperature: 1, Humidity: 1, CoilTemperature: 1, OptimizerID: 1, OptimizerMode: 1, _id: 0 }
+    //         );
+
+    //         // Transform OptimizerLogsForGateway array to include only specific fields
+    //         const TransformedOptimizerLogs = OptimizerLogsForGateway.map(log => ({
+    //             TimeStamp: log.TimeStamp,
+    //             RoomTemperature: log.RoomTemperature,
+    //             Humidity: log.Humidity,
+    //             CoilTemperature: log.CoilTemperature,
+    //             OptimizerID: log.OptimizerID,
+    //             OptimizerMode: log.OptimizerMode
+    //         }));
+
+    //         const gatewayData = { GatewayID: gateway.GatewayID, OptimizerLogDetails: TransformedOptimizerLogs, ...GatewayLogs?._doc };
+    //         return gatewayData;
+    //     }));
+
+    //     // Filter out gateways without OptimizerLogDetails and GatewayLogs._doc
+    //     const filteredGateways = GatewaysWithOptimizerLogs;
+    //     // const filteredGateways = GatewaysWithOptimizerLogs.filter(gateway => gateway.OptimizerLogDetails.length > 0);
+    //     return res.status(200).json({ success: true, message: 'Data fetched successfully', data: filteredGateways });
+    // } catch (error) {
+    //     console.error(error.message);
+    //     return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
+    // }
 };
 

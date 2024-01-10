@@ -72,7 +72,7 @@ exports.Config = async (req, res) => {
     }
 }
 
-
+// Store Gatewat & Optimizer Loga data 
 exports.Store = async (req, res) => {
     const data = req.body;
     const optimizers = req.body.OptimizerDetails;
@@ -179,6 +179,8 @@ exports.Feedback = async (req, res) => {
     res.send(req.params);
 }
 
+
+// OptimizerDefaultSetting
 exports.OptimizerDefaultSettingValue = async (req, res) => {
 
     const newValues = {

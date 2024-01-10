@@ -60,6 +60,10 @@ app.use('/api/fake', v1Router);
 // app.use('/api/srv-1', entRouter);
 
 
+app.get('/check', (req, res) => {
+    res.send("Hello I am Server, Happy To See You..")
+});
+
 
 // Internal Server Error handling middleware
 app.use((err, req, res, next) => {

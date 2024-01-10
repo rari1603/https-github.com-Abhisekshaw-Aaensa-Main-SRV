@@ -1,0 +1,40 @@
+// API 1 - GATEWAY CALLS AT EVERY 60 SECONDS - 
+{
+    "gatewayID": "864292049541723",
+    "is_config": true,
+    "optimizer": [
+        {
+            "optimizer_id": "NGCSE1CD8E2AF8",
+            "is_bypass": true,
+            "is_reset": true,
+            "is_setting": true,
+            "settings": {
+                "FIRST POWERON OBSERVATION": "",
+                "MAX COMPRESSOR TURNOFF COUNT PER HOUR": "",
+                "OPTIMIZATION TIME": "",
+                "STEADY STATEROOM TEMPERATURE TOLERANCE": "",
+                "STEADY STATECOIL TEMPERATURE TOLERANCE": "",
+                "STEADY STATE SAMPLING DURATION": "",
+                "MIN AIR CONDITIONER OFF DURATION": "",
+                "AIR CONDITIONER OFF DECLARATION MINPERIOD": "",
+                "MAX OBSERVATION TIME": "",
+                "THERMO STATE TIME INCREASE": "",
+                "THERMO STATE INTERVAL": ""
+            }
+        }
+    ]
+}
+
+
+// API 2
+{
+    "ssid": "Nox123",
+    "password": "Password",
+    "optimizer_list": [
+        "NGCSE1CD8E2AF8",
+        "NGCSE1CD8E2AF5",
+        "NGCSE1CD8E2AF6",
+        "NGCSE1CD8E2AF1",
+        "NGCSE1CD8E2AF7"
+    ]
+}

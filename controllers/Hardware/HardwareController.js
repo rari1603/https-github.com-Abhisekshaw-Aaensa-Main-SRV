@@ -9,6 +9,39 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 
 
+// CheckAllDevicesOnlineStatus
+exports.CheckAllDevicesOnlineStatus = async (req, res) => {
+    const { gateway_id, onlineOptimizers } = req.body;
+    try {
+        const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        if (Gateway) {
+            const associateOptimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
+
+            const OnlineOptimizerCount = onlineOptimizers.filter(optimizer => optimizer !== "").length;
+            const AssociateOptimizerCount = associateOptimizers.length;
+
+            if (AssociateOptimizerCount === OnlineOptimizerCount) {
+                const UpdatedGateway = await GatewayModel.findByIdAndUpdate({ _id: Gateway._id },
+                    {
+                        isConfigure: true,
+                    },
+                    { new: true } // This option returns the modified document rather than the original
+                );
+                return res.status(200).json({ success: true, message: "Gateway updated successfully.", UpdatedGateway });
+            } else {
+                return res.status(503).send({ success: false, message: "All Optimizers are not online.Please try again.", key: "optimizer_status" });
+            }
+
+        } else {
+            return res.status(404).send({ success: false, message: "Gateway not found", key: "gateway" });
+        }
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
+}
+
 
 exports.Config = async (req, res) => {
     // NGCS2023011003
@@ -177,6 +210,30 @@ exports.Feedback = async (req, res) => {
     });
     await jlkj.save();
     res.send(req.params);
+}
+
+
+// Acknowledgement from the configured gateway
+exports.AcknowledgeFromConfGateway = async (req, res) => {
+    const { gateway_id } = req.params;
+    try {
+        const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        if (Gateway) {
+            const UpdatedGateway = await GatewayModel.findByIdAndUpdate({ _id: Gateway._id },
+                {
+                    isConfigure: false,
+                },
+                { new: true } // This option returns the modified document rather than the original
+            );
+            return res.status(200).json({ success: true, message: "Gateway updated successfully.", UpdatedGateway });
+
+        } else {
+            return res.status(404).send({ success: false, message: "Gateway not found", key: "gateway" });
+        }
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
 }
 
 

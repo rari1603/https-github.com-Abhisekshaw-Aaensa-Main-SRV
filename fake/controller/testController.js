@@ -1,7 +1,9 @@
 const { faker } = require('@faker-js/faker');
-const Gateway = require('../../models/gateway.model');
-const Optimizer = require('../../models/optimizer.model');
+const GatewayModel = require('../../models/gateway.model');
+const OptimizerModel = require('../../models/optimizer.model');
 const DataLogModel = require('../../models/GatewayLog.model');
+const GatewayLogModel = require('../../models/GatewayLog.model');
+const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const UserModel = require('../../models/user.model');
 const SystemIntModel = require('../../models/systemInit.model');
 const EnterpriseModel = require('../../models/enterprise.model');
@@ -61,7 +63,7 @@ exports.processArray = async (req, res) => {
             "GatewayId": "6579818f943b8692984fc0d4"
         }
     ];
-    
+
     let dataLogEntry;
     for (let index = 0; index < array.length; index++) {
         const element = array[index];
@@ -124,9 +126,10 @@ const generateRandomData = async (GatewayID, OptimizerID) => ({
     ByPass: false
 });
 
+
 exports.addManyDataDB = async (req, res) => {
-    await Gateway.updateMany({}, { $set: { isConfigure: false } });
-    // await Optimizer.updateMany({}, { $set: { isDelete: false } });
+    await GatewayModel.updateMany({}, { $set: { isConfigure: false } });
+    // await OptimizerModel.updateMany({}, { $set: { isDelete: false } });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });
     // await UserModel.updateMany({}, { $set: { isDelete: false } });
     // await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });
@@ -141,4 +144,63 @@ exports.addManyDataDB = async (req, res) => {
     // }
     // return res.send(allSystInt);
     return res.send("Done...")
+}
+
+
+// addFakeGatewayOptimizerData to create Gateway & Optimizer Data Log
+exports.addFakeGatewayOptimizerData = async (req, res) => {
+    const data = req.body;
+    const optimizers = req.body.OptimizerDetails;
+
+    try {
+        const gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
+        // return console.log(gateway);
+        if (!gateway) {
+            throw new Error(`Gateway with ID ${req.body.GatewayID} not found`);
+        }
+
+        const gatewayId = gateway._id;
+        const { Phases, KVAH, KWH, PF } = data;
+
+        const gatewayLog = await GatewayLogModel({
+            GatewayID: gatewayId,
+            Phases,
+            KVAH,
+            KWH,
+            PF
+        }).save();
+
+        const optimizerLogPromises = optimizers.map(async element => {
+            const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
+            // return console.log(optimizer);
+            if (!optimizer) {
+                console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
+            }
+
+            // if (!optimizer.GatewayId.equals(gateway._id)) {
+            //     console.log(`The Optimizer with ID ${req.body.OptimizerID} is not associated with the Gateway with ID ${req.body.GatewayID}. Please verify with the system administrator.`);
+            // }
+
+            if (optimizer) {
+                return OptimizerLogModel({
+                    OptimizerID: optimizer._id,
+                    GatewayID: gatewayId,
+                    GatewayLogID: gatewayLog._id,
+                    TimeStamp: element.TimeStamp,
+                    RoomTemperature: element.RoomTemperature,
+                    Humidity: element.Humidity,
+                    CoilTemperature: element.CoilTemperature,
+                    OptimizerMode: element.OptimizerMode,
+                }).save();
+            }
+        });
+
+        await Promise.all(optimizerLogPromises);
+
+        res.status(200).send({ success: true, message: "Logs created successfully" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(404).send({ success: false, message: error.message });
+    }
 }

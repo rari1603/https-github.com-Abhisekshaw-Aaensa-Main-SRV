@@ -4,12 +4,18 @@ const { CheckSetOptimizerSetting, CheckResetOptimizerSetting } = require('../mid
 const verifyToken = require('../middleware/authentication.middleware');
 const router = express.Router();
 
+
+// Check All Devices Online Status API
+router.post('/check/all/device/online/status', HardwareController.CheckAllDevicesOnlineStatus);
+
 router.get('/get/config/:gateway_id', HardwareController.Config);
 // called by gateway if is_config: true
 router.get('/connectivity/config/service/:gateway_id', HardwareController.Property);
 // Feedback api 
 router.get('/feedback/service/:gateway_id?/:optimizer?', HardwareController.Feedback);
 
+// Acknowledgement from the configured gateway API
+router.post('/acknowledge/from/conf/gateway/:gateway_id', HardwareController.AcknowledgeFromConfGateway);
 
 // Optimizer Setting Value
 router.post('/optimizer/setting/default/value/:flag?', HardwareController.OptimizerDefaultSettingValue);  // need middleware here to prevent unwanted access.

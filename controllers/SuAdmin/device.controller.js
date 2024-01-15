@@ -21,9 +21,9 @@ exports.AddEnterpriseState = async (req, res) => {
 
 // AddEnterpriseStateLocation
 exports.AddEnterpriseStateLocation = async (req, res) => {
-    const { Enterprise_ID, State_ID, LocationName } = req.body;
+    const { Enterprise_ID, State_ID, LocationName, Address } = req.body;
     try {
-        const NewEntStateLocation = new EnterpriseStateLocationModel({ Enterprise_ID, State_ID, LocationName });
+        const NewEntStateLocation = new EnterpriseStateLocationModel({ Enterprise_ID, State_ID, LocationName, Address });
 
         await NewEntStateLocation.save();
         return res.status(201).json({ success: true, message: "Enterprise Location added successfully." });

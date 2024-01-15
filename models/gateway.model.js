@@ -21,6 +21,7 @@ const GatewaySchema = new mongoose.Schema({
         default: false
     },
     isConfigure: { type: Boolean, default: false },
+    is_Ready_toConfig: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const GatewayModel = mongoose.model('Gateway', GatewaySchema);

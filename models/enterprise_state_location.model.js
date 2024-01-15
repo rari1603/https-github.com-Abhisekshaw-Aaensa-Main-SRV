@@ -12,6 +12,7 @@ const EnterpriseStateLocationSchema = new mongoose.Schema({
         require: true
     },
     LocationName: { type: String },
+    Address: { type: String },
     isDelete: {
         type: Boolean,
         default: false

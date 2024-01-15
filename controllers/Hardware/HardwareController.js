@@ -7,6 +7,32 @@ const GatewayModel = require('../../models/gateway.model');
 const LocationModel = require('../../models/enterprise_state_location.model');
 const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
+const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
+
+
+
+// Device ready to config
+exports.DeviceReadyToConfig = async (req, res) => {
+    const { gateway_id } = req.params;
+    try {
+        const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        if (Gateway) {
+            const UpdatedGateway = await GatewayModel.findByIdAndUpdate({ _id: Gateway._id },
+                { $set: { is_Ready_toConfig: true } }
+            );
+            if (!UpdatedGateway) {
+                return res.status(500).send({ success: false, message: "Something went wrong, please try again" });
+            }
+            return res.status(200).json({ success: true, message: "Gateway updated successfully." });
+        } else {
+            return res.status(404).json({ success: false, message: "Gateway not found." });
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
+};
 
 
 // CheckAllDevicesOnlineStatus
@@ -24,10 +50,11 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
                 const UpdatedGateway = await GatewayModel.findByIdAndUpdate({ _id: Gateway._id },
                     {
                         isConfigure: true,
+                        is_Ready_toConfig: false,
                     },
                     { new: true } // This option returns the modified document rather than the original
                 );
-                return res.status(200).json({ success: true, message: "Gateway updated successfully.", UpdatedGateway });
+                return res.status(200).json({ success: true, message: "All Optimizers Are Online." });
             } else {
                 return res.status(503).send({ success: false, message: "All Optimizers are not online.Please try again.", key: "optimizer_status" });
             }
@@ -40,19 +67,17 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
         console.error(error.message);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
-}
+};
 
 
 exports.Config = async (req, res) => {
-    // NGCS2023011003
     try {
         const { gateway_id } = req.params;
 
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
-        }
-        console.log(Gateway.GatewayID);
+        };
 
         // const GatewayUniqueID = Gateway._id;
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
@@ -94,6 +119,7 @@ exports.Config = async (req, res) => {
         const NewObj = {
             "gatewayID": Gateway.GatewayID,
             "config": Gateway.isConfigure,
+            "is_Ready_toConfig": Gateway.is_Ready_toConfig,
             "optimizer": optObject
 
         };
@@ -103,7 +129,7 @@ exports.Config = async (req, res) => {
         console.log(error);
         return res.status(500).json({ success: false, message: error.message });
     }
-}
+};
 
 // Store Gatewat & Optimizer Loga data 
 exports.Store = async (req, res) => {
@@ -190,7 +216,7 @@ exports.Property = async (req, res) => {
         };
     }
     return res.send(NewObj);
-}
+};
 
 exports.Feedback = async (req, res) => {
 
@@ -210,7 +236,7 @@ exports.Feedback = async (req, res) => {
     });
     await jlkj.save();
     res.send(req.params);
-}
+};
 
 
 // Acknowledgement from the configured gateway
@@ -234,7 +260,7 @@ exports.AcknowledgeFromConfGateway = async (req, res) => {
         console.error(error.message);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
-}
+};
 
 
 // OptimizerDefaultSetting
@@ -499,7 +525,7 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
         console.error(error);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
-}
+};
 
 
 // Common UpdateSettings functions for both set and reset
@@ -527,4 +553,69 @@ const UpdateSettings = async (optimizerIDS, data) => {
             { new: true, upsert: true }
         );
     }));
-}
+};
+
+
+// Optimizer switch bypass
+exports.BypassOptimizers = async (req, res) => {
+    const { group, id } = req.body;
+    try {
+        // bypass from device level
+        if (group === "optimizer") {
+            const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
+            if (Optimizer) {
+                await OptimizerModel.findByIdAndUpdate({ _id: Optimizer._id },
+                    { Switch: true },
+                    { new: true } // This option returns the modified document rather than the original
+                );
+                return res.status(200).json({ success: true, message: "Optimizer updated successfully." });
+            } else {
+                return res.status(404).json({ success: false, message: "Optimizer not found." });
+            }
+        }
+
+        // bypass from gateway level
+        if (group === "gateway") {
+            const Gateway = await GatewayModel.findOne({ GatewayID: id });
+            if (Gateway) {
+                // Find all optimizers related to the gateway
+                const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
+                if (Optimizers) {
+                    // Update the "Switch" field for all optimizers
+                    await OptimizerModel.updateMany({ GatewayId: Gateway._id },
+                        { $set: { Switch: true } }
+                    );
+                    return res.status(200).json({ success: true, message: "Optimizers updated successfully." });
+                } else {
+                    return res.status(404).json({ success: false, message: "Optimizers not found." });
+                }
+            } else {
+                return res.status(404).json({ success: false, message: "Gateway not found." });
+            }
+        }
+
+        // bypass from location level
+        if (group === "location") {
+            const Location = await EnterpriseStateLocationModel.findOne({ _id: id });
+            if (Location) {
+                // Find all gateways related to the location
+                const Gateways = await GatewayModel.find({ EnterpriseInfo: Location._id });
+                // Loop through all gateways and find associated optimizers
+                for (const Gateway of Gateways) {
+                    // Update the "Switch" field for all optimizers
+                    await OptimizerModel.updateMany({ GatewayId: Gateway._id },
+                        { $set: { Switch: true } }
+                    );
+                }
+
+                return res.status(200).json({ success: true, message: "Optimizers updated successfully." });
+            } else {
+                return res.status(404).json({ success: false, message: "Location not found." });
+            }
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
+};

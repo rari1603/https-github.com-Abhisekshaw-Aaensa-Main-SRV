@@ -2,9 +2,12 @@ const express = require('express');
 const HardwareController = require('../controllers/Hardware/HardwareController');
 const { CheckSetOptimizerSetting, CheckResetOptimizerSetting } = require('../middleware/hardware/Hardware.middleware');
 const verifyToken = require('../middleware/authentication.middleware');
+const routeAccessMiddleware = require('../middleware/access.middleware');
 const router = express.Router();
 
 
+// Device configureable ready API
+router.post('/device/ready/to/config/:gateway_id', [verifyToken, routeAccessMiddleware()], HardwareController.DeviceReadyToConfig);
 // Check All Devices Online Status API
 router.post('/check/all/device/online/status', HardwareController.CheckAllDevicesOnlineStatus);
 
@@ -16,6 +19,11 @@ router.get('/feedback/service/:gateway_id?/:optimizer?', HardwareController.Feed
 
 // Acknowledgement from the configured gateway API
 router.post('/acknowledge/from/conf/gateway/:gateway_id', HardwareController.AcknowledgeFromConfGateway);
+
+
+// Optimizer switch bypass
+router.post('/bypass/optimizers', [verifyToken, routeAccessMiddleware()], HardwareController.BypassOptimizers);
+
 
 // Optimizer Setting Value
 router.post('/optimizer/setting/default/value/:flag?', HardwareController.OptimizerDefaultSettingValue);  // need middleware here to prevent unwanted access.

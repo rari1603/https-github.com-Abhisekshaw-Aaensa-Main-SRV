@@ -31,7 +31,7 @@ exports.CheckEntState = async (req, res, next) => {
 
 // check enterprise state location
 exports.CheckEntStateLocation = async (req, res, next) => {
-    const { Enterprise_ID, State_ID, LocationName } = req.body;
+    const { Enterprise_ID, State_ID, LocationName, Address } = req.body;
     try {
         if (!Enterprise_ID) {
             return res.status(401).json({ success: false, message: "Enterprise is required!", key: "Enterprise_ID" });
@@ -45,15 +45,19 @@ exports.CheckEntStateLocation = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Location name is required!", key: "LocationName" });
 
         }
+        if (!Address) {
+            return res.status(401).json({ success: false, message: "An Address is required!", key: "Address" });
 
-        const lowerCaseLocationName = LocationName.toLowerCase();
+        }
+
+        const lowerCaseAddressName = Address.toLowerCase();
         // Assuming EnterpriseStateLocationModel is your Mongoose model
         const allLocations = await EnterpriseStateLocationModel.find({});
-        // Check for existing records with the lowercase location name
+        // Check for existing records with the lowercase address name
         for (const location of allLocations) {
-            const dbLocationName = location.LocationName.toLowerCase();
-            if (lowerCaseLocationName === dbLocationName) {
-                return res.status(401).json({ success: false, message: "Same location name already added under this state.", key: "LocationName" });
+            const dbLocationName = location.Address.toLowerCase();
+            if (lowerCaseAddressName === dbLocationName) {
+                return res.status(401).json({ success: false, message: "Same address already added under this location.", key: "Address" });
             }
         }
 

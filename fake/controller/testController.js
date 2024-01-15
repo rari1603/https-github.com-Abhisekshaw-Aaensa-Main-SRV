@@ -9,6 +9,7 @@ const SystemIntModel = require('../../models/systemInit.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const StateModel = require('../../models/state.model');
+const StateLocationModel = require('../../models/enterprise_state_location.model');
 
 exports.Optimizer = async (req, res) => {
     const fakeOptimizerData = {
@@ -128,7 +129,8 @@ const generateRandomData = async (GatewayID, OptimizerID) => ({
 
 
 exports.addManyDataDB = async (req, res) => {
-    await GatewayModel.updateMany({}, { $set: { isConfigure: false } });
+    await GatewayModel.updateMany({}, { $set: { is_Ready_toConfig: false } });
+    // await StateLocationModel.updateMany({}, { $set: { Address: "Default Address" } });
     // await OptimizerModel.updateMany({}, { $set: { isDelete: false } });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });
     // await UserModel.updateMany({}, { $set: { isDelete: false } });

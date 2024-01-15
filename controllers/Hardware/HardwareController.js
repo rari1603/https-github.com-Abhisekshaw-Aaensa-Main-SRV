@@ -23,7 +23,7 @@ exports.DeviceReadyToConfig = async (req, res) => {
             if (!UpdatedGateway) {
                 return res.status(500).send({ success: false, message: "Something went wrong, please try again" });
             }
-            return res.status(200).json({ success: true, message: "Gateway updated successfully." });
+            return res.status(200).json({ success: true, message: "Gateway is ready to config." });
         } else {
             return res.status(404).json({ success: false, message: "Gateway not found." });
         }
@@ -70,6 +70,7 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
 };
 
 
+// Gateway Config
 exports.Config = async (req, res) => {
     try {
         const { gateway_id } = req.params;
@@ -585,7 +586,7 @@ exports.BypassOptimizers = async (req, res) => {
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
                         { $set: { Switch: true } }
                     );
-                    return res.status(200).json({ success: true, message: "Optimizers updated successfully." });
+                    return res.status(200).json({ success: true, message: "Optimizers updated successfully. Optimizer bypass operation completed." });
                 } else {
                     return res.status(404).json({ success: false, message: "Optimizers not found." });
                 }

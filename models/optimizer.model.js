@@ -9,7 +9,9 @@ const OptimizerSchema = new mongoose.Schema({
     OptimizerID: { type: String, unique: true },
     OptimizerName: { type: String }, //NickName
     // Description: { type: String },
-    Switch: { type: Boolean, default: false }, // For bypass
+    isBypass: { type: Boolean, default: false }, // For bypass
+    isSetting: { type: Boolean, default: false }, // For set
+    isReset: { type: Boolean, default: false }, // For reset
     isDelete: {
         type: Boolean,
         default: false

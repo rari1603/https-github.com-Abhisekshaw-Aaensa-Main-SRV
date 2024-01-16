@@ -34,7 +34,6 @@ exports.DeviceReadyToConfig = async (req, res) => {
     }
 };
 
-
 // CheckAllDevicesOnlineStatus
 exports.CheckAllDevicesOnlineStatus = async (req, res) => {
     const { gateway_id, onlineOptimizers } = req.body;
@@ -69,9 +68,8 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
     }
 };
 
-
-// Gateway Config
-exports.Config = async (req, res) => {
+// ConfigureableData
+exports.ConfigureableData = async (req, res) => {
     try {
         const { gateway_id } = req.params;
 
@@ -84,10 +82,10 @@ exports.Config = async (req, res) => {
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
         const optObject = Optimizers.map(element => ({
             "optimizer_id": element.OptimizerID,
-            "is_bypass": element.Switch,
-            "is_reset": true,
-            "is_setting": true,
-            "settings": {
+            "is_bypass": element.isBypass,
+            "is_reset": element.isReset,
+            "is_setting": element.isSetting,
+            "settings": element.isSetting ? {
                 "FIRST POWERON OBSERVATION": "",
                 "MAX COMPRESSOR TURNOFF COUNT PER HOUR": "",
                 "OPTIMIZATION TIME": "",
@@ -99,24 +97,9 @@ exports.Config = async (req, res) => {
                 "MAX OBSERVATION TIME": "",
                 "THERMO STATE TIME INCREASE": "",
                 "THERMO STATE INTERVAL": ""
-            }
+            } : {}
         }));
 
-        var property;
-
-        // if (Gateway.isConfigure) {
-        //     property = {
-        //         "flag": Gateway.isConfigure,
-        //         "ssid": Gateway.NetworkSSID,
-        //         "password": Gateway.NetworkPassword
-        //     };
-        // } else {
-        //     property = {
-        //         "flag": Gateway.isConfigure,
-        //         "ssid": null,
-        //         "password": null
-        //     };
-        // }
         const NewObj = {
             "gatewayID": Gateway.GatewayID,
             "config": Gateway.isConfigure,
@@ -124,7 +107,7 @@ exports.Config = async (req, res) => {
             "optimizer": optObject
 
         };
-        return res.send(NewObj);
+        return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
         console.log(error);
@@ -190,9 +173,8 @@ exports.Store = async (req, res) => {
     }
 };
 
-
-// not in use
-exports.Property = async (req, res) => {
+// Installation property
+exports.InstallationProperty = async (req, res) => {
     const { gateway_id } = req.params;
 
     const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
@@ -219,27 +201,6 @@ exports.Property = async (req, res) => {
     return res.send(NewObj);
 };
 
-exports.Feedback = async (req, res) => {
-
-    var jlkj = OptimizerSettingValueModel({
-        optimizerID: '6582fb2f1980116c336a10fb',
-        powerOnObservation: 0,
-        maxCompressorTurnoffCountPerHour: 0,
-        optimizationTime: 0,
-        steadyStateRoomTemperatureTolerance: 0,
-        steadyStateCoilTemperatureTolerance: 0,
-        steadyStateSamplingDuration: 0,
-        minAirConditionerOffDuration: 0,
-        airConditionerOffDeclarationMinPeriod: 0,
-        maxObservationTime: 0,
-        thermoStateTimeIncrease: 0,
-        thermoStateInterval: 0
-    });
-    await jlkj.save();
-    res.send(req.params);
-};
-
-
 // Acknowledgement from the configured gateway
 exports.AcknowledgeFromConfGateway = async (req, res) => {
     const { gateway_id } = req.params;
@@ -262,7 +223,6 @@ exports.AcknowledgeFromConfGateway = async (req, res) => {
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
-
 
 // OptimizerDefaultSetting
 exports.OptimizerDefaultSettingValue = async (req, res) => {
@@ -308,7 +268,6 @@ exports.OptimizerDefaultSettingValue = async (req, res) => {
         res.status(500).send({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 // SetOptimizerSettingValue 
 exports.SetOptimizerSettingValue = async (req, res) => {
@@ -528,11 +487,10 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
     }
 };
 
-
 // Common UpdateSettings functions for both set and reset
 const UpdateSettings = async (optimizerIDS, data) => {
     // first get the optimizer default value
-    const defaultValue = await OptimizerDefaultSettingValueModel.findOne();
+    const defaultValue = await OptimizerDefaultSettingValueModel.find();
     let resetValues = {
         powerOnObservation: data ? data.powerOnObservation : defaultValue.powerOnObservation,
         maxCompressorTurnoffCountPerHour: data ? data.maxCompressorTurnoffCountPerHour : defaultValue.maxCompressorTurnoffCountPerHour,
@@ -546,8 +504,17 @@ const UpdateSettings = async (optimizerIDS, data) => {
         thermoStateTimeIncrease: data ? data.thermoStateTimeIncrease : defaultValue.thermoStateTimeIncrease,
         thermoStateInterval: data ? data.thermoStateInterval : defaultValue.thermoStateInterval
     };
+
     return await Promise.all(optimizerIDS.map(async id => {
         resetValues.optimizerID = id.toString();
+        await OptimizerModel.findByIdAndUpdate({ _id: id.toString() },
+            {
+                isReset: data ? false : true,
+                isSetting: data ? true : false,
+            },
+            { new: true } // This option returns the modified document rather than the original
+        );
+
         return await OptimizerSettingValueModel.findOneAndUpdate(
             { optimizerID: id },
             { $set: resetValues },
@@ -555,7 +522,6 @@ const UpdateSettings = async (optimizerIDS, data) => {
         );
     }));
 };
-
 
 // Optimizer switch bypass
 exports.BypassOptimizers = async (req, res) => {
@@ -619,4 +585,81 @@ exports.BypassOptimizers = async (req, res) => {
         console.error(error);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
+};
+
+// Settings acknowledgement after set/rest
+exports.SetRestSettingsAcknowledgement = async (req, res) => {
+    const { purpose, optimizerIDS } = req.body;
+    try {
+        if (purpose === "set") {
+            const OptimizerisSettingUpdate = await Promise.all(optimizerIDS.map(async id => {
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
+                // Check if Optimizer exists before attempting to update
+                if (Optimizer) {
+                    await OptimizerModel.findByIdAndUpdate(
+                        { _id: Optimizer._id },
+                        { isSetting: false },
+                        { new: true }
+                    );
+                    return true;  // Indicate successful update for this OptimizerID
+                } else {
+                    return false; // Indicate that no document was found for this OptimizerID
+                }
+            }));
+
+            if (OptimizerisSettingUpdate.every(update => update !== false)) {
+                return res.status(200).send({ success: true, message: "IsSetting updated successfully." });
+            } else {
+                return res.status(500).send({ success: false, message: "Failed to update IsSetting." });
+            }
+        }
+
+        if (purpose === "reset") {
+            const OptimizerisResetUpdate = await Promise.all(optimizerIDS.map(async id => {
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
+                // Check if Optimizer exists before attempting to update
+                if (Optimizer) {
+                    await OptimizerModel.findByIdAndUpdate(
+                        { _id: Optimizer._id },
+                        { isReset: false },
+                        { new: true }
+                    );
+                    return true;  // Indicate successful update for this OptimizerID
+                } else {
+                    return false; // Indicate that no document was found for this OptimizerID
+                }
+            }));
+
+            if (OptimizerisResetUpdate.every(update => update !== false)) {
+                return res.status(200).send({ success: true, message: "IsReset updated successfully." });
+            } else {
+                return res.status(500).send({ success: false, message: "Failed to update IsReset." });
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
+}
+
+
+// Not in use
+exports.Feedback = async (req, res) => {
+
+    var jlkj = OptimizerSettingValueModel({
+        optimizerID: '6582fb2f1980116c336a10fb',
+        powerOnObservation: 0,
+        maxCompressorTurnoffCountPerHour: 0,
+        optimizationTime: 0,
+        steadyStateRoomTemperatureTolerance: 0,
+        steadyStateCoilTemperatureTolerance: 0,
+        steadyStateSamplingDuration: 0,
+        minAirConditionerOffDuration: 0,
+        airConditionerOffDeclarationMinPeriod: 0,
+        maxObservationTime: 0,
+        thermoStateTimeIncrease: 0,
+        thermoStateInterval: 0
+    });
+    await jlkj.save();
+    res.send(req.params);
 };

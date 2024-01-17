@@ -17,7 +17,7 @@ router.get('/get/config/:gateway_id', HardwareController.ConfigureableData);
 router.post('/device/ready/to/config/:gateway_id', [verifyToken, routeAccessMiddleware()], HardwareController.DeviceReadyToConfig);
 // Check All Devices Online Status API
 router.post('/check/all/device/online/status', HardwareController.CheckAllDevicesOnlineStatus);
-// called by gateway if is_config: true
+// InstallationProperty API
 router.get('/connectivity/config/service/:gateway_id', HardwareController.InstallationProperty);
 
 // Optimizer Setting Value

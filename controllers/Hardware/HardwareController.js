@@ -46,7 +46,7 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
             const AssociateOptimizerCount = associateOptimizers.length;
 
             if (AssociateOptimizerCount === OnlineOptimizerCount) {
-                const UpdatedGateway = await GatewayModel.findByIdAndUpdate({ _id: Gateway._id },
+                await GatewayModel.findByIdAndUpdate({ _id: Gateway._id },
                     {
                         isConfigure: true,
                         is_Ready_toConfig: false,

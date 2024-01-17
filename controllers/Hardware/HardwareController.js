@@ -86,17 +86,12 @@ exports.ConfigureableData = async (req, res) => {
             "is_reset": element.isReset,
             "is_setting": element.isSetting,
             "settings": element.isSetting ? {
-                "FIRST POWERON OBSERVATION": "",
-                "MAX COMPRESSOR TURNOFF COUNT PER HOUR": "",
-                "OPTIMIZATION TIME": "",
-                "STEADY STATEROOM TEMPERATURE TOLERANCE": "",
-                "STEADY STATECOIL TEMPERATURE TOLERANCE": "",
-                "STEADY STATE SAMPLING DURATION": "",
-                "MIN AIR CONDITIONER OFF DURATION": "",
-                "AIR CONDITIONER OFF DECLARATION MINPERIOD": "",
-                "MAX OBSERVATION TIME": "",
-                "THERMO STATE TIME INCREASE": "",
-                "THERMO STATE INTERVAL": ""
+                FirstPowerOnObservationTime: "",
+                MaximumObservationTime: "",
+                OptimizationOnTime: "",
+                ThermostateInterval: "",
+                SteadyStateTimeRoomTemperatureTolrence: "",
+                SteadyStateCoilTemperatureTolerance: ""
             } : {}
         }));
 

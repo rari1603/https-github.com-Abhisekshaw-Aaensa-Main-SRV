@@ -8,6 +8,7 @@ const LocationModel = require('../../models/enterprise_state_location.model');
 const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
+const UpdateSettings = require('../../utility/UpdateSetting');
 
 
 
@@ -78,21 +79,25 @@ exports.ConfigureableData = async (req, res) => {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
         };
 
-        // const GatewayUniqueID = Gateway._id;
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
-        const optObject = Optimizers.map(element => ({
-            "optimizer_id": element.OptimizerID,
-            "is_bypass": element.isBypass,
-            "is_reset": element.isReset,
-            "is_setting": element.isSetting,
-            "settings": element.isSetting ? {
-                FirstPowerOnObservationTime: "",
-                MaximumObservationTime: "",
-                OptimizationOnTime: "",
-                ThermostateInterval: "",
-                SteadyStateTimeRoomTemperatureTolrence: "",
-                SteadyStateCoilTemperatureTolerance: ""
-            } : {}
+        const optObject = await Promise.all(Optimizers.map(async (element) => {
+            const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element.id });
+
+            return {
+                "optimizer_id": element.OptimizerID,
+                "is_bypass": element.isBypass,
+                "is_reset": element.isReset,
+                "is_setting": element.isSetting,
+                "settings": element.isSetting ? {
+                    firstPowerOnObservationTime: OptimizerSettings.firstPowerOnObservationTime,
+                    maxObservatioTime: OptimizerSettings.maxObservatioTime,
+                    OptimizationOnTime: OptimizerSettings.OptimizationOnTime,
+                    thermostatMonitoringInterval: OptimizerSettings.thermostatMonitoringInterval,
+                    thermostatMonitoringTimeIncrement: OptimizerSettings.thermostatMonitoringTimeIncrement,
+                    steadyStateTimeRoomTempTolerance: OptimizerSettings.steadyStateTimeRoomTempTolerance,
+                    steadyStateCoilTempTolerance: OptimizerSettings.steadyStateCoilTempTolerance
+                } : {}
+            };
         }));
 
         const NewObj = {
@@ -223,17 +228,13 @@ exports.AcknowledgeFromConfGateway = async (req, res) => {
 exports.OptimizerDefaultSettingValue = async (req, res) => {
 
     const newValues = {
-        powerOnObservation: req.body.powerOnObservation,
-        maxCompressorTurnoffCountPerHour: req.body.maxCompressorTurnoffCountPerHour,
-        optimizationTime: req.body.optimizationTime,
-        steadyStateRoomTemperatureTolerance: req.body.steadyStateRoomTemperatureTolerance,
-        steadyStateCoilTemperatureTolerance: req.body.steadyStateCoilTemperatureTolerance,
-        steadyStateSamplingDuration: req.body.steadyStateSamplingDuration,
-        minAirConditionerOffDuration: req.body.minAirConditionerOffDuration,
-        airConditionerOffDeclarationMinPeriod: req.body.airConditionerOffDeclarationMinPeriod,
-        maxObservationTime: req.body.maxObservationTime,
-        thermoStateTimeIncrease: req.body.thermoStateTimeIncrease,
-        thermoStateInterval: req.body.thermoStateInterval
+        firstPowerOnObservationTime: req.body.firstPowerOnObservationTime,
+        maxObservatioTime: req.body.maxObservatioTime,
+        OptimizationOnTime: req.body.OptimizationOnTime,
+        thermostatMonitoringInterval: req.body.thermostatMonitoringInterval,
+        thermostatMonitoringTimeIncrement: req.body.thermostatMonitoringTimeIncrement,
+        steadyStateTimeRoomTempTolerance: req.body.steadyStateTimeRoomTempTolerance,
+        steadyStateCoilTempTolerance: req.body.steadyStateCoilTempTolerance,
     };
 
     try {
@@ -268,17 +269,13 @@ exports.OptimizerDefaultSettingValue = async (req, res) => {
 exports.SetOptimizerSettingValue = async (req, res) => {
     try {
         const data = {
-            powerOnObservation: req.body.powerOnObservation,
-            maxCompressorTurnoffCountPerHour: req.body.maxCompressorTurnoffCountPerHour,
-            optimizationTime: req.body.optimizationTime,
-            steadyStateRoomTemperatureTolerance: req.body.steadyStateRoomTemperatureTolerance,
-            steadyStateCoilTemperatureTolerance: req.body.steadyStateCoilTemperatureTolerance,
-            steadyStateSamplingDuration: req.body.steadyStateSamplingDuration,
-            minAirConditionerOffDuration: req.body.minAirConditionerOffDuration,
-            airConditionerOffDeclarationMinPeriod: req.body.airConditionerOffDeclarationMinPeriod,
-            maxObservationTime: req.body.maxObservationTime,
-            thermoStateTimeIncrease: req.body.thermoStateTimeIncrease,
-            thermoStateInterval: req.body.thermoStateInterval
+            firstPowerOnObservationTime: req.body.firstPowerOnObservationTime,
+            maxObservatioTime: req.body.maxObservatioTime,
+            OptimizationOnTime: req.body.OptimizationOnTime,
+            thermostatMonitoringInterval: req.body.thermostatMonitoringInterval,
+            thermostatMonitoringTimeIncrement: req.body.thermostatMonitoringTimeIncrement,
+            steadyStateTimeRoomTempTolerance: req.body.steadyStateTimeRoomTempTolerance,
+            steadyStateCoilTempTolerance: req.body.steadyStateCoilTempTolerance,
         };
 
         // reset particular optimizer
@@ -480,42 +477,6 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
         console.error(error);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
-};
-
-// Common UpdateSettings functions for both set and reset
-const UpdateSettings = async (optimizerIDS, data) => {
-    // first get the optimizer default value
-    const defaultValue = await OptimizerDefaultSettingValueModel.find();
-    let resetValues = {
-        powerOnObservation: data ? data.powerOnObservation : defaultValue.powerOnObservation,
-        maxCompressorTurnoffCountPerHour: data ? data.maxCompressorTurnoffCountPerHour : defaultValue.maxCompressorTurnoffCountPerHour,
-        optimizationTime: data ? data.optimizationTime : defaultValue.optimizationTime,
-        steadyStateRoomTemperatureTolerance: data ? data.steadyStateRoomTemperatureTolerance : defaultValue.steadyStateRoomTemperatureTolerance,
-        steadyStateCoilTemperatureTolerance: data ? data.steadyStateCoilTemperatureTolerance : defaultValue.steadyStateCoilTemperatureTolerance,
-        steadyStateSamplingDuration: data ? data.steadyStateSamplingDuration : defaultValue.steadyStateSamplingDuration,
-        minAirConditionerOffDuration: data ? data.minAirConditionerOffDuration : defaultValue.minAirConditionerOffDuration,
-        airConditionerOffDeclarationMinPeriod: data ? data.airConditionerOffDeclarationMinPeriod : defaultValue.airConditionerOffDeclarationMinPeriod,
-        maxObservationTime: data ? data.maxObservationTime : defaultValue.maxObservationTime,
-        thermoStateTimeIncrease: data ? data.thermoStateTimeIncrease : defaultValue.thermoStateTimeIncrease,
-        thermoStateInterval: data ? data.thermoStateInterval : defaultValue.thermoStateInterval
-    };
-
-    return await Promise.all(optimizerIDS.map(async id => {
-        resetValues.optimizerID = id.toString();
-        await OptimizerModel.findByIdAndUpdate({ _id: id.toString() },
-            {
-                isReset: data ? false : true,
-                isSetting: data ? true : false,
-            },
-            { new: true } // This option returns the modified document rather than the original
-        );
-
-        return await OptimizerSettingValueModel.findOneAndUpdate(
-            { optimizerID: id },
-            { $set: resetValues },
-            { new: true, upsert: true }
-        );
-    }));
 };
 
 // Optimizer switch bypass

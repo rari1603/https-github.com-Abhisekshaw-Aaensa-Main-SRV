@@ -2,12 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const OptimizerDefaultSettingValue = new Schema({
-    FirstPowerOnObservationTime: { type: String },
-    MaximumObservationTime: { type: String },
+    firstPowerOnObservationTime: { type: String },
+    maxObservatioTime: { type: String },
     OptimizationOnTime: { type: String },
-    ThermostateInterval: { type: String },
-    SteadyStateTimeRoomTemperatureTolrence: { type: String },
-    SteadyStateCoilTemperatureTolerance: { type: String },
+    thermostatMonitoringInterval: { type: String },
+    thermostatMonitoringTimeIncrement: { type: String },
+    steadyStateTimeRoomTempTolerance: { type: String },
+    steadyStateCoilTempTolerance: { type: String },
     isDelete: {
         type: Boolean,
         default: false

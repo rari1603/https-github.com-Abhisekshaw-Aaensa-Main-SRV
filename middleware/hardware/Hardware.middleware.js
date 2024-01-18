@@ -22,17 +22,13 @@ exports.CheckSetOptimizerSetting = async (req, res, next) => {
     const {
         group,
         id,
-        powerOnObservation,
-        maxCompressorTurnoffCountPerHour,
-        optimizationTime,
-        steadyStateRoomTemperatureTolerance,
-        steadyStateCoilTemperatureTolerance,
-        steadyStateSamplingDuration,
-        minAirConditionerOffDuration,
-        airConditionerOffDeclarationMinPeriod,
-        maxObservationTime,
-        thermoStateTimeIncrease,
-        thermoStateInterval
+        firstPowerOnObservationTime,
+        maxObservatioTime,
+        OptimizationOnTime,
+        thermostatMonitoringInterval,
+        thermostatMonitoringTimeIncrement,
+        steadyStateTimeRoomTempTolerance,
+        steadyStateCoilTempTolerance
     } = req.body;
 
     try {
@@ -41,17 +37,13 @@ exports.CheckSetOptimizerSetting = async (req, res, next) => {
             const fields = [
                 { value: group, key: "group" },
                 { value: id, key: "group_id" },
-                { value: powerOnObservation, key: "powerOnObservation" },
-                { value: maxCompressorTurnoffCountPerHour, key: "maxCompressorTurnoffCountPerHour" },
-                { value: optimizationTime, key: "optimizationTime" },
-                { value: steadyStateRoomTemperatureTolerance, key: "steadyStateRoomTemperatureTolerance" },
-                { value: steadyStateCoilTemperatureTolerance, key: "steadyStateCoilTemperatureTolerance" },
-                { value: steadyStateSamplingDuration, key: "steadyStateSamplingDuration" },
-                { value: minAirConditionerOffDuration, key: "minAirConditionerOffDuration" },
-                { value: airConditionerOffDeclarationMinPeriod, key: "airConditionerOffDeclarationMinPeriod" },
-                { value: maxObservationTime, key: "maxObservationTime" },
-                { value: thermoStateTimeIncrease, key: "thermoStateTimeIncrease" },
-                { value: thermoStateInterval, key: "thermoStateInterval" },
+                { value: firstPowerOnObservationTime, key: "firstPowerOnObservationTime" },
+                { value: maxObservatioTime, key: "maxObservatioTime" },
+                { value: OptimizationOnTime, key: "OptimizationOnTime" },
+                { value: thermostatMonitoringInterval, key: "thermostatMonitoringInterval" },
+                { value: thermostatMonitoringTimeIncrement, key: "thermostatMonitoringTimeIncrement" },
+                { value: steadyStateTimeRoomTempTolerance, key: "steadyStateTimeRoomTempTolerance" },
+                { value: steadyStateCoilTempTolerance, key: "steadyStateCoilTempTolerance" },
             ];
 
             for (const field of fields) {

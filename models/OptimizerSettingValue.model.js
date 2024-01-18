@@ -6,12 +6,13 @@ const OptimizerSettingValueSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Optimizer"
     },
-    FirstPowerOnObservationTime: { type: String },
-    MaximumObservationTime: { type: String },
+    firstPowerOnObservationTime: { type: String },
+    maxObservatioTime: { type: String },
     OptimizationOnTime: { type: String },
-    ThermostateInterval: { type: String },
-    SteadyStateTimeRoomTemperatureTolrence: { type: String },
-    SteadyStateCoilTemperatureTolerance: { type: String },
+    thermostatMonitoringInterval: { type: String },
+    thermostatMonitoringTimeIncrement: { type: String },
+    steadyStateTimeRoomTempTolerance: { type: String },
+    steadyStateCoilTempTolerance: { type: String },
     isDelete: {
         type: Boolean,
         default: false

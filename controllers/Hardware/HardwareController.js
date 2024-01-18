@@ -107,7 +107,8 @@ exports.ConfigureableData = async (req, res) => {
             "optimizer": optObject
 
         };
-        return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
+        return res.status(200).send(NewObj);
+        // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
         console.log(error);

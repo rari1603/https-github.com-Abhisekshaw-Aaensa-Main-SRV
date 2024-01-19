@@ -121,6 +121,11 @@ exports.Store = async (req, res) => {
     const data = req.body;
     const optimizers = req.body.OptimizerDetails;
 
+    // Helper function to handle "nan" values
+    const handleNaN = (value) => {
+        return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
+    };
+
     try {
         const gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
         // return console.log(gateway);
@@ -131,12 +136,24 @@ exports.Store = async (req, res) => {
         const gatewayId = gateway._id;
         const { Phases, KVAH, KWH, PF } = data;
 
+        // Convert "nan" values to 0
+        const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
+            acc[phase] = {
+                Voltage: handleNaN(Phases[phase].Voltage),
+                Current: handleNaN(Phases[phase].Current),
+                ActivePower: handleNaN(Phases[phase].ActivePower),
+                PowerFactor: handleNaN(Phases[phase].PowerFactor),
+                ApparentPower: handleNaN(Phases[phase].ApparentPower),
+            };
+            return acc;
+        }, {});
+
         const gatewayLog = await GatewayLogModel({
             GatewayID: gatewayId,
-            Phases,
-            KVAH,
-            KWH,
-            PF
+            Phases: sanitizedPhases,
+            KVAH: handleNaN(KVAH),
+            KWH: handleNaN(KWH),
+            PF: handleNaN(PF),
         }).save();
 
         const optimizerLogPromises = optimizers.map(async element => {
@@ -166,7 +183,7 @@ exports.Store = async (req, res) => {
 
         await Promise.all(optimizerLogPromises);
 
-        res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
+        return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
         console.error(error);
@@ -597,26 +614,4 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
         console.error(error);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
-}
-
-
-// Not in use
-exports.Feedback = async (req, res) => {
-
-    var jlkj = OptimizerSettingValueModel({
-        optimizerID: '6582fb2f1980116c336a10fb',
-        powerOnObservation: 0,
-        maxCompressorTurnoffCountPerHour: 0,
-        optimizationTime: 0,
-        steadyStateRoomTemperatureTolerance: 0,
-        steadyStateCoilTemperatureTolerance: 0,
-        steadyStateSamplingDuration: 0,
-        minAirConditionerOffDuration: 0,
-        airConditionerOffDeclarationMinPeriod: 0,
-        maxObservationTime: 0,
-        thermoStateTimeIncrease: 0,
-        thermoStateInterval: 0
-    });
-    await jlkj.save();
-    res.send(req.params);
 };

@@ -31,10 +31,6 @@ router.post('/acknowledge/from/conf/gateway/:gateway_id', HardwareController.Ack
 router.post('/setting/acknowledge/after/set/reset', HardwareController.SetRestSettingsAcknowledgement);
 
 
-// Feedback api 
-router.get('/feedback/service/:gateway_id?/:optimizer?', HardwareController.Feedback);
-
-
 
 
 

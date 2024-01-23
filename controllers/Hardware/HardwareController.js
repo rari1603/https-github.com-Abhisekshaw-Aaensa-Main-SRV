@@ -81,7 +81,7 @@ exports.ConfigureableData = async (req, res) => {
 
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
         const optObject = await Promise.all(Optimizers.map(async (element) => {
-            const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element.id });
+            const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element._id });
 
             return {
                 "optimizer_id": element.OptimizerID,
@@ -89,13 +89,13 @@ exports.ConfigureableData = async (req, res) => {
                 "is_reset": element.isReset,
                 "is_setting": element.isSetting,
                 "settings": element.isSetting ? {
-                    firstPowerOnObservationTime: OptimizerSettings.firstPowerOnObservationTime,
-                    maxObservatioTime: OptimizerSettings.maxObservatioTime,
-                    OptimizationOnTime: OptimizerSettings.OptimizationOnTime,
-                    thermostatMonitoringInterval: OptimizerSettings.thermostatMonitoringInterval,
-                    thermostatMonitoringTimeIncrement: OptimizerSettings.thermostatMonitoringTimeIncrement,
-                    steadyStateTimeRoomTempTolerance: OptimizerSettings.steadyStateTimeRoomTempTolerance,
-                    steadyStateCoilTempTolerance: OptimizerSettings.steadyStateCoilTempTolerance
+                    firstPowerOnObservationTime: OptimizerSettings?.firstPowerOnObservationTime,
+                    maxObservatioTime: OptimizerSettings?.maxObservatioTime,
+                    OptimizationOnTime: OptimizerSettings?.OptimizationOnTime,
+                    thermostatMonitoringInterval: OptimizerSettings?.thermostatMonitoringInterval,
+                    thermostatMonitoringTimeIncrement: OptimizerSettings?.thermostatMonitoringTimeIncrement,
+                    steadyStateTimeRoomTempTolerance: OptimizerSettings?.steadyStateTimeRoomTempTolerance,
+                    steadyStateCoilTempTolerance: OptimizerSettings?.steadyStateCoilTempTolerance
                 } : {}
             };
         }));

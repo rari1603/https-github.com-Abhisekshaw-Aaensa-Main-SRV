@@ -1,9 +1,4 @@
 const EnterpriseModel = require('../../models/enterprise.model');
-// const EnterpriseUserModel = require('../../models/enterprise_user.model');
-const EnterpriseStateModel = require('../../models/enterprise_state.model');
-// const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
-const GatewayModel = require('../../models/gateway.model');
-const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const GatewayLogModel = require('../../models/GatewayLog.model');
 
 
@@ -12,7 +7,7 @@ exports.AllDataLog = async (req, res) => {
 
     try {
         const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10; // Set your preferred page size
+        const pageSize = parseInt(req.query.pageSize) || 50;
 
         const lookUpQuery = {
             from: 'optimizerlogs',
@@ -21,9 +16,24 @@ exports.AllDataLog = async (req, res) => {
             as: 'OptimizerLogDetails'
         };
 
+        const gatewayLookup = {
+            from: 'gateways', // Assuming your GatewayModel collection is named 'gateways'
+            localField: 'GatewayID',
+            foreignField: '_id',
+            as: 'GatewayDetails'
+        };
+
+        const optimizerLookup = {
+            from: 'optimizers', // Assuming your OptimizerModel collection is named 'optimizers'
+            localField: 'OptimizerLogDetails.OptimizerID',
+            foreignField: '_id',
+            as: 'OptimizerDetails'
+        };
+
         const projectQuery = {
             _id: 1,
-            GatewayID: 1,
+            GatewayID: { $arrayElemAt: ['$GatewayDetails.GatewayID', 0] },
+            TimeStamp: 1,
             Phases: 1,
             KVAH: 1,
             KWH: 1,
@@ -34,15 +44,19 @@ exports.AllDataLog = async (req, res) => {
                     input: '$OptimizerLogDetails',
                     as: 'optimizer',
                     in: {
-                        OptimizerID: '$$optimizer.OptimizerID',
-                        GatewayID: '$$optimizer.GatewayID',
+                        OptimizerID: {
+                            $ifNull: [
+                                { $ifNull: [{ $arrayElemAt: ['$OptimizerDetails.OptimizerID', 0] }, '$$optimizer.OptimizerID'] },
+                                null
+                            ]
+                        },
+                        GatewayID: { $arrayElemAt: ['$GatewayDetails.GatewayID', 0] },
                         GatewayLogID: '$$optimizer.GatewayLogID',
-                        TimeStamp: '$$optimizer.TimeStamp',
                         RoomTemperature: '$$optimizer.RoomTemperature',
-                        Humidity: '$$optimizer.Humidity',
                         CoilTemperature: '$$optimizer.CoilTemperature',
                         OptimizerMode: '$$optimizer.OptimizerMode',
-                        isDelete: '$$optimizer.isDelete'
+                        isDelete: '$$optimizer.isDelete',
+                        OptimizerDetails: '$$optimizer.OptimizerDetails'
                     }
                 }
             }
@@ -55,7 +69,16 @@ exports.AllDataLog = async (req, res) => {
                 $lookup: lookUpQuery
             },
             {
+                $lookup: gatewayLookup
+            },
+            {
+                $lookup: optimizerLookup
+            },
+            {
                 $project: projectQuery
+            },
+            {
+                $sort: { TimeStamp: -1 }
             },
             {
                 $skip: skip
@@ -78,7 +101,7 @@ exports.AllDataLog = async (req, res) => {
 exports.AllDataLogDemo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 50; // Set your preferred page size
+        const pageSize = parseInt(req.query.pageSize) || 50;
 
         const lookUpQuery = {
             from: 'optimizerlogs',
@@ -87,9 +110,23 @@ exports.AllDataLogDemo = async (req, res) => {
             as: 'OptimizerLogDetails'
         };
 
+        const gatewayLookup = {
+            from: 'gateways', // Assuming your GatewayModel collection is named 'gateways'
+            localField: 'GatewayID',
+            foreignField: '_id',
+            as: 'GatewayDetails'
+        };
+
+        const optimizerLookup = {
+            from: 'optimizers', // Assuming your OptimizerModel collection is named 'optimizers'
+            localField: 'OptimizerLogDetails.OptimizerID',
+            foreignField: '_id',
+            as: 'OptimizerDetails'
+        };
+
         const projectQuery = {
             _id: 1,
-            GatewayID: 1,
+            GatewayID: { $arrayElemAt: ['$GatewayDetails.GatewayID', 0] },
             TimeStamp: 1,
             Phases: 1,
             KVAH: 1,
@@ -101,15 +138,19 @@ exports.AllDataLogDemo = async (req, res) => {
                     input: '$OptimizerLogDetails',
                     as: 'optimizer',
                     in: {
-                        OptimizerID: '$$optimizer.OptimizerID',
-                        GatewayID: '$$optimizer.GatewayID',
+                        OptimizerID: {
+                            $ifNull: [
+                                { $ifNull: [{ $arrayElemAt: ['$OptimizerDetails.OptimizerID', 0] }, '$$optimizer.OptimizerID'] },
+                                null
+                            ]
+                        },
+                        GatewayID: { $arrayElemAt: ['$GatewayDetails.GatewayID', 0] },
                         GatewayLogID: '$$optimizer.GatewayLogID',
-                        // TimeStamp: '$$optimizer.TimeStamp',
                         RoomTemperature: '$$optimizer.RoomTemperature',
-                        Humidity: '$$optimizer.Humidity',
                         CoilTemperature: '$$optimizer.CoilTemperature',
                         OptimizerMode: '$$optimizer.OptimizerMode',
-                        isDelete: '$$optimizer.isDelete'
+                        isDelete: '$$optimizer.isDelete',
+                        OptimizerDetails: '$$optimizer.OptimizerDetails'
                     }
                 }
             }
@@ -120,6 +161,12 @@ exports.AllDataLogDemo = async (req, res) => {
         const allData = await GatewayLogModel.aggregate([
             {
                 $lookup: lookUpQuery
+            },
+            {
+                $lookup: gatewayLookup
+            },
+            {
+                $lookup: optimizerLookup
             },
             {
                 $project: projectQuery
@@ -140,5 +187,3 @@ exports.AllDataLogDemo = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
-
-

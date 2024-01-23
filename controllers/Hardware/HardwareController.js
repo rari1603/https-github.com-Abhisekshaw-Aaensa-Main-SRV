@@ -134,7 +134,7 @@ exports.Store = async (req, res) => {
         }
 
         const gatewayId = gateway._id;
-        const { Phases, KVAH, KWH, PF } = data;
+        const { TimeStamp, Phases, KVAH, KWH, PF } = data;
 
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
@@ -150,6 +150,7 @@ exports.Store = async (req, res) => {
 
         const gatewayLog = await GatewayLogModel({
             GatewayID: gatewayId,
+            TimeStamp: TimeStamp,
             Phases: sanitizedPhases,
             KVAH: handleNaN(KVAH),
             KWH: handleNaN(KWH),
@@ -163,16 +164,13 @@ exports.Store = async (req, res) => {
                 console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
             }
 
-            // if (!optimizer.GatewayId.equals(gateway._id)) {
-            //     console.log(`The Optimizer with ID ${req.body.OptimizerID} is not associated with the Gateway with ID ${req.body.GatewayID}. Please verify with the system administrator.`);
-            // }
 
             if (optimizer) {
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
-                    TimeStamp: element.TimeStamp,
+                    // TimeStamp: element.TimeStamp,
                     RoomTemperature: element.RoomTemperature,
                     Humidity: element.Humidity,
                     CoilTemperature: element.CoilTemperature,

@@ -8,6 +8,7 @@ const GatewayLogSchema = new mongoose.Schema({
         ref: "Gateway",
         required: true
     },
+    TimeStamp: { type: String, required: true },
     Phases: {
         Ph1: {
             Voltage: { type: Number },

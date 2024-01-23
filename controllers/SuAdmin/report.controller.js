@@ -78,7 +78,7 @@ exports.AllDataLog = async (req, res) => {
 exports.AllDataLogDemo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10; // Set your preferred page size
+        const pageSize = parseInt(req.query.pageSize) || 50; // Set your preferred page size
 
         const lookUpQuery = {
             from: 'optimizerlogs',
@@ -90,6 +90,7 @@ exports.AllDataLogDemo = async (req, res) => {
         const projectQuery = {
             _id: 1,
             GatewayID: 1,
+            TimeStamp: 1,
             Phases: 1,
             KVAH: 1,
             KWH: 1,
@@ -103,7 +104,7 @@ exports.AllDataLogDemo = async (req, res) => {
                         OptimizerID: '$$optimizer.OptimizerID',
                         GatewayID: '$$optimizer.GatewayID',
                         GatewayLogID: '$$optimizer.GatewayLogID',
-                        TimeStamp: '$$optimizer.TimeStamp',
+                        // TimeStamp: '$$optimizer.TimeStamp',
                         RoomTemperature: '$$optimizer.RoomTemperature',
                         Humidity: '$$optimizer.Humidity',
                         CoilTemperature: '$$optimizer.CoilTemperature',
@@ -124,6 +125,9 @@ exports.AllDataLogDemo = async (req, res) => {
                 $project: projectQuery
             },
             {
+                $sort: { TimeStamp: -1 }
+            },
+            {
                 $skip: skip
             },
             {
@@ -136,8 +140,5 @@ exports.AllDataLogDemo = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
-
-
-
 
 

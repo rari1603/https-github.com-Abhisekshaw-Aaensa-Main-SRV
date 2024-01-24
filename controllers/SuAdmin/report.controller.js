@@ -17,14 +17,14 @@ exports.AllDataLog = async (req, res) => {
         };
 
         const gatewayLookup = {
-            from: 'gateways', // Assuming your GatewayModel collection is named 'gateways'
+            from: 'gateways', // GatewayModel collection is named 'gateways'
             localField: 'GatewayID',
             foreignField: '_id',
             as: 'GatewayDetails'
         };
 
         const optimizerLookup = {
-            from: 'optimizers', // Assuming your OptimizerModel collection is named 'optimizers'
+            from: 'optimizers', // OptimizerModel collection is named 'optimizers'
             localField: 'OptimizerLogDetails.OptimizerID',
             foreignField: '_id',
             as: 'OptimizerDetails'
@@ -111,14 +111,14 @@ exports.AllDataLogDemo = async (req, res) => {
         };
 
         const gatewayLookup = {
-            from: 'gateways', // Assuming your GatewayModel collection is named 'gateways'
+            from: 'gateways', // GatewayModel collection is named 'gateways'
             localField: 'GatewayID',
             foreignField: '_id',
             as: 'GatewayDetails'
         };
 
         const optimizerLookup = {
-            from: 'optimizers', // Assuming your OptimizerModel collection is named 'optimizers'
+            from: 'optimizers', // OptimizerModel collection is named 'optimizers'
             localField: 'OptimizerLogDetails.OptimizerID',
             foreignField: '_id',
             as: 'OptimizerDetails'
@@ -147,6 +147,7 @@ exports.AllDataLogDemo = async (req, res) => {
                         GatewayID: { $arrayElemAt: ['$GatewayDetails.GatewayID', 0] },
                         GatewayLogID: '$$optimizer.GatewayLogID',
                         RoomTemperature: '$$optimizer.RoomTemperature',
+                        Humidity: '$$optimizer.Humidity',
                         CoilTemperature: '$$optimizer.CoilTemperature',
                         OptimizerMode: '$$optimizer.OptimizerMode',
                         isDelete: '$$optimizer.isDelete',

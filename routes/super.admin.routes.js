@@ -29,6 +29,8 @@ router.get('/get/enterprise/state/location/gateway/list/:enterpriseInfo_id', [ve
 router.get('/get/enterprise/state/location/gateway/optimizer/list/:gateway_id', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayOptimizerList);
 // OptimizerDetails
 router.get('/get/optimizer/details/:optimizer_id', [verifyToken], EnterpriseController.OptimizerDetails);
+// GatewayDetails
+router.get('/get/gateway/details/:gateway_id', [verifyToken], EnterpriseController.GatewayDetails);
 
 // add enterprise admin
 router.post('/add/enterprise', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, duplicateEnterpriseCheck], UserController.addEnterprise);

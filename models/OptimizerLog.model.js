@@ -34,6 +34,3 @@ const OptimizerLogSchema = new mongoose.Schema({
 const OptimizerLogModel = mongoose.model('OptimizerLog', OptimizerLogSchema);
 
 module.exports = OptimizerLogModel;
-
-
-// OK

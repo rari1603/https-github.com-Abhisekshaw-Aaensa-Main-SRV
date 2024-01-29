@@ -561,53 +561,64 @@ exports.BypassOptimizers = async (req, res) => {
 
 // Settings acknowledgement after set/rest
 exports.SetRestSettingsAcknowledgement = async (req, res) => {
-    const { purpose, optimizerIDS } = req.body;
+    const DATA = req.body;
+
     try {
-        if (purpose === "set") {
-            const OptimizerisSettingUpdate = await Promise.all(optimizerIDS.map(async id => {
-                const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
-                // Check if Optimizer exists before attempting to update
+        const results = await Promise.all(DATA.map(async item => {
+            const { purpose, optimizerID } = item;
+
+            if (purpose === "set") {
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizerID });
+
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
                         { isSetting: false },
                         { new: true }
                     );
-                    return true;  // Indicate successful update for this OptimizerID
+                    return { success: true, message: "IsSetting updated successfully." };
                 } else {
-                    return false; // Indicate that no document was found for this OptimizerID
+                    return { success: false, message: "No document found for this OptimizerID." };
                 }
-            }));
-
-            if (OptimizerisSettingUpdate.every(update => update !== false)) {
-                return res.status(200).send({ success: true, message: "IsSetting updated successfully." });
-            } else {
-                return res.status(500).send({ success: false, message: "Failed to update IsSetting." });
             }
-        }
 
-        if (purpose === "reset") {
-            const OptimizerisResetUpdate = await Promise.all(optimizerIDS.map(async id => {
-                const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
-                // Check if Optimizer exists before attempting to update
+            if (purpose === "reset") {
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizerID });
+
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
                         { isReset: false },
                         { new: true }
                     );
-                    return true;  // Indicate successful update for this OptimizerID
+                    return { success: true, message: "IsReset updated successfully." };
                 } else {
-                    return false; // Indicate that no document was found for this OptimizerID
+                    return { success: false, message: "No document found for this OptimizerID." };
                 }
-            }));
-
-            if (OptimizerisResetUpdate.every(update => update !== false)) {
-                return res.status(200).send({ success: true, message: "IsReset updated successfully." });
-            } else {
-                return res.status(500).send({ success: false, message: "Failed to update IsReset." });
             }
-        }
+
+            if (purpose === "bypass") {
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizerID });
+
+                if (Optimizer) {
+                    await OptimizerModel.findByIdAndUpdate(
+                        { _id: Optimizer._id },
+                        { isBypass: false },
+                        { new: true }
+                    );
+                    return { success: true, message: "IsBypass updated successfully." };
+                } else {
+                    return { success: false, message: "No document found for this OptimizerID." };
+                }
+            }
+
+            return { success: false, message: "Invalid purpose." };
+        }));
+
+        const isSuccess = results.every(result => result.success);
+        const statusCode = isSuccess ? 200 : 500;
+
+        return res.status(statusCode).send({ success: isSuccess, results });
     } catch (error) {
         console.error(error);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });

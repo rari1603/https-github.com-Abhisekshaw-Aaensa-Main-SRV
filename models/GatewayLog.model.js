@@ -46,6 +46,3 @@ const GatewayLogSchema = new mongoose.Schema({
 const GatewayLogModel = mongoose.model('GatewayLog', GatewayLogSchema);
 
 module.exports = GatewayLogModel;
-
-
-// OK

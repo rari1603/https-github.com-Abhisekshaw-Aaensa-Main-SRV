@@ -6,6 +6,8 @@ const UserModel = require('../../models/user.model');
 const bcrypt = require('bcrypt');
 const { decode } = require('../../utility/JwtDecoder');
 const OptimizerModel = require('../../models/optimizer.model');
+const GatewayLogModel = require('../../models/GatewayLog.model');
+const OptimizerLogModel = require('../../models/OptimizerLog.model');
 
 
 
@@ -410,53 +412,111 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 // OptimizerDetails
 exports.OptimizerDetails = async (req, res) => {
     const { optimizer_id } = req.params;
-    const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizer_id });
+    try {
+        const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizer_id });
 
-    if (Optimizer) {
-        const Gateway = await GatewayModel.findOne({ _id: Optimizer.GatewayId });
-        const STATIC_DATA = {
-            optimizer: Optimizer,
-            gateway: Gateway,
-            optimizer_mode: "NON-OPTIMIZATION",
-            outside_temp: "29",
-            outside_humidity: "20",
-            room_temp: "23.8",
-            coil_temp: "22.3",
-            humidity_percentage: "65",
-            unit: {
-                temperature: "C",
-                voltage: "V",
-                current: "A",
-                active_power: "kW",
-                apartment_power: "kVA",
-            },
-            PH1: {
-                voltage: "253.974503",
-                current: "6.210000",
-                active_power: "-0.995000",
-                power_factor: "1185.000000",
-                apartment_power: "1579.000000",
-            },
-            PH2: {
-                voltage: "254.018997",
-                current: "5.880000",
-                active_power: "0.961000",
-                power_factor: "1341.000000",
-                apartment_power: "1496.000000",
-            },
-            PH3: {
-                voltage: "254.386505",
-                current: "9.950001",
-                active_power: "0.999000",
-                power_factor: "1591.000000",
-                apartment_power: "1075.000000",
-            },
+        if (Optimizer) {
+            const Gateway = await GatewayModel.findOne({ _id: Optimizer.GatewayId });
+            const GatewayLogData = await GatewayLogModel.findOne({ GatewayID: Gateway._id }).sort({ createdAt: -1 });
+
+            const OptimizerLogData = await OptimizerLogModel
+                .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
+                .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
+                .limit(1);
+
+            const DATA = {
+                Optimizer: {
+                    _id: Optimizer._id,
+                    OptimizerID: Optimizer.OptimizerID,
+                    OptimizerName: Optimizer.OptimizerName,
+                    isBypass: Optimizer.isBypass,
+                    isReset: Optimizer.isReset,
+                    isSetting: Optimizer.isSetting,
+                    createdAt: Optimizer.createdAt,
+                    updatedAt: Optimizer.updatedAt,
+                },
+                Gateway: {
+                    _id: Gateway._id,
+                    GatewayID: Gateway.GatewayID,
+                    OnboardingDate: Gateway.OnboardingDate,
+                    Switch: Gateway.Switch,
+                    isDelete: Gateway.isDelete,
+                    isConfigure: Gateway.isConfigure,
+                    createdAt: Gateway.createdAt,
+                    updatedAt: Gateway.updatedAt,
+                },
+                optimizer_mode: OptimizerLogData.OptimizerMode,
+                outside_temp: "29", // static_data
+                outside_humidity: "20", // static_data
+                room_temp: OptimizerLogData.RoomTemperature,
+                coil_temp: OptimizerLogData.CoilTemperature,
+                humidity: OptimizerLogData.Humidity,
+                unit: {
+                    temperature: "C",
+                    voltage: "V",
+                    current: "A",
+                    active_power: "kW",
+                    apartment_power: "kVA",
+                },
+                PH1: {
+                    voltage: GatewayLogData.Phases.Ph1.Voltage,
+                    current: GatewayLogData.Phases.Ph1.Current,
+                    active_power: GatewayLogData.Phases.Ph1.ActivePower,
+                    power_factor: GatewayLogData.Phases.Ph1.PowerFactor,
+                    apartment_power: GatewayLogData.Phases.Ph1.ApparentPower,
+                },
+                PH2: {
+                    voltage: GatewayLogData.Phases.Ph2.Voltage,
+                    current: GatewayLogData.Phases.Ph2.Current,
+                    active_power: GatewayLogData.Phases.Ph2.ActivePower,
+                    power_factor: GatewayLogData.Phases.Ph2.PowerFactor,
+                    apartment_power: GatewayLogData.Phases.Ph2.ApparentPower,
+                },
+                PH3: {
+                    voltage: GatewayLogData.Phases.Ph3.Voltage,
+                    current: GatewayLogData.Phases.Ph3.Current,
+                    active_power: GatewayLogData.Phases.Ph3.ActivePower,
+                    power_factor: GatewayLogData.Phases.Ph3.PowerFactor,
+                    apartment_power: GatewayLogData.Phases.Ph3.ApparentPower,
+                },
+            };
+            return res.status(200).json({ success: true, message: "Data fetched successfully", data: DATA });
+        } else {
+            return res.status(404).json({ success: false, message: "Optimizer not found", data: null });
         }
-        return res.status(200).json({ success: true, message: "Data fetched successfully", data: STATIC_DATA });
-    } else {
-        return res.status(404).json({ success: false, message: "Optimizer not found", data: null });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
-}
+};
+
+// GatewayDetails
+exports.GatewayDetails = async (req, res) => {
+    const { gateway_id } = req.params;
+    try {
+        const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        if (Gateway) {
+            const GatewayLogData = await GatewayLogModel.findOne({ GatewayID: Gateway._id }).populate({
+                'path': 'GatewayID',
+                'select': '_id OnboardingDate GatewayID EnterpriseUserID Switch isDelete isConfigure is_Ready_toConfig createdAt updatedAt'
+            }).sort({ createdAt: -1 });
+
+            const DATA = {
+                ...GatewayLogData.toObject(),
+                Gateway: GatewayLogData.GatewayID,  // Rename GatewayID to Gateway
+            };
+
+            delete DATA.GatewayID;  // Remove the original GatewayID field
+
+            return res.status(200).json({ success: true, message: "Data fetched successfully", data: DATA });
+        } else {
+            return res.status(404).json({ success: false, message: "Gateway not found", data: null });
+        }
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+};
 
 // SET PASSWORD VIEW
 exports.SetNewPasswordView = async (req, res) => {
@@ -491,7 +551,7 @@ exports.SetNewPasswordView = async (req, res) => {
         console.log(error.message);
         return res.send({ success: false, message: error.message });
     }
-}
+};
 
 // SET PASSWORD
 exports.SetNewPassword = async (req, res) => {
@@ -519,5 +579,5 @@ exports.SetNewPassword = async (req, res) => {
             message: error.message,
         });
     }
-}
+};
 

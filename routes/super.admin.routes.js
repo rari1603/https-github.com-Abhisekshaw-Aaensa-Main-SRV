@@ -57,6 +57,9 @@ router.post('/add/optimizer', [verifyToken, routeAccessMiddleware(), CheckOptimi
 // Get all enterprise & system integrator user
 router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIntUsers);
 
+// Get all enterprise & system integrator user
+router.get('/get/dashboard/details/data', [verifyToken], CommonController.DashboardDetails);
+
 
 // router.get('/hi', routeAccessMiddleware(), UserController.index);
 

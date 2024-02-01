@@ -507,7 +507,7 @@ exports.BypassOptimizers = async (req, res) => {
                     { Switch: true },
                     { new: true } // This option returns the modified document rather than the original
                 );
-                return res.status(200).json({ success: true, message: "Optimizer updated successfully." });
+                return res.status(200).json({ success: true, message: "Bypass operation completed." });
             } else {
                 return res.status(404).json({ success: false, message: "Optimizer not found." });
             }
@@ -524,7 +524,7 @@ exports.BypassOptimizers = async (req, res) => {
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
                         { $set: { Switch: true } }
                     );
-                    return res.status(200).json({ success: true, message: "Optimizers updated successfully. Optimizer bypass operation completed." });
+                    return res.status(200).json({ success: true, message: "Bypass operation completed." });
                 } else {
                     return res.status(404).json({ success: false, message: "Optimizers not found." });
                 }
@@ -547,7 +547,7 @@ exports.BypassOptimizers = async (req, res) => {
                     );
                 }
 
-                return res.status(200).json({ success: true, message: "Optimizers updated successfully." });
+                return res.status(200).json({ success: true, message: "Bypass operation completed." });
             } else {
                 return res.status(404).json({ success: false, message: "Location not found." });
             }

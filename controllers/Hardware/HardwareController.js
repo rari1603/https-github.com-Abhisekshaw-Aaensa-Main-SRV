@@ -9,6 +9,7 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
+const mongoose = require('mongoose');
 
 
 
@@ -497,14 +498,14 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 
 // Optimizer switch bypass
 exports.BypassOptimizers = async (req, res) => {
-    const { group, id } = req.body;
+    const { state, group, id } = req.body;
     try {
         // bypass from device level
         if (group === "optimizer") {
             const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
             if (Optimizer) {
                 await OptimizerModel.findByIdAndUpdate({ _id: Optimizer._id },
-                    { Switch: true },
+                    { isBypass: state ? true : false },
                     { new: true } // This option returns the modified document rather than the original
                 );
                 return res.status(200).json({ success: true, message: "Bypass operation completed." });
@@ -522,7 +523,7 @@ exports.BypassOptimizers = async (req, res) => {
                 if (Optimizers) {
                     // Update the "Switch" field for all optimizers
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { $set: { Switch: true } }
+                        { $set: { isBypass: state ? true : false } }
                     );
                     return res.status(200).json({ success: true, message: "Bypass operation completed." });
                 } else {
@@ -543,7 +544,7 @@ exports.BypassOptimizers = async (req, res) => {
                 for (const Gateway of Gateways) {
                     // Update the "Switch" field for all optimizers
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { $set: { Switch: true } }
+                        { $set: { isBypass: state ? true : false } }
                     );
                 }
 

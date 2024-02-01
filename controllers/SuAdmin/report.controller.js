@@ -11,41 +11,6 @@ exports.AllDataLog = async (req, res) => {
         const skip = (page - 1) * pageSize;
 
         const pipeline = [
-            {
-                $addFields: {
-                    // Extract date and time components using a regular expression
-                    dateComponents: {
-                        $regexMatch: {
-                            input: '$TimeStamp',
-                            regex: /Date:(\d{1,2}-\d{2}-\d{4}) Time:(\d{1,2}:\d{2}:\d{2})/
-                        }
-                    }
-                }
-            },
-            {
-                $match: {
-                    dateComponents: { $exists: true }
-                }
-            },
-            {
-                $addFields: {
-                    // Convert to ISO format
-                    isoDate: {
-                        $dateFromString: {
-                            dateString: {
-                                $concat: [
-                                    { $arrayElemAt: ['$dateComponents.captures', 0] },
-                                    'T',
-                                    { $arrayElemAt: ['$dateComponents.captures', 1] },
-                                    'Z'
-                                ]
-                            },
-                            format: '%d-%m-%YT%H:%M:%S'
-                        }
-                    }
-                }
-            },
-            { $unset: 'dateComponents' },
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: pageSize },
@@ -125,41 +90,6 @@ exports.AllDataLogDemo = async (req, res) => {
         const skip = (page - 1) * pageSize;
 
         const pipeline = [
-            {
-                $addFields: {
-                    // Extract date and time components using a regular expression
-                    dateComponents: {
-                        $regexMatch: {
-                            input: '$TimeStamp',
-                            regex: /Date:(\d{1,2}-\d{2}-\d{4}) Time:(\d{1,2}:\d{2}:\d{2})/
-                        }
-                    }
-                }
-            },
-            {
-                $match: {
-                    dateComponents: { $exists: true }
-                }
-            },
-            {
-                $addFields: {
-                    // Convert to ISO format
-                    isoDate: {
-                        $dateFromString: {
-                            dateString: {
-                                $concat: [
-                                    { $arrayElemAt: ['$dateComponents.captures', 0] },
-                                    'T',
-                                    { $arrayElemAt: ['$dateComponents.captures', 1] },
-                                    'Z'
-                                ]
-                            },
-                            format: '%d-%m-%YT%H:%M:%S'
-                        }
-                    }
-                }
-            },
-            { $unset: 'dateComponents' },
             { $sort: { createdAt: -1 } },
             { $skip: skip },
             { $limit: pageSize },

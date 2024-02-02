@@ -14,7 +14,8 @@ const router = express.Router();
 
 
 
-router.post('/get/all/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
+router.post('/get/all/device/data', ReportController.AllDeviceLog);
+// router.post('/get/all/device/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 router.get('/get/all/demo/data', ReportController.AllDataLogDemo);
 // enterprise list
 router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.EnterpriseListData); // flag should be "data"/"name"

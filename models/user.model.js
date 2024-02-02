@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
+const moment = require('moment-timezone');
+
+
 const UserSchema = new mongoose.Schema({
     username: { type: String },
     email: { type: String },
@@ -25,6 +28,14 @@ const UserSchema = new mongoose.Schema({
     }
 
 }, { timestamps: true });
+
+// Middleware to convert timestamps to IST before saving
+UserSchema.pre('save', function (next) {
+    // Convert timestamps to IST
+    this.createdAt = moment(this.createdAt).tz('Asia/Kolkata');
+    this.updatedAt = moment(this.updatedAt).tz('Asia/Kolkata');
+    next();
+});
 
 const User = mongoose.model('User', UserSchema);
 

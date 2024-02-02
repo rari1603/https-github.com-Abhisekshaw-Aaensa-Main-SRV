@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Add this line to import Schema
+const moment = require('moment-timezone');
+
+
 const GatewaySchema = new mongoose.Schema({
     // EnterpriseName: { type: String },
     EnterpriseInfo: { // primary _id of EnterpriseStateLocation schema/model
@@ -24,6 +27,14 @@ const GatewaySchema = new mongoose.Schema({
     is_Ready_toConfig: { type: Boolean, default: false },
 }, { timestamps: true });
 
+
+// Middleware to convert timestamps to IST before saving
+GatewaySchema.pre('save', function (next) {
+    // Convert timestamps to IST
+    this.createdAt = moment(this.createdAt).tz('Asia/Kolkata');
+    this.updatedAt = moment(this.updatedAt).tz('Asia/Kolkata');
+    next();
+});
 const GatewayModel = mongoose.model('Gateway', GatewaySchema);
 
 module.exports = GatewayModel;

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const moment = require('moment-timezone');
 
 const OptimizerSettingValueSchema = new Schema({
     optimizerID: {
@@ -18,6 +19,15 @@ const OptimizerSettingValueSchema = new Schema({
         default: false
     }
 }, { timestamps: true });
+
+// Middleware to convert timestamps to IST before saving
+OptimizerSettingValueSchema.pre('save', function (next) {
+    // Convert timestamps to IST
+    this.createdAt = moment(this.createdAt).tz('Asia/Kolkata');
+    this.updatedAt = moment(this.updatedAt).tz('Asia/Kolkata');
+    next();
+});
+
 
 const OptimizerSettingValueModel = mongoose.model('OptimizerSettingValue', OptimizerSettingValueSchema);
 

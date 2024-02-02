@@ -500,6 +500,10 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 exports.BypassOptimizers = async (req, res) => {
     const { state, group, id } = req.body;
     try {
+        if (!(state === true || state === false) || !group || !id) {
+            return res.status(404).json({ success: false, message: "Oops, there is a problem with updating!" });
+        }
+
         // bypass from device level
         if (group === "optimizer") {
             const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
@@ -508,7 +512,7 @@ exports.BypassOptimizers = async (req, res) => {
                     { isBypass: state ? true : false },
                     { new: true } // This option returns the modified document rather than the original
                 );
-                return res.status(200).json({ success: true, message: "Bypass operation completed." });
+                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
             } else {
                 return res.status(404).json({ success: false, message: "Optimizer not found." });
             }
@@ -525,7 +529,7 @@ exports.BypassOptimizers = async (req, res) => {
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
                         { $set: { isBypass: state ? true : false } }
                     );
-                    return res.status(200).json({ success: true, message: "Bypass operation completed." });
+                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
                 } else {
                     return res.status(404).json({ success: false, message: "Optimizers not found." });
                 }
@@ -548,7 +552,7 @@ exports.BypassOptimizers = async (req, res) => {
                     );
                 }
 
-                return res.status(200).json({ success: true, message: "Bypass operation completed." });
+                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
             } else {
                 return res.status(404).json({ success: false, message: "Location not found." });
             }

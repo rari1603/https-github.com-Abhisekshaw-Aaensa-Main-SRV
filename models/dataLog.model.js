@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema; // Add this line to import Schema
+const Schema = mongoose.Schema;
 const moment = require('moment-timezone');
 
 const DataLogSchema = new mongoose.Schema({
-// const GatewayLogSchema = new mongoose.Schema({
 
     Time: { type: Date, default: Date.now },
     GatewayID: {
@@ -65,10 +64,5 @@ DataLogSchema.pre('save', function (next) {
 
 
 const DataLogModel = mongoose.model('DataLog', DataLogSchema);
-// const GatewayLogModel = mongoose.model('GatewayLog', GatewayLogSchema);
 
 module.exports = DataLogModel;
-// module.exports = GatewayLogModel;
-
-
-// OK

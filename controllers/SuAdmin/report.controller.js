@@ -10,7 +10,7 @@ const StateModel = require('../../models/state.model');
 
 exports.AllDeviceLog = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
-
+    // console.log(req.body);
     try {
         const parsedStartDate = new Date(startDate);
         const parsedEndDate = new Date(endDate);
@@ -45,13 +45,13 @@ exports.AllDeviceLog = async (req, res) => {
         }
 
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
-        const EntStates = await EnterpriseStateModel.find({ Enterprise_ID: Enterprise._id });
+        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
 
         const DATA = await Promise.all(EntStates.map(async (State) => {
-            const Location = await EnterpriseStateLocationModel.find({
-                Enterprise_ID: State.Enterprise_ID,
-                State_ID: State.State_ID,
-            });
+            const locationQuery = location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
+
+            const Location = await EnterpriseStateLocationModel.find(locationQuery);
 
             const state = await StateModel.findOne({ _id: State.State_ID });
 
@@ -60,7 +60,9 @@ exports.AllDeviceLog = async (req, res) => {
                     stateName: state.name,
                     state_ID: state._id,
                     location: await Promise.all(Location.map(async (loc) => {
-                        const Gateways = await GatewayModel.find({ EnterpriseInfo: loc._id });
+
+                        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
+                        const Gateways = await GatewayModel.find(gatewayQuery);
 
                         return {
                             locationName: loc.LocationName,
@@ -79,7 +81,7 @@ exports.AllDeviceLog = async (req, res) => {
                                             OptimizerID: optimizer._id,
                                             createdAt: { $gte: parsedStartDate, $lte: parsedEndDate }
                                         };
-                                        console.log(query);
+                                        // console.log(query);
 
                                         const OptimizerLogs = await OptimizerLogModel.find(query);
 

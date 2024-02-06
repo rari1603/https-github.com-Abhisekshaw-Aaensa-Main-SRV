@@ -83,10 +83,25 @@ exports.ConfigureableData = async (req, res) => {
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
         const optObject = await Promise.all(Optimizers.map(async (element) => {
             const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element._id });
+            var bypassType = false;
+            if (element.isBypass.type) {
+                if (element.isBypass.is_schedule) {
+                    //  check current time with bypass time
+                    var currentTimestamp = Math.floor(Date.now() / 1000);
+                    var scheduleTimestamp = new Date(element.isBypass.time).getTime() / 1000;
+                    if (currentTimestamp >= scheduleTimestamp) {
+                        bypassType = element.isBypass.type;
+                    } else {
+                        bypassType = false;
+                    }
+                } else {
+                    bypassType = element.isBypass.type;
+                }
 
+            }
             return {
                 "optimizer_id": element.OptimizerID,
-                "is_bypass": element.isBypass,
+                "is_bypass": bypassType,
                 "is_reset": element.isReset,
                 "is_setting": element.isSetting,
                 "settings": element.isSetting ? {
@@ -498,7 +513,7 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 
 // Optimizer switch bypass
 exports.BypassOptimizers = async (req, res) => {
-    const { state, group, id } = req.body;
+    const { is_schedule, schedule_time, state, group, id } = req.body;
     try {
         if (!(state === true || state === false) || !group || !id) {
             return res.status(404).json({ success: false, message: "Oops, there is a problem with updating!" });
@@ -509,10 +524,10 @@ exports.BypassOptimizers = async (req, res) => {
             const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
             if (Optimizer) {
                 await OptimizerModel.findByIdAndUpdate({ _id: Optimizer._id },
-                    { isBypass: state ? true : false },
+                    { isBypass: state ? { is_schedule, type: true, time: schedule_time } : { is_schedule, type: false, time: "" } },
                     { new: true } // This option returns the modified document rather than the original
                 );
-                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in default state" });
             } else {
                 return res.status(404).json({ success: false, message: "Optimizer not found." });
             }
@@ -527,9 +542,10 @@ exports.BypassOptimizers = async (req, res) => {
                 if (Optimizers) {
                     // Update the "Switch" field for all optimizers
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { $set: { isBypass: state ? true : false } }
+                        { isBypass: state ? { is_schedule, type: true, time: schedule_time } : { is_schedule, type: false, time: "" } },
+                        { new: true }
                     );
-                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in default state" });
                 } else {
                     return res.status(404).json({ success: false, message: "Optimizers not found." });
                 }
@@ -548,11 +564,12 @@ exports.BypassOptimizers = async (req, res) => {
                 for (const Gateway of Gateways) {
                     // Update the "Switch" field for all optimizers
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { $set: { isBypass: state ? true : false } }
+                        { isBypass: state ? { is_schedule, type: true, time: schedule_time } : { is_schedule, type: false, time: "" } },
+                        { new: true }
                     );
                 }
 
-                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in default state" });
             } else {
                 return res.status(404).json({ success: false, message: "Location not found." });
             }

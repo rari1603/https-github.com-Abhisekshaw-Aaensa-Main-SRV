@@ -625,7 +625,7 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
-                        { isBypass: false },
+                        { isBypass: { is_schedule: false, type: false, time: "" } },
                         { new: true }
                     );
                     return { success: true, message: "IsBypass updated successfully." };

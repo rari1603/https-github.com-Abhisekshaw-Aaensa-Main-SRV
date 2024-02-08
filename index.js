@@ -60,7 +60,7 @@ app.use('/api/fake', v1Router);
 // app.use('/api/srv-1', entRouter);
 
 
-app.get('/check', (req, res) => {
+app.get('/api/hi', (req, res) => {
     res.send("Hello I am Server, Happy To See You..")
 });
 
@@ -93,8 +93,8 @@ app.use((req, res, next) => {
 
 
 
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || "http://localhost:3000";
+const PORT = process.env.PORT || 5001;
+const HOST = process.env.HOST || "http://localhost:5001";
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${HOST}`);

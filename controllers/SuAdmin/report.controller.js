@@ -10,16 +10,10 @@ const StateModel = require('../../models/state.model');
 
 exports.AllDeviceLog = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
-    // console.log(req.body);
     try {
         const parsedStartDate = new Date(startDate);
         const parsedEndDate = new Date(endDate);
 
-        // Adjust the time zone offset for India Standard Time (IST)
-        // parsedStartDate.setMinutes(parsedStartDate.getMinutes() + 330); // 5 hours 30 minutes
-        // parsedEndDate.setMinutes(parsedEndDate.getMinutes() + 330); // 5 hours 30 minutes
-
-        // Check if parsing was successful
         if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
             return res.status(400).json({ success: false, message: 'Invalid date format' });
         }
@@ -28,94 +22,87 @@ exports.AllDeviceLog = async (req, res) => {
         const pageSize = parseInt(req.query.pageSize) || 50;
         const skip = (page - 1) * pageSize;
 
-        const query = {
-            'Enterprise_ID': enterprise_id
-        };
-
-        if (state_id) {
-            query['States.State_ID'] = state_id;
-        }
-
-        if (location_id) {
-            query['States.Location_ID'] = location_id;
-        }
-
-        if (gateway_id) {
-            query['States.Gateways.Gateway_ID'] = gateway_id;
-        }
-
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
 
-        const DATA = await Promise.all(EntStates.map(async (State) => {
+        // Fetch states for the current page only
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).skip(skip).limit(pageSize);
+
+        const responseData = [];
+
+        for (const State of EntStates) {
             const locationQuery = location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
-
             const Location = await EnterpriseStateLocationModel.find(locationQuery);
 
             const state = await StateModel.findOne({ _id: State.State_ID });
 
             if (Location.length > 0) {
-                return {
+                const stateData = {
                     stateName: state.name,
                     state_ID: state._id,
-                    location: await Promise.all(Location.map(async (loc) => {
-
-                        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
-                        const Gateways = await GatewayModel.find(gatewayQuery);
-
-                        return {
-                            locationName: loc.LocationName,
-                            location_ID: loc._id,
-                            gateway: await Promise.all(Gateways.map(async (gateway) => {
-                                const Optimizers = await OptimizerModel.find({
-                                    GatewayId: gateway._id
-                                });
-
-                                return {
-                                    GatewayName: gateway.GatewayID,
-                                    Gateway_ID: gateway._id,
-
-                                    optimizer: await Promise.all(Optimizers.map(async (optimizer) => {
-                                        const query = {
-                                            OptimizerID: optimizer._id,
-                                            createdAt: { $gte: parsedStartDate, $lte: parsedEndDate }
-                                        };
-                                        // console.log(query);
-
-                                        const OptimizerLogs = await OptimizerLogModel.find(query);
-
-                                        return {
-                                            optimizerName: optimizer.OptimizerID,
-                                            optimizer_ID: optimizer._id,
-                                            optimizerLogs: OptimizerLogs.map(optimizerLog => (optimizerLog))
-                                        };
-                                    }))
-                                };
-                            }))
-                        };
-                    }))
+                    location: []
                 };
-            } else {
-                return null;
+
+                for (const loc of Location) {
+                    const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
+                    const Gateways = await GatewayModel.find(gatewayQuery);
+
+                    const locationData = {
+                        locationName: loc.LocationName,
+                        location_ID: loc._id,
+                        gateway: []
+                    };
+
+                    for (const gateway of Gateways) {
+                        const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                        const gatewayData = {
+                            GatewayName: gateway.GatewayID,
+                            Gateway_ID: gateway._id,
+                            optimizer: []
+                        };
+
+                        for (const optimizer of Optimizers) {
+                            const query = {
+                                OptimizerID: optimizer._id,
+                                createdAt: { $gte: parsedStartDate, $lte: parsedEndDate }
+                            };
+
+                            const OptimizerLogs = await OptimizerLogModel.find(query);
+
+                            const optimizerData = {
+                                optimizerName: optimizer.OptimizerID,
+                                optimizer_ID: optimizer._id,
+                                optimizerLogs: OptimizerLogs.map(optimizerLog => (optimizerLog))
+                            };
+
+                            gatewayData.optimizer.push(optimizerData);
+                        }
+
+                        locationData.gateway.push(gatewayData);
+                    }
+
+                    stateData.location.push(locationData);
+                }
+
+                responseData.push(stateData);
             }
-        }));
+        }
 
-        const responseData = [{
-            Enterprise: Enterprise.EnterpriseName,
-            Enterprise_ID: Enterprise._id,
-            States: DATA.filter(state => state !== null)
-        }];
+        const totalCount = await EnterpriseStateModel.countDocuments(enterpriseStateQuery);
+        const totalPages = Math.ceil(totalCount / pageSize);
 
-        return res.send(responseData);
+        return res.send({
+            totalPages,
+            currentPage: page,
+            data: responseData
+        });
 
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
-
-
 
 
 exports.AllDataLogDemo = async (req, res) => {

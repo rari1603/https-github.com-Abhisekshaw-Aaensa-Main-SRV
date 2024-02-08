@@ -9,7 +9,6 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
-const mongoose = require('mongoose');
 
 
 
@@ -587,10 +586,10 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
 
     try {
         const results = await Promise.all(DATA.map(async item => {
-            const { purpose, optimizerID } = item;
+            const { purpose, OptimizerID } = item;
 
             if (purpose === "set") {
-                const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizerID });
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
@@ -598,14 +597,14 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
                         { isSetting: false },
                         { new: true }
                     );
-                    return { success: true, message: "IsSetting updated successfully." };
+                    return { success: true, message: `IsSetting updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };
                 }
             }
 
             if (purpose === "reset") {
-                const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizerID });
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
@@ -613,22 +612,22 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
                         { isReset: false },
                         { new: true }
                     );
-                    return { success: true, message: "IsReset updated successfully." };
+                    return { success: true, message: `IsReset updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };
                 }
             }
 
             if (purpose === "bypass") {
-                const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizerID });
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
-                        { isBypass: false },
+                        { isBypass: { is_schedule: false, type: false, time: "" } },
                         { new: true }
                     );
-                    return { success: true, message: "IsBypass updated successfully." };
+                    return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };
                 }

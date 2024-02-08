@@ -85,23 +85,23 @@ exports.UpdateGateway = async (req, res) => {
     const { gateway_id } = req.params;
 
     try {
-        const UpdatedGateway = await GatewayModel.findByIdAndUpdate({ _id: gateway_id },
-            {
-                EnterpriseInfo,
-                OnboardingDate,
-                GatewayID,
-                NetworkSSID,
-                NetworkPassword,
-                EnterpriseUserID
-            },
-            { new: true } // This option returns the modified document rather than the original
-        );
-
-        if (!UpdatedGateway) {
+        const Gateway = await GatewayModel.find({ _id: gateway_id, EnterpriseInfo: EnterpriseInfo, GatewayID: GatewayID, EnterpriseUserID: EnterpriseUserID });
+        if (Gateway.length > 0) {
+            await GatewayModel.findByIdAndUpdate({ _id: gateway_id },
+                {
+                    EnterpriseInfo,
+                    OnboardingDate,
+                    GatewayID,
+                    NetworkSSID,
+                    NetworkPassword,
+                    EnterpriseUserID
+                },
+                { new: true } // This option returns the modified document rather than the original
+            );
+            return res.status(200).json({ success: true, message: "Gateway updated successfully." });
+        } else {
             return res.status(404).json({ success: false, message: "Gateway not found." });
         }
-
-        return res.status(200).json({ success: true, message: "Gateway updated successfully." });
 
     } catch (err) {
         console.error(err.message);

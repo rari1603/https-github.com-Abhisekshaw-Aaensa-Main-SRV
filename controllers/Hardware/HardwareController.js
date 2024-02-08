@@ -82,8 +82,8 @@ exports.ConfigureableData = async (req, res) => {
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
         const optObject = await Promise.all(Optimizers.map(async (element) => {
             const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element._id });
-            var bypassType = false;
-            if (element.isBypass.type) {
+            var bypassType = "default";
+            if (element.isBypass.type === "true") {
                 if (element.isBypass.is_schedule) {
                     //  check current time with bypass time
                     var currentTimestamp = Math.floor(Date.now() / 1000);
@@ -91,13 +91,16 @@ exports.ConfigureableData = async (req, res) => {
                     if (currentTimestamp >= scheduleTimestamp) {
                         bypassType = element.isBypass.type;
                     } else {
-                        bypassType = false;
+                        bypassType = "default";
                     }
                 } else {
                     bypassType = element.isBypass.type;
                 }
 
+            } else if (element.isBypass.type === "false") {
+                bypassType = "false"
             }
+
             return {
                 "optimizer_id": element.OptimizerID,
                 "is_bypass": bypassType,
@@ -523,10 +526,10 @@ exports.BypassOptimizers = async (req, res) => {
             const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
             if (Optimizer) {
                 await OptimizerModel.findByIdAndUpdate({ _id: Optimizer._id },
-                    { isBypass: state ? { is_schedule, type: true, time: schedule_time } : { is_schedule, type: false, time: "" } },
+                    { isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" } },
                     { new: true } // This option returns the modified document rather than the original
                 );
-                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in default state" });
+                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
             } else {
                 return res.status(404).json({ success: false, message: "Optimizer not found." });
             }
@@ -541,10 +544,10 @@ exports.BypassOptimizers = async (req, res) => {
                 if (Optimizers) {
                     // Update the "Switch" field for all optimizers
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { isBypass: state ? { is_schedule, type: true, time: schedule_time } : { is_schedule, type: false, time: "" } },
+                        { isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" } },
                         { new: true }
                     );
-                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in default state" });
+                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
                 } else {
                     return res.status(404).json({ success: false, message: "Optimizers not found." });
                 }
@@ -563,12 +566,12 @@ exports.BypassOptimizers = async (req, res) => {
                 for (const Gateway of Gateways) {
                     // Update the "Switch" field for all optimizers
                     await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { isBypass: state ? { is_schedule, type: true, time: schedule_time } : { is_schedule, type: false, time: "" } },
+                        { isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" } },
                         { new: true }
                     );
                 }
 
-                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in default state" });
+                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
             } else {
                 return res.status(404).json({ success: false, message: "Location not found." });
             }
@@ -618,13 +621,13 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
                 }
             }
 
-            if (purpose === "bypass") {
+            if (purpose === "bypass_on" || purpose === "bypass_off") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
-                        { isBypass: { is_schedule: false, type: false, time: "" } },
+                        { isBypass: { is_schedule: false, type: "default", time: "" } },
                         { new: true }
                     );
                     return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };

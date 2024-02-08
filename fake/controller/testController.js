@@ -135,7 +135,7 @@ exports.addManyDataDB = async (req, res) => {
         $set: {
             isBypass: {
                 is_schedule: false,
-                type: false,
+                type: "default",
                 time: ""
             }
         }

@@ -13,7 +13,7 @@ const OptimizerSchema = new mongoose.Schema({
     // Description: { type: String },
     isBypass: {
         is_schedule: { type: Boolean, default: false },
-        type: { type: Boolean, default: false },
+        type: { type: String, default: "default" },
         time: { type: String, default: "" }
     },
     isSetting: { type: Boolean, default: false }, // For set

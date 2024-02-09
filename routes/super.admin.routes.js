@@ -52,6 +52,7 @@ router.post('/add/enterprise/state/location', [verifyToken, routeAccessMiddlewar
 router.post('/add/gateway', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.AddGateway);
 // UpdateGateway
 router.post('/update/gateway/:gateway_id', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.UpdateGateway);
+
 // AddOptimizer
 router.post('/add/optimizer', [verifyToken, routeAccessMiddleware(), CheckOptimizer], DeviceController.AddOptimizer);
 
@@ -62,6 +63,9 @@ router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIn
 router.get('/get/dashboard/details/data', [verifyToken], CommonController.DashboardDetails);
 
 
+/**** Test Delete Optimizer ****/
+// TestDeleteGateway
+router.get('/delete/gateway/:gateway_id', DeviceController.DeleteOptimizer);
 // router.get('/hi', routeAccessMiddleware(), UserController.index);
 
 

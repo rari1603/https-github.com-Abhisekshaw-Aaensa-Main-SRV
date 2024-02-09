@@ -108,3 +108,30 @@ exports.UpdateGateway = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 }
+
+
+
+
+
+
+
+//************* Test **************//
+// Delete gateway
+exports.DeleteOptimizer = async (req, res) => {
+    const { gateway_id } = req.params;
+
+    try {
+        // Find and delete all Optimizers associated with the Gateway
+        const deletedOptimizer = await OptimizerModel.deleteMany({ GatewayId: gateway_id });
+
+        if (deletedOptimizer) {
+            return res.status(200).json({ success: true, message: "Associated Optimizers deleted successfully." });
+        } else {
+            return res.status(404).json({ success: false, message: "Gateway not found." });
+        }
+
+    } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+};

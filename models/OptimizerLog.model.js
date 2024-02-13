@@ -19,7 +19,7 @@ const OptimizerLogSchema = new mongoose.Schema({
         ref: "GatewayLog",
         required: true
     },
-    // TimeStamp: { type: Date, default: Date.now },
+    TimeStamp: { type: String },
     RoomTemperature: { type: Number },
     Humidity: { type: Number },
     CoilTemperature: { type: Number },

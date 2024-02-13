@@ -328,6 +328,21 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 
     try {
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        // const marginInSeconds = 20; // Define the time gap in seconds
+        // const currentTimeStamp = Math.floor(new Date().getTime() / 1000); // Get the current timestamp in seconds
+
+        // // Calculate the timestamp for 10 seconds ago
+        // const startTimeStamp = currentTimeStamp - marginInSeconds;
+
+        // // Query the database to find records within the 10-second window
+        // const DeviceData = await OptimizerLogModel.find({
+        //     GatewayID: Gateway._id,
+        //     TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() } // Query for records within the 10-second window
+        // }).sort({ TimeStamp: -1 });
+
+
+        // return res.send(DeviceData);
+
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found" });
         }
@@ -349,7 +364,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         });
 
         if (AllEnterpriseStateLocationGatewayOptimizer.length === 0) {
-            return res.status(404).send({ success: false, message: 'No data found for the given enterprise ID.' });
+            return res.status(404).send({ success: false, message: 'No data found for the given ID.' });
         }
 
 

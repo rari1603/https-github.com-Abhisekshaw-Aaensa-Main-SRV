@@ -33,28 +33,55 @@ router.get('/get/optimizer/details/:optimizer_id', [verifyToken], EnterpriseCont
 // GatewayDetails
 router.get('/get/gateway/details/:gateway_id', [verifyToken], EnterpriseController.GatewayDetails);
 
+
+/*********** START ENTERPRISE ADD & UPDATE ***********/
 // add enterprise admin
 router.post('/add/enterprise', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, duplicateEnterpriseCheck], UserController.addEnterprise);
+router.post('/update/enterprise/:enterprise_id', [verifyToken, routeAccessMiddleware(), adminEmptyCheck], UserController.UpdateEnterprise);
+/*********** END ENTERPRISE ADD & UPDATE ***********/
 
 
 // add enterprise user
 router.post('/add/enterprise/user', [verifyToken, routeAccessMiddleware(), userEmptyCheck, duplicateUserCheck], UserController.addEnterpriseUser);
+
 // add system int
 router.post('/add/system/integrator', [verifyToken, routeAccessMiddleware(), systemInitEmptyCheck, duplicateUserCheck], UserController.addSystemInt);
 // states
 router.get('/get/all/states', CommonController.getStates);
 
+
+/*********** START STATE ADD & UPDATE ***********/
 // AddEnterpriseState
 router.post('/add/enterprise/state', [verifyToken, routeAccessMiddleware(), CheckEntState], DeviceController.AddEnterpriseState);
+// UpdateEnterpriseState
+router.post('/update/enterprise/state/:ent_state_id', [verifyToken, routeAccessMiddleware(), CheckEntState], DeviceController.UpdateEnterpriseState);
+/*********** END STATE ADD & UPDATE ***********/
+
+
+
+/*********** START LOCATION ADD & UPDATE ***********/
 // AddEnterpriseStateLocation
 router.post('/add/enterprise/state/location', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation], DeviceController.AddEnterpriseStateLocation);
+// UpdateEnterpriseStateLocation
+router.post('/update/enterprise/state/location/:location_id', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation], DeviceController.UpdateEnterpriseStateLocation);
+/*********** END LOCATION ADD & UPDATE ***********/
+
+
+/*********** START GATEWAY ADD & UPDATE ***********/
 // AddGateway
 router.post('/add/gateway', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.AddGateway);
 // UpdateGateway
 router.post('/update/gateway/:gateway_id', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.UpdateGateway);
+/*********** END GATEWAY ADD & UPDATE ***********/
 
+
+/*********** START OPTIMIZER ADD & UPDATE ***********/
 // AddOptimizer
 router.post('/add/optimizer', [verifyToken, routeAccessMiddleware(), CheckOptimizer], DeviceController.AddOptimizer);
+// UpdateOptimizer
+router.post('/update/optimizer/:optimizer_id', [verifyToken, routeAccessMiddleware(), CheckOptimizer], DeviceController.UpdateOptimizer);
+/*********** END OPTIMIZER ADD & UPDATE ***********/
+
 
 // Get all enterprise & system integrator user
 router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIntUsers);

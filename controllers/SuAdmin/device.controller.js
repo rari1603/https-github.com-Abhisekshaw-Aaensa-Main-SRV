@@ -4,6 +4,8 @@ const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 
 
+
+/********** ADD ***********/
 // AddEnterpriseState
 exports.AddEnterpriseState = async (req, res) => {
     const { Enterprise_ID, State_ID } = req.body;
@@ -45,8 +47,6 @@ exports.AddGateway = async (req, res) => {
             NetworkSSID,
             NetworkPassword,
             EnterpriseUserID,
-            isDelete: false,
-            isConfigure: false,
         });
 
         await NewGateway.save();
@@ -67,8 +67,6 @@ exports.AddOptimizer = async (req, res) => {
             GatewayId: GATEWAY._id, // primary _id of that Gateway
             OptimizerID,
             OptimizerName,
-            Switch: false,
-            isDelete: false,
         });
 
         await NewOptimizer.save();
@@ -79,7 +77,63 @@ exports.AddOptimizer = async (req, res) => {
     }
 }
 
-// Update gateway
+
+/********** UPDATE ***********/
+// UpdateEnterpriseState
+exports.UpdateEnterpriseState = async (req, res) => {
+    const { Enterprise_ID, State_ID } = req.body;
+    const { ent_state_id } = req.params;
+
+    try {
+        const EntState = await EnterpriseStateModel.findOne({ _id: ent_state_id });
+
+        if (EntState) {
+            await EnterpriseStateModel.findByIdAndUpdate({ _id: ent_state_id },
+                {
+                    Enterprise_ID,
+                    State_ID,
+                },
+                { new: true }); // This option returns the modified document rather than the original);
+            return res.status(201).json({ success: true, message: "Enterprise state updated successfully." });
+        } else {
+            return res.status(201).json({ success: true, message: "Enterprise state not found." });
+        }
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+};
+
+// Update EnterpriseStateLocation
+exports.UpdateEnterpriseStateLocation = async (req, res) => {
+    const { Enterprise_ID, State_ID, LocationName, Address } = req.body;
+    const { location_id } = req.params;
+
+    try {
+        const EntStateLocation = await EnterpriseStateLocationModel.findOne({ _id: location_id, Enterprise_ID, State_ID });
+        console.log(EntStateLocation);
+        if (EntStateLocation) {
+            await EnterpriseStateLocationModel.findByIdAndUpdate({ _id: location_id },
+                {
+                    Enterprise_ID,
+                    State_ID,
+                    LocationName,
+                    Address,
+                },
+                { new: true }); // This option returns the modified document rather than the original);
+            return res.status(201).json({ success: true, message: "Enterprise Location updated successfully." });
+        } else {
+            return res.status(404).json({ success: false, message: "Enterprise Location not found." });
+        }
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+}
+
+// Update Gateway
 exports.UpdateGateway = async (req, res) => {
     const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
     const { gateway_id } = req.params;
@@ -109,6 +163,34 @@ exports.UpdateGateway = async (req, res) => {
     }
 }
 
+// Update Optimizer
+exports.UpdateOptimizer = async (req, res) => {
+    const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    const { optimizer_id } = req.params;
+    try {
+        const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
+        const OPTIMIZER = await OptimizerModel.findOne({ OptimizerID: optimizer_id });
+        const Optimizer = await OptimizerModel.findOne({ _id: OPTIMIZER._id, GatewayId: GATEWAY._id });
+
+        if (Optimizer) {
+            await OptimizerModel.findByIdAndUpdate({ _id: OPTIMIZER._id },
+                {
+                    GatewayId: GATEWAY._id, // primary _id of that Gateway
+                    OptimizerID,
+                    OptimizerName,
+                    Switch: false,
+                    isDelete: false,
+                },
+                { new: true }) // This option returns the modified document rather than the original);
+            return res.status(201).json({ success: true, message: "Optimizer Updated successfully." });
+        } else {
+            return res.status(404).json({ success: false, message: "Optimizer not found." });
+        }
+    } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+}
 
 
 

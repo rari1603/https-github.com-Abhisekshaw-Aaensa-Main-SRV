@@ -10,7 +10,7 @@ const OptimizerSchema = new mongoose.Schema({
     },
     OptimizerID: { type: String, unique: true },
     OptimizerName: { type: String }, // NickName
-    // Description: { type: String },
+    isOnline: { type: Boolean, default: false },
     isBypass: {
         is_schedule: { type: Boolean, default: false },
         type: { type: String, default: "default" },

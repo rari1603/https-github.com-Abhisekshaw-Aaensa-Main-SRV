@@ -154,7 +154,7 @@ exports.addSystemInt = async (req, res) => {
                 systemIntegratorId: savedSyetmInit._id,
                 isDelete: false
             });
-            
+
 
             const SavedSyetmInit = await newSyetmInit.save();
 
@@ -205,3 +205,33 @@ exports.GetEnterpriseSystemIntUsers = async (req, res) => {
         return res.status(500).json({ success: false, message: "Something Went wrong please try again later.", error: err.message });
     }
 }
+
+
+// UPDATE ENTERPRISE ADMIN
+exports.UpdateEnterprise = async (req, res) => {
+    const { enterprise_id } = req.params;
+
+    try {
+        const Enterprise = await EnterpriseAdminModel.findOne({ _id: enterprise_id });
+        if (Enterprise) {
+            await EnterpriseAdminModel.findByIdAndUpdate({ _id: enterprise_id }, {
+                EnterpriseName: req.body.EnterpriseName,
+                ContactInfo: {
+                    Email: req.body.Email,
+                    Name: req.body.Name,
+                    Phone: req.body.Phone,
+                },
+                OnboardingDate: req.body.OnboardingDate
+            },
+                { new: true } // This option returns the modified document rather than the original
+            );
+            return res.status(200).json({ success: true, message: "Enterprise updated successfully." });
+        } else {
+            return res.status(404).json({ success: false, message: "Enterprise not found." });
+        }
+
+    } catch (error) {
+        console.error('Error adding enterprise:', error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
+    }
+};

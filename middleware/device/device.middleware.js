@@ -7,6 +7,8 @@ const OptimizerModel = require('../../models/optimizer.model');
 // check enterprise state
 exports.CheckEntState = async (req, res, next) => {
     const { Enterprise_ID, State_ID } = req.body;
+    const { ent_state_id } = req.params;
+
     try {
 
         if (!Enterprise_ID) {
@@ -17,9 +19,12 @@ exports.CheckEntState = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "State is required!", key: "State_ID" });
 
         }
-        const existingEntState = await EnterpriseStateModel.findOne({ Enterprise_ID, State_ID });
-        if (existingEntState) {
-            return res.status(401).json({ success: false, message: "State already added under this enterprise!" });
+
+        if (!ent_state_id) {
+            const existingEntState = await EnterpriseStateModel.findOne({ Enterprise_ID, State_ID });
+            if (existingEntState) {
+                return res.status(401).json({ success: false, message: "State already added under this enterprise!" });
+            }
         }
         next();
 
@@ -32,6 +37,8 @@ exports.CheckEntState = async (req, res, next) => {
 // check enterprise state location
 exports.CheckEntStateLocation = async (req, res, next) => {
     const { Enterprise_ID, State_ID, LocationName, Address } = req.body;
+    const { location_id } = req.params;
+
     try {
         if (!Enterprise_ID) {
             return res.status(401).json({ success: false, message: "Enterprise is required!", key: "Enterprise_ID" });
@@ -50,14 +57,17 @@ exports.CheckEntStateLocation = async (req, res, next) => {
 
         }
 
-        const lowerCaseAddressName = Address.toLowerCase();
-        // Assuming EnterpriseStateLocationModel is your Mongoose model
-        const allLocations = await EnterpriseStateLocationModel.find({});
-        // Check for existing records with the lowercase address name
-        for (const location of allLocations) {
-            const dbLocationName = location.Address.toLowerCase();
-            if (lowerCaseAddressName === dbLocationName) {
-                return res.status(401).json({ success: false, message: "Same address already added under this location.", key: "Address" });
+
+        if (!location_id) {
+            const lowerCaseAddressName = Address.toLowerCase();
+            // Assuming EnterpriseStateLocationModel is your Mongoose model
+            const allLocations = await EnterpriseStateLocationModel.find({});
+            // Check for existing records with the lowercase address name
+            for (const location of allLocations) {
+                const dbLocationName = location.Address.toLowerCase();
+                if (lowerCaseAddressName === dbLocationName) {
+                    return res.status(401).json({ success: false, message: "Same address already added under this location.", key: "Address" });
+                }
             }
         }
 
@@ -119,6 +129,8 @@ exports.CheckGateway = async (req, res, next) => {
 // Add optimizer empty field check
 exports.CheckOptimizer = async (req, res, next) => {
     const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    const { optimizer_id } = req.params;
+
     try {
 
         if (!GatewayId) {
@@ -133,10 +145,11 @@ exports.CheckOptimizer = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Optimizer name is required!", key: "OptimizerName" });
 
         }
-
-        const ExsistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
-        if (ExsistingOptimizer) {
-            return res.status(409).json({ success: false, message: 'A optimizer with the provided ID already exists. Please choose a different ID.', key: 'OptimizerID' });
+        if (!optimizer_id) {
+            const ExsistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
+            if (ExsistingOptimizer) {
+                return res.status(409).json({ success: false, message: 'A optimizer with the provided ID already exists. Please choose a different ID.', key: 'OptimizerID' });
+            }
         }
 
         next();

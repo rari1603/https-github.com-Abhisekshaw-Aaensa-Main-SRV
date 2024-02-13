@@ -188,7 +188,7 @@ exports.Store = async (req, res) => {
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
-                    // TimeStamp: element.TimeStamp,
+                    TimeStamp: TimeStamp,
                     RoomTemperature: element.RoomTemperature,
                     Humidity: element.Humidity,
                     CoilTemperature: element.CoilTemperature,

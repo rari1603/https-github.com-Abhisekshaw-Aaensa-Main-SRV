@@ -83,6 +83,10 @@ router.post('/update/optimizer/:optimizer_id', [verifyToken, routeAccessMiddlewa
 /*********** END OPTIMIZER ADD & UPDATE ***********/
 
 
+/******* RECURSIVE DELETE FOR ALL *******/
+router.post('/delete/all', [verifyToken, routeAccessMiddleware()], DeviceController.DeleteAll);
+
+
 // Get all enterprise & system integrator user
 router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIntUsers);
 

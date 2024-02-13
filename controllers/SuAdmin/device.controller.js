@@ -193,11 +193,32 @@ exports.UpdateOptimizer = async (req, res) => {
 }
 
 
+/********** DELETE ***********/
+exports.DeleteAll = async (req, res) => {
+    const { group, id } = req.body;
+
+    try {
+        if (group === "enterprise") {
+            return res.status(200).json({ group, id });
+        }
+    } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+};
 
 
 
 
-//************* Test **************//
+
+
+
+
+
+
+
+
+//************* Test Delete **************//
 // Delete gateway
 exports.DeleteOptimizer = async (req, res) => {
     const { gateway_id } = req.params;

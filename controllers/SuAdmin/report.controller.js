@@ -105,6 +105,366 @@ exports.AllDeviceLog = async (req, res) => {
 };
 
 
+exports.AllMeterData = async (req, res) => {
+    try {
+        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
+        const { page, pageSize } = req.query;
+        // console.log(Interval, "++++++++++++++++++");
+        // return;
+        // Create a Date object with the given string
+        const startDateObject = new Date(startDate);
+        const endDateObject = new Date(endDate);
+
+        // Get the timestamp in milliseconds
+        const startTimeStamp = startDateObject.getTime().toString();
+        const endTimeStamp = endDateObject.getTime().toString();
+
+
+        // Validate page and pageSize parameters
+        const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
+        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+
+
+
+        // Fetch Enterprise data
+        const enterprise = await EnterpriseModel.findOne({ _id: Customer });
+        if (!enterprise) {
+            return res.status(404).json({
+                success: false,
+                message: "This enterprise is not available",
+            });
+        } else if (!startDate || !endDate) {
+            return res.status(404).json({
+                success: false,
+                message: "Please provide Start and End Date and time ",
+            });
+        }
+
+        // Pagination
+        const skip = (validatedPage - 1) * validatedPageSize;
+        // const skip = (page - 1) * pageSize;
+
+        // Aggregation Pipeline
+        let aggregationPipeline = [];
+
+        if (Stateid && Locationid && Gatewayid) {
+
+            const gatewayLogData = await GatewayLogModel.find({
+                GatewayID: [Gatewayid],
+                TimeStamp: { $gte: startTimeStamp, $lte: endTimeStamp },
+            })
+                .skip(skip)
+                .limit(validatedPageSize);
+            const totalgatewaydata = await GatewayLogModel.find({
+                GatewayID: [Gatewayid],
+                TimeStamp: { $gte: startTimeStamp, $lte: endTimeStamp },
+            })
+
+            // console.log(gatewayLogData, " gatewaylog data ");
+            const responseData = [];
+            const locationData = await EnterpriseStateLocationModel.findOne({
+                State_ID: Stateid,
+                _id: Locationid,
+                Enterprise_ID: Customer,
+            });
+            const stateData = await StateModel.findOne({ _id: Stateid });
+            const gatewayName = await GatewayModel.findOne({ _id: Gatewayid });
+            const state = {
+                stateName: stateData.name,
+                location: [],
+            };
+            const location = {
+                locationName: locationData.LocationName,
+                Gateway: [],
+            };
+
+            if (gatewayLogData.length > 0 && locationData && stateData) {
+                if (gatewayLogData.length > 0) {
+                    location.Gateway.push({
+                        GatewayName: gatewayName.GatewayID,
+                        Gatewaylog: gatewayLogData,
+                    });
+                }
+                if (location.Gateway.length > 0) {
+                    state.location.push(location);
+                }
+                if (state.location.length > 0) {
+                    responseData.push({
+                        EnterpriseName: enterprise.EnterpriseName,
+                        State: [state],
+                    });
+                }
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Data fetched successfully",
+                    response: responseData,
+                    pagination: {
+                        page: validatedPage,
+                        pageSize: validatedPageSize,
+                        totalResults: totalgatewaydata.length, // You may need to adjust this based on your actual total count
+                    },
+                });
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "No data available for the provided parameters",
+                });
+            }
+        } else if (Stateid && Locationid) {
+            const locationData = await EnterpriseStateLocationModel.findOne({
+                State_ID: Stateid,
+                _id: Locationid,
+                Enterprise_ID: Customer,
+            });
+            const stateData = await StateModel.findOne({ _id: Stateid });
+            const gatewayData = await GatewayModel.find({ EnterpriseInfo: Locationid });
+            const gatewayIDs = gatewayData.map((data) => data._id);
+
+            aggregationPipeline = [
+                {
+                    $match: {
+                        GatewayID: { $in: gatewayIDs },
+                        TimeStamp: { $gte: startTimeStamp, $lte: endTimeStamp },
+                    },
+                },
+            ];
+            // Add pagination to the pipeline
+            aggregationPipeline.push(
+                { $skip: skip },
+                { $limit: validatedPageSize }
+            );
+
+            // Execute Aggregation Pipeline
+            const gatewayLogData = await GatewayLogModel.aggregate(aggregationPipeline);
+            // console.log(gatewayLogData,"___________________");
+
+            const responseData = [];
+            const state = {
+                stateName: stateData.name,
+                location: [],
+            };
+            const location = {
+                locationName: locationData.LocationName,
+                Gateway: [],
+            };
+            // responseData[stateData.name] = responseData[stateData.name] || { locations: {} };
+            // responseData[stateData.name].locations[Locationid] = { gateways: {} };
+
+            for (const gateway of gatewayData) {
+                const gatewayName = gateway.GatewayID;
+                const gatewayLogsForGateway = gatewayLogData.filter((log) => log.GatewayID.equals(gateway._id));
+
+                if (gatewayLogsForGateway.length > 0) {
+                    location.Gateway.push({
+                        GatewayName: gatewayName,
+                        Gatewaylog: gatewayLogsForGateway,
+                    });
+                }
+            }
+            if (location.Gateway.length > 0) {
+                state.location.push(location);
+            }
+
+            if (state.location.length > 0) {
+                responseData.push({
+                    EnterpriseName: enterprise.EnterpriseName,
+                    State: [state],
+                });
+            }
+
+
+
+
+
+            return res.status(200).json({
+                success: true,
+                message: "Data fetched successfully",
+                response: responseData,
+            });
+        } else if (Stateid) {
+            // -------------====================================================
+            const locationData = await EnterpriseStateLocationModel.find({
+                State_ID: Stateid,
+                Enterprise_ID: Customer,
+            });
+            const stateData = await StateModel.findOne({ _id: Stateid });
+
+            const responseData = [];
+            const state = {
+                stateName: stateData.name,
+                location: [],
+            };
+            if (!locationData) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No location data available for the selected state",
+                });
+            }
+
+            const locationIDs = locationData.map((data) => data._id);
+            let gatewayLogDataPresent = false;
+
+            for (const locationID of locationIDs) {
+                const gatewayData = await GatewayModel.find({ EnterpriseInfo: locationID });
+                const gatewayIDs = gatewayData.map((data) => data._id);
+                aggregationPipeline = [
+                    {
+                        $match: {
+                            GatewayID: { $in: gatewayIDs },
+                            TimeStamp: { $gte: startTimeStamp, $lte: endTimeStamp },
+                        },
+                    },
+                ];
+                // Add pagination to the pipeline
+                aggregationPipeline.push(
+                    { $skip: skip },
+                    { $limit: validatedPageSize }
+                );
+
+                // Execute Aggregation Pipeline
+                const gatewayLogData = await GatewayLogModel.aggregate(aggregationPipeline);
+
+
+                if (gatewayLogData.length > 0) {
+                    gatewayLogDataPresent = true;
+                    const location = {
+
+                        // Include state name
+
+                        locationName: locationData.find((loc) => loc._id.equals(locationID)).LocationName,
+                        Gateway: [],
+                    };
+                    for (const gateway of gatewayData) {
+                        const gatewayName = gateway.GatewayID;
+
+                        if (gatewayLogData.some((log) => log.GatewayID.equals(gateway._id))) {
+                            location.Gateway.push({
+                                GatewayName: gatewayName,
+                                Gatewaylog: gatewayLogData.filter((log) => log.GatewayID.equals(gateway._id)),
+                            });
+                        }
+                    }
+                    if (location.Gateway.length > 0) {
+                        state.location.push(location);
+                    }
+                }
+            }
+            if (state.location.length > 0) {
+                responseData.push({
+                    EnterpriseName: enterprise.EnterpriseName,
+                    State: [state],
+                });
+            }
+            if (!gatewayLogDataPresent) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No data available for the selected State",
+                });
+            }
+            return res.status(200).json({
+                success: true,
+                message: "Data fetched successfully",
+                response: responseData,
+            });
+            // ----------------------------------------------------------
+        } else {
+            const enterpriseStateData = await EnterpriseStateModel.find({ Enterprise_ID: Customer });
+
+            if (enterpriseStateData.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No states available for this enterprise",
+                });
+            }
+
+            const responseData = {
+                EnterpriseName: enterprise.EnterpriseName,
+                State: [],
+            };
+
+            const stateIDs = enterpriseStateData.map((stateData) => stateData.State_ID);
+
+            for (const stateID of stateIDs) {
+                const stateData = await StateModel.findOne({ _id: stateID });
+                const locationData = await EnterpriseStateLocationModel.find({ State_ID: stateID, Enterprise_ID: Customer });
+                const locationIDs = locationData.map((data) => data._id);
+                let gatewayLogDataPresent = false;
+
+                const state = {
+                    stateName: stateData.name,
+                    location: [],
+                };
+
+                for (const locationID of locationIDs) {
+                    const locationDataName = await EnterpriseStateLocationModel.findOne({ _id: locationID });
+                    const location = {
+                        locationName: locationDataName.LocationName,
+                        Gateway: [],
+                    };
+                    const gatewayData = await GatewayModel.find({ EnterpriseInfo: locationID });
+                    // const gatewayIDs = gatewayData.map((data) => data._id);
+                    for (const gateway of gatewayData) {
+                        const gatewayName = gateway.GatewayID;
+
+                        aggregationPipeline = [
+                            {
+                                $match: {
+                                    GatewayID: { $in: [gateway._id] },
+                                    TimeStamp: { $gte: startTimeStamp, $lte: endTimeStamp },
+                                },
+                            },
+                        ];
+                        aggregationPipeline.push(
+                            { $skip: skip },
+                            { $limit: validatedPageSize }
+                        );
+                        // Execute Aggregation Pipeline
+                        const gatewayLogData = await GatewayLogModel.aggregate(aggregationPipeline);
+
+                        if (gatewayLogData.length > 0) {
+                            location.Gateway.push({
+                                GatewayName: gatewayName,
+                                Gatewaylog: gatewayLogData,
+                            });
+                        }
+                    }
+                    if (location.Gateway.length > 0) {
+                        state.location.push(location);
+                    }
+
+                }
+
+                if (state.location.length > 0) {
+                    responseData.State.push(state);
+                }
+            }
+
+            if (Object.keys(responseData).length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No data available for the selected date and time range",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Data fetched successfully ",
+                response: [responseData],
+                pagination: {
+                    page: validatedPage,
+                    pageSize: validatedPageSize,
+                    // totalResults: totalgatewaydata.length, // You may need to adjust this based on your actual total count
+                },
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        return res.status(500).json("Internal server error");
+    }
+};
+
+
 exports.AllDataLogDemo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;

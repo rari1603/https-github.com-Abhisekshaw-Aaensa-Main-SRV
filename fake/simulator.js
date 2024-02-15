@@ -1,61 +1,64 @@
 // The data you want to post
 const DATA = {
-    "GatewayID": "WB110120240238ONE",
+    "GatewayID": "9876543210GATEWAYSIX",
+    "TimeStamp": "",
     "OptimizerDetails": [
         {
-            "TimeStamp": "2024-01-11 03:00:00",
-            "RoomTemperature": 22.5,
-            "Humidity": null,
-            "CoilTemperature": 28.9,
-            "OptimizerID": "WB110120240238OPTONE",
+            "RoomTemperature": 26.9,
+            "Humidity": 0.0,
+            "CoilTemperature": 25.6,
+            "OptimizerID": "1234567890OPTIMIZER_ELEVEN",
             "OptimizerMode": "NON-OPTIMIZATION"
         },
         {
-            "TimeStamp": "2024-01-11 03:00:00",
-            "RoomTemperature": 18.7,
-            "Humidity": null,
-            "CoilTemperature": 21.8,
-            "OptimizerID": "WB110120240242OPTTWO",
+            "RoomTemperature": 26.9,
+            "Humidity": 0.0,
+            "CoilTemperature": 25.6,
+            "OptimizerID": "1234567890OPTIMIZER_TWELVE",
             "OptimizerMode": "NON-OPTIMIZATION"
         }
     ],
     "Phases": {
         "Ph1": {
-            "Voltage": "1.1203",
-            "Current": "2.2130",
-            "ActivePower": "2.3654",
-            "PowerFactor": "3.8564",
-            "ApparentPower": "8.0884"
+            "Voltage": 0.00,
+            "Current": 0.00,
+            "ActivePower": 0.00,
+            "PowerFactor": 0.00,
+            "ApparentPower": 0.00
         },
         "Ph2": {
-            "Voltage": "9.15476",
-            "Current": "12.4786",
-            "ActivePower": "9.123456",
-            "PowerFactor": "0.9875",
-            "ApparentPower": "7.812451"
+            "Voltage": 0.000000,
+            "Current": 0.000000,
+            "ActivePower": 0.000000,
+            "PowerFactor": 0.000000,
+            "ApparentPower": 0.000000
         },
         "Ph3": {
-            "Voltage": "9.87461",
-            "Current": "5.67785",
-            "ActivePower": "0.97634",
-            "PowerFactor": "6.758487",
-            "ApparentPower": "6.02165"
+            "Voltage": 0.000000,
+            "Current": 0.000000,
+            "ActivePower": 0.00,
+            "PowerFactor": 0.000000,
+            "ApparentPower": 0.000000
         }
     },
-    "KVAH": "25",
-    "KWH": "2.0000",
-    "PF": "3.1200"
+    "KVAH": 0.00,
+    "KWH": 0.000000,
+    "PF": 0.000000
 };
 
 function fetchData() {
-    console.log({ message: "Calling fake data URL." });
-    fetch('http://localhost:3000/api/fake/add/gateway/optimizer/data', {
+    // Generate current local timestamp
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+
+    // Update the DATA object with current timestamp
+    const updatedData = { ...DATA, TimeStamp: currentTimestamp };
+    fetch('http://localhost:3000/api/hardware/gateway/save/data', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             // You may need to add other headers based on your API requirements
         },
-        body: JSON.stringify(DATA),
+        body: JSON.stringify(updatedData),
     })
         .then(response => response.json())
         .then(data => {

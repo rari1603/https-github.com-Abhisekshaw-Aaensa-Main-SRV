@@ -327,29 +327,18 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
     const { gateway_id } = req.params;
 
     try {
+        // Step 1: Find the gateway based on the provided gateway ID
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
-        // const marginInSeconds = 20; // Define the time gap in seconds
-        // const currentTimeStamp = Math.floor(new Date().getTime() / 1000); // Get the current timestamp in seconds
 
-        // // Calculate the timestamp for 10 seconds ago
-        // const startTimeStamp = currentTimeStamp - marginInSeconds;
-
-        // // Query the database to find records within the 10-second window
-        // const DeviceData = await OptimizerLogModel.find({
-        //     GatewayID: Gateway._id,
-        //     TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() } // Query for records within the 10-second window
-        // }).sort({ TimeStamp: -1 });
-
-
-        // return res.send(DeviceData);
-
+        // Check if the gateway exists
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found" });
         }
+
+        // Step 2: Find all optimizers associated with the gateway
         const AllEnterpriseStateLocationGatewayOptimizer = await OptimizerModel.find({ GatewayId: Gateway._id }).populate({
             path: 'GatewayId',
-            populate:
-            {
+            populate: {
                 path: 'EnterpriseInfo',
                 populate: [
                     {
@@ -360,14 +349,33 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
                     },
                 ]
             }
-
         });
 
+        // If no optimizers found, return 404
         if (AllEnterpriseStateLocationGatewayOptimizer.length === 0) {
             return res.status(404).send({ success: false, message: 'No data found for the given ID.' });
         }
 
+        // Step 3: Fetch device data (optimizer logs) within the last 60 seconds
+        const marginInSeconds = 60;
+        const currentTimeStamp = Math.floor(new Date().getTime() / 1000);
+        const startTimeStamp = currentTimeStamp - marginInSeconds;
 
+        const DeviceData = await OptimizerLogModel.find({
+            GatewayID: Gateway._id,
+            TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+        });
+
+        // Step 4: Iterate over DeviceData and update the isOnline flag
+        DeviceData.forEach(device => {
+            AllEnterpriseStateLocationGatewayOptimizer.forEach(optimizer => {
+                if (device.OptimizerID.toString() === optimizer._id.toString()) {
+                    optimizer.isOnline = true;
+                }
+            });
+        });
+
+        // Step 5: Extract common data fields
         // Extract the common Enterprise_ID data from the first object
         const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId.EnterpriseInfo.Enterprise_ID;
         const commonEnterpriseDataWithDoc = { ...commonEnterpriseData._doc };
@@ -406,17 +414,19 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 
         // return res.send(AllEntStateLocationGatewayOptimizer);
 
-        return res.status(200).json(
-            {
-                success: true,
-                message: "Data fetched successfully",
-                commonEnterpriseData: commonEnterpriseDataWithDoc,
-                commonStateData: commonStateDataWithDoc,
-                commonLocationData: commonLocationDataDoc,
-                commonGatewayData: commonGatewayDataDoc,
-                AllEntStateLocationGatewayOptimizer
-            }
-        );
+        // Step 6: Prepare response
+        const response = {
+            success: true,
+            message: "Data fetched successfully",
+            commonEnterpriseData: commonEnterpriseDataWithDoc,
+            commonStateData: commonStateDataWithDoc,
+            commonLocationData: commonLocationDataDoc,
+            commonGatewayData: commonGatewayDataDoc,
+            AllEntStateLocationGatewayOptimizer
+        };
+
+        // Step 7: Return the response
+        return res.status(200).json(response);
 
     } catch (err) {
         console.log(err.message);

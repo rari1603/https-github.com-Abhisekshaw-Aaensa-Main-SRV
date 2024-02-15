@@ -2,6 +2,7 @@ const EnterpriseStateModel = require('../../models/enterprise_state.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
+const { deleteEnterprise, deleteState, deleteLocation, deleteGateway, deleteOptimizer } = require('../../services/delete.service');
 
 
 
@@ -194,25 +195,42 @@ exports.UpdateOptimizer = async (req, res) => {
 
 
 /********** DELETE ***********/
+// Delete All
 exports.DeleteAll = async (req, res) => {
     const { group, id } = req.body;
 
     try {
-        if (group === "enterprise") {
-            return res.status(200).json({ group, id });
+        if (!(group && id)) {
+            return res.status(400).json({ success: false, message: "Group and ID are required for deletion." });
         }
+
+        let deleteResult;
+        switch (group) {
+            case 'enterprise':
+                deleteResult = await deleteEnterprise(id);
+                break;
+            case 'state':
+                deleteResult = await deleteState(id);
+                break;
+            case 'location':
+                deleteResult = await deleteLocation(id);
+                break;
+            case 'gateway':
+                deleteResult = await deleteGateway(id);
+                break;
+            case 'optimizer':
+                deleteResult = await deleteOptimizer(id);
+                break;
+            default:
+                return res.status(404).json({ success: false, message: "Invalid group specified for deletion." });
+        }
+
+        return res.status(deleteResult.success ? 200 : 404).json(deleteResult);
     } catch (err) {
         console.error(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 };
-
-
-
-
-
-
-
 
 
 

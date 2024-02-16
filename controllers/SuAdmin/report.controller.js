@@ -105,92 +105,192 @@ exports.AllDeviceLog = async (req, res) => {
 };
 
 
+// exports.AllMeterData = async (req, res) => {
+//     try {
+//         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
+//         const { page, pageSize } = req.query;
+//         // Create a Date object with the given string
+//         const startDateObject = new Date(startDate);
+//         const endDateObject = new Date(endDate);
+
+//         const ISTTimeZone = "Asia/Kolkata"; // Assuming IST timezone
+
+//         // Get the timestamp in milliseconds
+//         // Convert frontend date and time format to UTC
+//         const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
+//         const endUtcTimestamp = (new Date(endDate).getTime() / 1000);
+//         // Validate page and pageSize parameters
+//         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
+//         const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+//         // Fetch Enterprise data
+//         const enterprise = await EnterpriseModel.findOne({ _id: Customer });
+//         if (!enterprise) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "This enterprise is not available",
+//             });
+//         } else if (!startDate || !endDate) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Please provide Start and End Date and time ",
+//             });
+//         }
+//         // Pagination
+//         const skip = (validatedPage - 1) * validatedPageSize;
+//         // const skip = (page - 1) * pageSize;
+
+//         // Aggregation Pipeline
+//         let aggregationPipeline = [];
+//         const enterpriseStateQuery = Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id };
+//         // Fetch states for the current page only
+//         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+//         // .skip(skip).limit(pageSize)
+//         const responseData = [];
+//         // const _OptimizerID = [];
+
+//         let totalResults;
+
+//         for (const States of EntStates) {
+//             const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
+//             const Location = await EnterpriseStateLocationModel.find(locationQuery);
+
+//             const state = await StateModel.findOne({ _id: States.State_ID });
+
+//             if (Location.length > 0) {
+//                 // const stateData = {
+//                 //   stateName: state.name,
+//                 //   state_ID: state._id,
+//                 //   location: []
+//                 // };
+//                 const stateData = {
+//                     EnterpriseName: enterprise.EnterpriseName,
+//                     State: [
+//                         {
+//                             stateName: state.name,
+//                             state_ID: state._id,
+//                             location: []
+//                         }
+//                     ]
+//                 };
+
+//                 for (const loc of Location) {
+//                     const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
+//                     const GatewayData = await GatewayModel.find(gatewayQuery);
+//                     const locationData = {
+//                         locationName: loc.LocationName,
+//                         location_ID: loc._id,
+//                         gateway: []
+//                     };
+
+//                     for (const gateway of GatewayData) {
+//                         console.log(gateway, "======");
+//                         const GatewayLogData = await GatewayLogModel.find({
+
+//                             GatewayID: gateway._id,
+//                             TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp }
+//                         }).skip(skip)
+//                             .limit(validatedPageSize);
+//                         // console.log(GatewayLogData,"********************");
+//                         totalResults = await GatewayLogModel.find({
+
+//                             GatewayID: gateway._id,
+//                             TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp }
+//                         });
+
+//                         if (GatewayLogData.length > 0) {
+//                             locationData.gateway.push({
+//                                 GatewayName: gateway.GatewayID,
+//                                 Gateway_ID: gateway._id,
+//                                 GatewayLogs: GatewayLogData
+//                             });
+//                         }
+//                     }
+
+//                     stateData.State[0].location.push(locationData);
+//                 }
+
+//                 responseData.push(stateData);
+//             }
+//         }
+
+
+
+
+//         return res.send({
+//             success: true,
+//             message: "Data fetched successfully",
+//             response: responseData,
+//             pagination: {
+//                 page: validatedPage,
+//                 pageSize: validatedPageSize,
+//                 totalResults: totalResults.length, // You may need to adjust this based on your actual total count
+//             },
+//         });
+//     } catch (error) {
+//         console.error("Error fetching data:", error);
+//         return res.status(500).json("Internal server error");
+//     }
+// };
+
 exports.AllMeterData = async (req, res) => {
     try {
-        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate } = req.body;
-        const { page = 1, pageSize = 10 } = req.query;
+        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
+        const { page, pageSize } = req.query;
 
-        if (!Customer || !startDate || !endDate) {
+        if (!startDate || !endDate) {
             return res.status(400).json({
                 success: false,
-                message: "Please provide Customer ID, Start and End Date",
+                message: "Please provide Start and End Date and time",
             });
         }
 
-        // Convert frontend date and time format to UTC
-        const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
-        const endUtcTimestamp = (new Date(endDate).getTime() / 1000);
+        const startUtcTimestamp = new Date(startDate).getTime();
+        const endUtcTimestamp = new Date(endDate).getTime();
 
-        // Pagination
-        const skip = (page - 1) * pageSize;
-
-        // Fetch Enterprise data
-        const enterprise = await EnterpriseModel.findOne({ _id: Customer });
+        const enterprise = await EnterpriseModel.findById(Customer);
         if (!enterprise) {
             return res.status(404).json({
                 success: false,
-                message: "Enterprise not found",
+                message: "This enterprise is not available",
             });
         }
 
-        // Construct query for Enterprise States
-        const enterpriseStateQuery = Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id };
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+        const skip = (page - 1) * pageSize;
+
+        const EntStates = await EnterpriseStateModel.find(Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id });
 
         const responseData = [];
-        let totalResults = 0;
 
         for (const state of EntStates) {
-            const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: state.Enterprise_ID, State_ID: state.State_ID };
-            const locations = await EnterpriseStateLocationModel.find(locationQuery);
+            const locations = await EnterpriseStateLocationModel.find(Locationid ? { _id: Locationid } : { Enterprise_ID: state.Enterprise_ID, State_ID: state.State_ID });
 
-            if (locations.length > 0) {
-                const stateData = {
-                    EnterpriseName: enterprise.EnterpriseName,
-                    State: [
-                        {
-                            stateName: state.name,
-                            state_ID: state._id,
-                            location: [],
-                        },
-                    ],
+            for (const location of locations) {
+                const gateways = await GatewayModel.find(Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: location._id });
+
+                const locationData = {
+                    locationName: location.LocationName,
+                    location_ID: location._id,
+                    gateway: []
                 };
 
-                for (const location of locations) {
-                    const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: location._id };
-                    const gateways = await GatewayModel.find(gatewayQuery);
+                for (const gateway of gateways) {
+                    const GatewayLogData = await GatewayLogModel.find({
+                        GatewayID: gateway._id,
+                        TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp }
+                    }).sort({ TimeStamp: -1 }).skip(skip).limit(pageSize);
 
-                    for (const gateway of gateways) {
-                        const gatewayLogCount = await GatewayLogModel.countDocuments({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                    if (GatewayLogData.length > 0) {
+                        locationData.gateway.push({
+                            GatewayName: gateway.GatewayID,
+                            Gateway_ID: gateway._id,
+                            GatewayLogs: GatewayLogData
                         });
-
-                        totalResults += gatewayLogCount;
-
-                        const gatewayLogData = await GatewayLogModel.find({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
-                        }).sort({ TimeStamp: -1 }).skip(skip).limit(parseInt(pageSize));
-
-                        if (gatewayLogData.length > 0) {
-                            // Sort the data in descending order of TimeStamp
-                            gatewayLogData.sort((a, b) => b.TimeStamp - a.TimeStamp);
-
-                            stateData.State[0].location.push({
-                                locationName: location.LocationName,
-                                location_ID: location._id,
-                                gateway: {
-                                    GatewayName: gateway.GatewayID,
-                                    Gateway_ID: gateway._id,
-                                    GatewayLogs: gatewayLogData,
-                                },
-                            });
-                        }
                     }
                 }
 
-                responseData.push(stateData);
+                if (locationData.gateway.length > 0) {
+                    responseData.push(locationData);
+                }
             }
         }
 
@@ -201,17 +301,15 @@ exports.AllMeterData = async (req, res) => {
             pagination: {
                 page: parseInt(page),
                 pageSize: parseInt(pageSize),
-                totalResults: totalResults,
+                totalResults: responseData.length
             },
         });
     } catch (error) {
         console.error("Error fetching data:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error",
-        });
+        return res.status(500).json("Internal server error");
     }
 };
+
 
 
 exports.AllDataLogDemo = async (req, res) => {

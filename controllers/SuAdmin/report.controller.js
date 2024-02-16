@@ -9,15 +9,11 @@ const StateModel = require('../../models/state.model');
 
 
 
-exports.AllDeviceLog = async (req, res) => {
+exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
     try {
-        const parsedStartDate = new Date(startDate);
-        const parsedEndDate = new Date(endDate);
-
-        if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
-            return res.status(400).json({ success: false, message: 'Invalid date format' });
-        }
+        const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
+        const endUtcTimestamp = (new Date(endDate).getTime() / 1000);
 
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 50;
@@ -29,7 +25,10 @@ exports.AllDeviceLog = async (req, res) => {
         // Fetch states for the current page only
         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).skip(skip).limit(pageSize);
 
-        const responseData = [];
+        const responseData = [{
+            EnterpriseName: Enterprise.EnterpriseName,
+            State: [],
+        }];
 
         for (const State of EntStates) {
             const locationQuery = location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
@@ -47,7 +46,6 @@ exports.AllDeviceLog = async (req, res) => {
                 for (const loc of Location) {
                     const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
                     const Gateways = await GatewayModel.find(gatewayQuery);
-
                     const locationData = {
                         locationName: loc.LocationName,
                         location_ID: loc._id,
@@ -66,18 +64,19 @@ exports.AllDeviceLog = async (req, res) => {
                         for (const optimizer of Optimizers) {
                             const query = {
                                 OptimizerID: optimizer._id,
-                                createdAt: { $gte: parsedStartDate, $lte: parsedEndDate }
+                                TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
                             };
-
-                            const OptimizerLogs = await OptimizerLogModel.find(query);
+                            
+                            const OptimizerLogs = await OptimizerLogModel.find(query).skip(skip).limit(pageSize);
 
                             const optimizerData = {
                                 optimizerName: optimizer.OptimizerID,
                                 optimizer_ID: optimizer._id,
                                 optimizerLogs: OptimizerLogs.map(optimizerLog => (optimizerLog))
                             };
-
-                            gatewayData.optimizer.push(optimizerData);
+                            if (OptimizerLogs.length > 0) {
+                                gatewayData.optimizer.push(optimizerData);
+                            }
                         }
 
                         locationData.gateway.push(gatewayData);
@@ -86,7 +85,7 @@ exports.AllDeviceLog = async (req, res) => {
                     stateData.location.push(locationData);
                 }
 
-                responseData.push(stateData);
+                responseData[0].State.push(stateData);
             }
         }
 

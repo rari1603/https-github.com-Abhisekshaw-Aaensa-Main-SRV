@@ -14,7 +14,7 @@ const router = express.Router();
 
 
 
-router.post('/get/all/device/data', ReportController.AllDeviceLog);
+router.post('/get/all/device/data', ReportController.AllDeviceData);
 router.post('/get/all/meter/data', ReportController.AllMeterData);
 // router.post('/get/all/device/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 router.get('/get/all/demo/data', ReportController.AllDataLogDemo);

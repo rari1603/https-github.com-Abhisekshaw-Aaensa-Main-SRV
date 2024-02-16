@@ -134,7 +134,7 @@ exports.ConfigureableData = async (req, res) => {
     }
 };
 
-// Store Gatewat & Optimizer Loga data 
+// Store Gateway & Optimizer Log data 
 exports.Store = async (req, res) => {
     const data = req.body;
     const optimizers = req.body.OptimizerDetails;

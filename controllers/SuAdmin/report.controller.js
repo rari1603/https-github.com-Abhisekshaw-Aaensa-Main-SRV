@@ -106,9 +106,11 @@ exports.AllDeviceLog = async (req, res) => {
 
 
 exports.AllMeterData = async (req, res) => {
+
+    const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
+    const { page, pageSize } = req.query;
+
     try {
-        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
-        const { page, pageSize } = req.query;
         // console.log(Interval, "++++++++++++++++++");
         // return;
         // Create a Date object with the given string
@@ -116,10 +118,11 @@ exports.AllMeterData = async (req, res) => {
         const endDateObject = new Date(endDate);
 
         // Get the timestamp in milliseconds
-        const startTimeStamp = startDateObject.getTime().toString();
-        const endTimeStamp = endDateObject.getTime().toString();
+        const startTimeStamp = (startDateObject.getTime().toString() / 1000);
+        const endTimeStamp = (endDateObject.getTime().toString() / 1000);
 
 
+        // asdasdasd
         // Validate page and pageSize parameters
         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
         const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -174,11 +177,11 @@ exports.AllMeterData = async (req, res) => {
                 location: [],
             };
             const location = {
-                locationName: locationData.LocationName,
+                locationName: locationData?.LocationName,
                 Gateway: [],
             };
 
-            if (gatewayLogData.length > 0 && locationData && stateData) {
+            if (gatewayLogData?.length > 0 && locationData && stateData) {
                 if (gatewayLogData.length > 0) {
                     location.Gateway.push({
                         GatewayName: gatewayName.GatewayID,
@@ -245,7 +248,7 @@ exports.AllMeterData = async (req, res) => {
                 location: [],
             };
             const location = {
-                locationName: locationData.LocationName,
+                locationName: locationData?.LocationName,
                 Gateway: [],
             };
             // responseData[stateData.name] = responseData[stateData.name] || { locations: {} };
@@ -253,9 +256,9 @@ exports.AllMeterData = async (req, res) => {
 
             for (const gateway of gatewayData) {
                 const gatewayName = gateway.GatewayID;
-                const gatewayLogsForGateway = gatewayLogData.filter((log) => log.GatewayID.equals(gateway._id));
+                const gatewayLogsForGateway = gatewayLogData?.filter((log) => log.GatewayID.equals(gateway._id));
 
-                if (gatewayLogsForGateway.length > 0) {
+                if (gatewayLogsForGateway?.length > 0) {
                     location.Gateway.push({
                         GatewayName: gatewayName,
                         Gatewaylog: gatewayLogsForGateway,
@@ -503,7 +506,20 @@ exports.AllDataLogDemo = async (req, res) => {
                 $project: {
                     _id: 1,
                     GatewayID: { $arrayElemAt: ['$GatewayDetails.GatewayID', 0] },
-                    TimeStamp: 1,
+                    TimeStamp: {
+                        $dateToString: {
+                            format: "%Y-%m-%d %H:%M:%S GMT%z", // Format the date without %I for 24-hour clock
+                            date: {
+                                $toDate: {
+                                    $multiply: [
+                                        { $toDouble: "$TimeStamp" }, // Convert to numeric type
+                                        1000
+                                    ]
+                                }
+                            },
+                            timezone: "+05:30" // Set your desired timezone
+                        }
+                    },
                     Phases: 1,
                     KVAH: 1,
                     KWH: 1,

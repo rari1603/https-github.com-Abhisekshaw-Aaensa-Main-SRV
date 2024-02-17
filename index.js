@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { connectToDatabase } = require('./configs/database.config');
 // Connect to the database
 connectToDatabase();
@@ -46,6 +47,30 @@ app.set("views", "views");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+    try {
+        if (mongoose.connection.name) {
+            const message = {
+                message: 'Health check complete.',
+                status: true,
+                time: new Date()
+            };
+            console.table(message);
+            return res.status(200).json({ response: message });
+        }else{
+            const message = {
+                message: 'Unhealthy.',
+                status: false,
+                time: new Date()
+            };
+            console.table(message);
+            return res.status(200).json({ response: message });
+        }
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // APIs Routes
 app.use('/api/auth', Auth);

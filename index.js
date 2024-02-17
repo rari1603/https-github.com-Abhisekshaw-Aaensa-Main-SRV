@@ -47,7 +47,7 @@ app.set("views", "views");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
     try {
         const networkInterfaces = os.networkInterfaces();
 

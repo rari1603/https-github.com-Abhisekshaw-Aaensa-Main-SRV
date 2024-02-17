@@ -25,7 +25,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const app = express();
 const moment = require('moment-timezone');
-
+const os = require('os');
 // Set the default time zone for the application (Asia/Kolkata in this example)
 moment.tz.setDefault('Asia/Kolkata');
 
@@ -49,16 +49,25 @@ app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     try {
+        const networkInterfaces = os.networkInterfaces();
+
+        // Extract IPv4 addresses
+        const ipv4Addresses = Object.values(networkInterfaces)
+            .flat()
+            .filter(interfaceInfo => interfaceInfo.family === 'IPv4')
+            .map(interfaceInfo => interfaceInfo.address);
         if (mongoose.connection.name) {
             const message = {
-                message: 'Health check complete.',
+                host: ipv4Addresses,
+                message: 'Healthy',
                 status: true,
                 time: new Date()
             };
             console.table(message);
             return res.status(200).json({ response: message });
-        }else{
+        } else {
             const message = {
+                host: ipv4Addresses,
                 message: 'Unhealthy.',
                 status: false,
                 time: new Date()
@@ -68,7 +77,7 @@ app.get('/', (req, res) => {
         }
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 });
 

@@ -157,11 +157,11 @@ exports.Store = async (req, res) => {
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
             acc[phase] = {
-                Voltage: handleNaN(Phases[phase].Voltage),
-                Current: handleNaN(Phases[phase].Current),
-                ActivePower: handleNaN(Phases[phase].ActivePower),
-                PowerFactor: handleNaN(Phases[phase].PowerFactor),
-                ApparentPower: handleNaN(Phases[phase].ApparentPower),
+                Voltage: handleNaN(Phases[phase].Voltage).toFixed(5),
+                Current: handleNaN(Phases[phase].Current).toFixed(5),
+                ActivePower: handleNaN(Phases[phase].ActivePower).toFixed(5),
+                PowerFactor: handleNaN(Phases[phase].PowerFactor).toFixed(5),
+                ApparentPower: handleNaN(Phases[phase].ApparentPower).toFixed(5),
             };
             return acc;
         }, {});
@@ -170,9 +170,9 @@ exports.Store = async (req, res) => {
             GatewayID: gatewayId,
             TimeStamp: TimeStamp,
             Phases: sanitizedPhases,
-            KVAH: handleNaN(KVAH),
-            KWH: handleNaN(KWH),
-            PF: handleNaN(PF),
+            KVAH: handleNaN(KVAH).toFixed(5),
+            KWH: handleNaN(KWH).toFixed(5),
+            PF: handleNaN(PF).toFixed(5),
         }).save();
 
         const optimizerLogPromises = optimizers.map(async element => {

@@ -476,6 +476,7 @@ exports.OptimizerDetails = async (req, res) => {
                 room_temp: OptimizerLogData.RoomTemperature,
                 coil_temp: OptimizerLogData.CoilTemperature,
                 humidity: OptimizerLogData.Humidity,
+                TimeStamp: OptimizerLogData.TimeStamp,
                 unit: {
                     temperature: "C",
                     voltage: "V",

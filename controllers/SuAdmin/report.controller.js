@@ -23,7 +23,7 @@ exports.AllDeviceData = async (req, res) => {
         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
 
         // Fetch states for the current page only
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).skip(skip).limit(pageSize);
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
 
         const responseData = [{
             EnterpriseName: Enterprise.EnterpriseName,

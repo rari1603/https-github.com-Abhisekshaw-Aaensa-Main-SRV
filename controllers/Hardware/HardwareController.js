@@ -9,7 +9,6 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
-const deepEqual = require('deep-equal');
 
 
 

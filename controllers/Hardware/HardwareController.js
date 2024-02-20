@@ -415,23 +415,88 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
     var result = "";
     var data = "";
     try {
+        // Fetch device data (optimizer logs) within the last 60 seconds
+        const marginInSeconds = 60;
+        const currentTimeStamp = Math.floor(new Date().getTime() / 1000);
+        const startTimeStamp = currentTimeStamp - marginInSeconds;
+
+        // Function to compare arrays irrespective of order
+        const arraysEqual = (arr1, arr2) => {
+            if (arr1.length !== arr2.length) return false;
+            for (let i = 0; i < arr1.length; i++) {
+                if (!arr2.includes(arr1[i])) return false;
+            }
+            return true;
+        }
+
         // reset particular optimizer
         if (req.body.group === 'optimizer') {
-            console.log(`Resetting to default value particular optimizer ${req.body.id}`);
-            const optimizerIDS = [req.body.id]
-            result = await UpdateSettings(optimizerIDS, data);
+            const Optimizer = await OptimizerModel.findOne({ _id: req.body.id })
+            if (!Optimizer) {
+                return res.status(404).json({ success: false, message: "Optimizer not found.", key: "optimizer" });
+            } else {
+                const DeviceData_ONE = await OptimizerLogModel.find({
+                    OptimizerID: req.body.id,
+                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+                });
+                console.log(`Resetting to default value particular optimizer ${req.body.id}`);
+                if (DeviceData_ONE.length > 0) {
+                    const optimizerIDS = [req.body.id]
+                    result = await UpdateSettings(optimizerIDS, data);
+                } else {
+                    return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
+                }
+            }
         }
 
         // reset all optimizer assign with the gateway => optimizers
         if (req.body.group == 'gateway') {
-            console.log(`Resetting to default value gateway => optimizers`);
-            const gateway_id = req.body.id;
-            const allOptimizer = await OptimizerModel.find({ GatewayId: gateway_id });
-            const optimizerIDS = await Promise.all(allOptimizer.map(async (item) => {
-                return item._id;
-            }));
+            const Gateway = await GatewayModel.findOne({ _id: req.body.id })
+            if (!Gateway) {
+                return res.status(404).json({ success: false, message: "Gateway not found.", key: "gateway" });
+            } else {
+                console.log(`Resetting to default value gateway => optimizers`);
+                const DeviceData_TWO = await OptimizerLogModel.find({
+                    GatewayID: req.body.id,
+                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+                });
+                const Optimizers = await OptimizerModel.find({ GatewayId: req.body.id });
+                if (Optimizers.length > 0) {
+                    if (DeviceData_TWO.length > 0) {
+                        let optimizersToUpdate = [];
 
-            result = await UpdateSettings(optimizerIDS, data);
+                        await Promise.all(DeviceData_TWO.map(async device => {
+                            const deviceOptimizerID = device.OptimizerID.toString();
+                            const optimizerExists = Optimizers.some(optimizer => optimizer._id.toString() === deviceOptimizerID);
+
+                            if (optimizerExists) {
+                                optimizersToUpdate.push(deviceOptimizerID);
+                            }
+                        }));
+
+                        const optimizersToUpdateUnique = [...new Set(optimizersToUpdate.sort())];
+                        const AssignedOptimizersIDs = Optimizers.map(opt => opt._id.toString());
+                        const isEqual = arraysEqual(optimizersToUpdateUnique, AssignedOptimizersIDs.sort());
+
+                        // Check device online offline.
+                        if (isEqual) {
+                            const gateway_id = req.body.id;
+                            const allOptimizer = await OptimizerModel.find({ GatewayId: gateway_id });
+                            const optimizerIDS = await Promise.all(allOptimizer.map(async (item) => {
+                                return item._id;
+                            }));
+                            result = await UpdateSettings(optimizerIDS, data);
+
+                        } else {
+                            return res.status(503).json({ success: false, message: "All Devices are not online. Please try again.", key: "optimizer_status" });
+                        }
+                    } else {
+                        return res.status(503).json({ success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
+                    }
+                } else {
+                    return res.status(404).json({ success: false, message: "Optimizer not found.", key: "optimizer" });
+                }
+            }
         }
 
         // reset all optimizer assign with the location => gateways => optimizers
@@ -441,12 +506,58 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
             const Location = await LocationModel.findOne({ _id: location_id });
             const allGateway = await GatewayModel.find({ EnterpriseInfo: Location._id });
 
-            const optimizerIDS = await Promise.all(allGateway.map(async (gateway) => {
-                const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
-                return allOptimizer.map((item) => item._id);
-            }));
+            if (!Location) {
+                return res.status(404).json({ success: false, message: "Location not found.", key: "location" });
+            }
+            if (!allGateway) {
+                return res.status(404).json({ success: false, message: "Gateways not found.", key: "gateway" });
+            }
 
-            result = await UpdateSettings(optimizerIDS.flat(), data);
+            let DeviceData_THREE = [];
+            let optimizersToUpdate = [];
+            let Optimizers = [];
+
+            for (const Gateway of allGateway) {
+                DeviceData_THREE = await OptimizerLogModel.find({
+                    GatewayID: Gateway._id,
+                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+                });
+            };
+
+            Optimizers = (await Promise.all(allGateway.map(async Gateway => {
+                return await OptimizerModel.find({ GatewayId: Gateway._id });
+            }))).flat();
+
+            if (DeviceData_THREE.length > 0) {
+                await Promise.all(DeviceData_THREE.map(async device => {
+                    const deviceOptimizerID = device.OptimizerID.toString();
+                    const optimizerExists = Optimizers.some(optimizer => optimizer._id.toString() === deviceOptimizerID);
+
+                    if (optimizerExists) {
+                        optimizersToUpdate.push(deviceOptimizerID);
+                    }
+                }));
+            } else {
+                responses.push({ status: 503, success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
+            };
+
+            const optimizersToUpdateUnique = [...new Set(optimizersToUpdate.sort())];
+            const AssignedOptimizersIDs = Optimizers.map(opt => opt._id.toString());
+            const isEqual = arraysEqual(optimizersToUpdateUnique, AssignedOptimizersIDs.sort());
+
+            // return res.send({ optimizersToUpdateUnique, AssignedOptimizersIDs });
+
+            if (isEqual) {
+                const optimizerIDS = await Promise.all(allGateway.map(async (gateway) => {
+                    const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+                    return allOptimizer.map((item) => item._id);
+                }));
+
+                result = await UpdateSettings(optimizerIDS.flat(), data);
+            } else {
+                return res.status(503).json({ success: false, message: "All Devices are not online. Please try again.", key: "optimizer_status" });
+            }
+
         }
 
         // reset all optimizer assign with the state => locations => gateways => optimizers
@@ -627,7 +738,7 @@ exports.BypassOptimizers = async (req, res) => {
                         if (!allOffline) {
                             return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
                         } else {
-                            return res.status(503).json({ success: false, message: "All Device are not online. Please try again.", key: "optimizer_status" });
+                            return res.status(503).json({ success: false, message: "All Devices are not online. Please try again.", key: "optimizer_status" });
                         }
                     } else {
                         return res.status(503).json({ success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
@@ -695,7 +806,7 @@ exports.BypassOptimizers = async (req, res) => {
                                 if (!allOffline) {
                                     responses.push({ status: 200, success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
                                 } else {
-                                    responses.push({ status: 503, success: false, message: "All Device are not online. Please try again.", key: "optimizer_status" });
+                                    responses.push({ status: 503, success: false, message: "All Devices are not online. Please try again.", key: "optimizer_status" });
                                 }
                             } else {
                                 responses.push({ status: 503, success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });

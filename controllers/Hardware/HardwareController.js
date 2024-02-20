@@ -9,6 +9,7 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
+const deepEqual = require('deep-equal');
 
 
 
@@ -521,35 +522,119 @@ exports.BypassOptimizers = async (req, res) => {
             return res.status(404).json({ success: false, message: "Oops, there is a problem with updating!" });
         }
 
+        // Fetch device data (optimizer logs) within the last 60 seconds
+        const marginInSeconds = 60;
+        const currentTimeStamp = Math.floor(new Date().getTime() / 1000);
+        const startTimeStamp = currentTimeStamp - marginInSeconds;
+
+        // Function to compare arrays irrespective of order
+        const arraysEqual = (arr1, arr2) => {
+            if (arr1.length !== arr2.length) return false;
+            for (let i = 0; i < arr1.length; i++) {
+                if (!arr2.includes(arr1[i])) return false;
+            }
+            return true;
+        }
+
         // bypass from device level
         if (group === "optimizer") {
             const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
+
             if (Optimizer) {
-                await OptimizerModel.findByIdAndUpdate({ _id: Optimizer._id },
-                    { isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" } },
-                    { new: true } // This option returns the modified document rather than the original
-                );
-                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                const DeviceData_ONE = await OptimizerLogModel.find({
+                    OptimizerID: Optimizer._id,
+                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+                });
+                if (DeviceData_ONE.length > 0) {
+                    let allOffline = true;
+                    // Iterate over DeviceData_ONE and update the isOnline flag
+                    await Promise.all(DeviceData_ONE.map(async device => {
+                        if (device.OptimizerID.toString() === Optimizer._id.toString()) {
+                            allOffline = false;
+                            await OptimizerModel.findByIdAndUpdate(
+                                { _id: Optimizer._id },
+                                {
+                                    $set: {
+                                        BypassMode: "IN_PROGRESS",
+                                        isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
+                                    }
+                                },
+                                { new: true } // This option returns the modified document rather than the original
+                            );
+                        }
+                    }));
+
+                    if (!allOffline) {
+                        return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                    } else {
+                        return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
+                    }
+                } else {
+                    return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
+                }
             } else {
-                return res.status(404).json({ success: false, message: "Optimizer not found." });
+                return res.status(404).json({ success: false, message: "Optimizers not found." });
             }
         }
 
         // bypass from gateway level
         if (group === "gateway") {
             const Gateway = await GatewayModel.findOne({ GatewayID: id });
+
             if (Gateway) {
-                // Find all optimizers related to the gateway
+                const DeviceData_TWO = await OptimizerLogModel.find({
+                    GatewayID: Gateway._id,
+                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+                });
+
                 const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
-                if (Optimizers) {
-                    // Update the "Switch" field for all optimizers
-                    await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" } },
-                        { new: true }
-                    );
-                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+
+                if (Optimizers.length > 0) {
+                    if (DeviceData_TWO.length > 0) {
+                        let allOffline = true;
+                        let optimizersToUpdate = [];
+
+                        await Promise.all(DeviceData_TWO.map(async device => {
+                            const deviceOptimizerID = device.OptimizerID.toString();
+                            const optimizerExists = Optimizers.some(optimizer => optimizer._id.toString() === deviceOptimizerID);
+
+                            if (optimizerExists) {
+                                optimizersToUpdate.push(deviceOptimizerID);
+                            }
+                        }));
+
+                        const optimizersToUpdateUnique = [...new Set(optimizersToUpdate.sort())];
+                        const AssignedOptimizersIDs = Optimizers.map(opt => opt._id.toString());
+                        const isEqual = arraysEqual(optimizersToUpdateUnique, AssignedOptimizersIDs.sort());
+
+                        // Update all optimizers together if their IDs are present in optimizersToUpdate
+                        if (isEqual) {
+                            // Update all optimizers
+                            await Promise.all(optimizersToUpdate.map(async optimizerID => {
+                                allOffline = false;
+                                await OptimizerModel.updateOne(
+                                    { _id: optimizerID },
+                                    {
+                                        $set: {
+                                            BypassMode: "Pending",
+                                            isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
+                                        }
+                                    },
+                                    { new: true } // This option returns the modified document rather than the original
+                                );
+                            }));
+                        }
+
+                        if (!allOffline) {
+                            return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                        } else {
+                            return res.status(503).json({ success: false, message: "All Device are not online. Please try again.", key: "optimizer_status" });
+                        }
+                    } else {
+                        return res.status(503).json({ success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
+                    }
                 } else {
-                    return res.status(404).json({ success: false, message: "Optimizers not found." });
+                    return res.status(404).json({ success: false, message: "Optimizers not found for this gateway." });
                 }
             } else {
                 return res.status(404).json({ success: false, message: "Gateway not found." });
@@ -560,18 +645,72 @@ exports.BypassOptimizers = async (req, res) => {
         if (group === "location") {
             const Location = await EnterpriseStateLocationModel.findOne({ _id: id });
             if (Location) {
-                // Find all gateways related to the location
                 const Gateways = await GatewayModel.find({ EnterpriseInfo: Location._id });
-                // Loop through all gateways and find associated optimizers
-                for (const Gateway of Gateways) {
-                    // Update the "Switch" field for all optimizers
-                    await OptimizerModel.updateMany({ GatewayId: Gateway._id },
-                        { isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" } },
-                        { new: true }
-                    );
-                }
+                if (Gateways.length > 0) {
+                    let allOffline = true;
+                    let responses = [];
+                    let DeviceData_THREE = [];
 
-                return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                    for (const Gateway of Gateways) {
+                        DeviceData_THREE = await OptimizerLogModel.find({
+                            GatewayID: Gateway._id,
+                            TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
+                        });
+                    };
+
+                    for (const Gateway of Gateways) {
+                        const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
+                        if (Optimizers.length > 0) {
+                            let optimizersToUpdate = [];
+
+                            if (DeviceData_THREE.length > 0) {
+                                await Promise.all(DeviceData_THREE.map(async device => {
+                                    const deviceOptimizerID = device.OptimizerID.toString();
+                                    const optimizerExists = Optimizers.some(optimizer => optimizer._id.toString() === deviceOptimizerID);
+
+                                    if (optimizerExists) {
+                                        optimizersToUpdate.push(deviceOptimizerID);
+                                    }
+                                }));
+
+                                const optimizersToUpdateUnique = [...new Set(optimizersToUpdate.sort())];
+                                const AssignedOptimizersIDs = Optimizers.map(opt => opt._id.toString());
+                                const isEqual = arraysEqual(optimizersToUpdateUnique, AssignedOptimizersIDs.sort());
+
+                                if (isEqual) {
+                                    await Promise.all(optimizersToUpdate.map(async optimizerID => {
+                                        allOffline = false;
+                                        await OptimizerModel.updateOne(
+                                            { _id: optimizerID },
+                                            {
+                                                $set: {
+                                                    BypassMode: "Pending",
+                                                    isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
+                                                }
+                                            },
+                                            { new: true }
+                                        );
+                                    }));
+                                }
+
+                                if (!allOffline) {
+                                    responses.push({ status: 200, success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                                } else {
+                                    responses.push({ status: 503, success: false, message: "All Device are not online. Please try again.", key: "optimizer_status" });
+                                }
+                            } else {
+                                responses.push({ status: 503, success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
+                            }
+                        } else {
+                            responses.push({ status: 404, success: false, message: "Optimizers not found for this gateway." });
+                        }
+                    }
+
+                    // Sending the response after the loop
+                    return res.status(responses[0]?.status).json({ success: responses[0]?.success, message: responses[0]?.message, key: responses[0]?.key });
+                } else {
+                    return res.status(404).json({ success: false, message: "Gateways not found." });
+                }
             } else {
                 return res.status(404).json({ success: false, message: "Location not found." });
             }
@@ -579,12 +718,12 @@ exports.BypassOptimizers = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+        return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
 
 // Settings acknowledgement after set/rest
-exports.SetRestSettingsAcknowledgement = async (req, res) => {
+exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
 
     try {
@@ -627,7 +766,13 @@ exports.SetRestSettingsAcknowledgement = async (req, res) => {
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
-                        { isBypass: { is_schedule: false, type: "default", time: "" } },
+                        {
+                            $set: {
+                                BypassMode: (purpose === "bypass_on") ? "ON" : "OFF",
+                                isBypass: { is_schedule: false, type: "default", time: "" }
+                            },
+
+                        },
                         { new: true }
                     );
                     return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };

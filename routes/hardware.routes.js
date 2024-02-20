@@ -28,7 +28,7 @@ router.post('/reset/optimizer', [verifyToken, CheckResetOptimizerSetting], Hardw
 // Acknowledgement from the configured gateway API
 router.post('/acknowledge/from/conf/gateway/:gateway_id', HardwareController.AcknowledgeFromConfGateway);
 // Settings Acknowledgement after set/reset
-router.post('/setting/acknowledge/after/set/reset', HardwareController.SetRestSettingsAcknowledgement);
+router.post('/setting/acknowledge/after/set/reset', HardwareController.BypassSetRestSettingsAcknowledgement);
 
 
 

@@ -16,6 +16,7 @@ const OptimizerSchema = new mongoose.Schema({
         type: { type: String, default: "default" },
         time: { type: String, default: "" }
     },
+    BypassMode: { type: String, default: "" }, // will chnage based on byPass feedback
     isSetting: { type: Boolean, default: false }, // For set
     isReset: { type: Boolean, default: false }, // For reset
     isDelete: { type: Boolean, default: false }

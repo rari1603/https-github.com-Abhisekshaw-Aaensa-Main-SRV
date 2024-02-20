@@ -133,7 +133,7 @@ exports.addManyDataDB = async (req, res) => {
     // await StateLocationModel.updateMany({}, { $set: { Address: "Default Address" } });
     await OptimizerModel.updateMany({}, {
         $set: {
-            isOnline: false
+            BypassMode: ""
         }
     });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });

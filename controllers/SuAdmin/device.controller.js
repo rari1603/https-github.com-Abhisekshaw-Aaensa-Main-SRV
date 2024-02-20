@@ -149,7 +149,8 @@ exports.UpdateGateway = async (req, res) => {
                     GatewayID,
                     NetworkSSID,
                     NetworkPassword,
-                    EnterpriseUserID
+                    EnterpriseUserID,
+                    is_Ready_toConfig: true,
                 },
                 { new: true } // This option returns the modified document rather than the original
             );

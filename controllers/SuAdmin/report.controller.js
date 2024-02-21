@@ -66,8 +66,24 @@ exports.AllDeviceData = async (req, res) => {
                                 OptimizerID: optimizer._id,
                                 TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
                             };
-                            
-                            const OptimizerLogs = await OptimizerLogModel.find(query).skip(skip).limit(pageSize);
+
+                            const OptimizerLogs = await OptimizerLogModel.find(query)
+                                .populate({
+                                    path: "OptimizerID",
+                                    OptimizerModel: "Optimizer",
+                                    options: { lean: true }
+                                })
+                                .skip(skip)
+                                .limit(pageSize)
+                                .lean();
+
+                            // Sort the array based on the TimeStamp field in descending order
+                            // OptimizerLogs.sort((a, b) => {
+                            //     const timestampA = new Date(a.TimeStamp);
+                            //     const timestampB = new Date(b.TimeStamp);
+
+                            //     return timestampB - timestampA;
+                            // });
 
                             const optimizerData = {
                                 optimizerName: optimizer.OptimizerID,

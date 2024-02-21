@@ -1,36 +1,22 @@
 // The data you want to post
 const DATA = {
-    "GatewayID": "9876543210GATEWAYSIX",
+    "GatewayID": "9876543210GATEWAYONE",
     "TimeStamp": "",
     "OptimizerDetails": [
         {
             "RoomTemperature": 26.9,
             "Humidity": 0.0,
             "CoilTemperature": 25.6,
-            "OptimizerID": "1234567890OPTIMIZER_TWELVE",
+            "OptimizerID": "1234567890OPTIMIZER_TWO",
             "OptimizerMode": "NON-OPTIMIZATION"
         },
         {
             "RoomTemperature": 26.9,
             "Humidity": 0.0,
             "CoilTemperature": 25.6,
-            "OptimizerID": "1234567890OPTIMIZER_ELEVEN",
+            "OptimizerID": "1234567890OPTIMIZER_ONE",
             "OptimizerMode": "NON-OPTIMIZATION"
         },
-        // {
-        //     "RoomTemperature": 26.9,
-        //     "Humidity": 0.0,
-        //     "CoilTemperature": 25.6,
-        //     "OptimizerID": "1234567890OPTIMIZER_TEN",
-        //     "OptimizerMode": "NON-OPTIMIZATION"
-        // },
-        {
-            "RoomTemperature": 26.9,
-            "Humidity": 0.0,
-            "CoilTemperature": 25.6,
-            "OptimizerID": "1234567890OPTIMIZER_NINE",
-            "OptimizerMode": "NON-OPTIMIZATION"
-        }
     ],
     "Phases": {
         "Ph1": {

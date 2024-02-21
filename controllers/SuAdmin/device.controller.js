@@ -150,7 +150,6 @@ exports.UpdateGateway = async (req, res) => {
                     NetworkSSID,
                     NetworkPassword,
                     EnterpriseUserID,
-                    is_Ready_toConfig: true,
                 },
                 { new: true } // This option returns the modified document rather than the original
             );

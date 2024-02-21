@@ -9,7 +9,6 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
-const deepEqual = require('deep-equal');
 
 
 
@@ -138,6 +137,7 @@ exports.ConfigureableData = async (req, res) => {
 // Store Gateway & Optimizer Log data 
 exports.Store = async (req, res) => {
     const data = req.body;
+    const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
     // Helper function to handle "nan" values
@@ -146,8 +146,32 @@ exports.Store = async (req, res) => {
     };
 
     try {
-        const gateway = await GatewayModel.findOne({ GatewayID: req.body.GatewayID });
-        // return console.log(gateway);
+        const gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+        const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID);
+
+        const OnlineOptimizers = optimizers;
+
+        // First, mark all optimizers as offline
+        await OptimizerModel.updateMany(
+            { OptimizerID: { $in: AssignedOptimizerIDs } },
+            { $set: { isOnline: false } }
+        );
+
+        // Then, mark online optimizers
+        await Promise.all(OnlineOptimizers.map(async optimizer => {
+            const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
+            await OptimizerModel.updateOne(
+                { OptimizerID: optimizer.OptimizerID },
+                {
+                    $set: {
+                        isOnline: isAssigned
+                    }
+                },
+                { new: true }
+            );
+        }));
+
         if (!gateway) {
             throw new Error(`Gateway with ID ${req.body.GatewayID} not found`);
         }
@@ -313,79 +337,139 @@ exports.SetOptimizerSettingValue = async (req, res) => {
             steadyStateCoilTempTolerance: req.body.steadyStateCoilTempTolerance,
         };
 
-        // reset particular optimizer
+        // set particular optimizer
         if (req.body.group === 'optimizer') {
-            console.log(`Setting value particular optimizer ${req.body.id}`);
+            console.log(`Resetting to default value particular optimizer ${req.body.id}`);
             const optimizerIDS = [req.body.id]
-            result = await UpdateSettings(optimizerIDS, data);
+            const Optmizer = await OptimizerModel.findOne({ _id: req.body.id });
+
+            if (Optmizer.isOnline) {
+                result = await UpdateSettings(optimizerIDS, data);
+            } else {
+                return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
+            }
         }
 
-        // reset all optimizer assign with the gateway => optimizers
-        if (req.body.group == 'gateway') {
-            console.log(`Setting value gateway => optimizers`);
+        // set all optimizer assign with the gateway => optimizers
+        if (req.body.group === 'gateway') {
+            console.log(`Resetting to default value gateway => optimizers`);
             const gateway_id = req.body.id;
             const allOptimizer = await OptimizerModel.find({ GatewayId: gateway_id });
-            const optimizerIDS = await Promise.all(allOptimizer.map(async (item) => {
-                return item._id;
-            }));
 
+            // Check if any optimizer is offline
+            const offlineOptimizer = allOptimizer.find(optimizer => !optimizer.isOnline);
+
+            if (offlineOptimizer) {
+                return res.status(503).json({ success: false, message: "Not all optimizers under this gateway are online. Please try again.", key: "optimizer_status" });
+            }
+
+            const optimizerIDS = allOptimizer.map(item => item._id);
             result = await UpdateSettings(optimizerIDS, data);
         }
 
-        // reset all optimizer assign with the location => gateways => optimizers
-        if (req.body.group == 'location') {
-            console.log(`Setting value location => gateways => optimizers`);
+        // set all optimizer assign with the location => gateways => optimizers
+        if (req.body.group === 'location') {
+            console.log(`Resetting to default value location => gateways => optimizers`);
             const location_id = req.body.id;
             const Location = await LocationModel.findOne({ _id: location_id });
             const allGateway = await GatewayModel.find({ EnterpriseInfo: Location._id });
 
+            // Array to hold offline optimizers
+            const offlineOptimizers = [];
+
+            // Iterate through each gateway to retrieve optimizers
             const optimizerIDS = await Promise.all(allGateway.map(async (gateway) => {
                 const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                // Check if any optimizer is offline and push it to the offlineOptimizers array
+                const offline = allOptimizer.some(optimizer => !optimizer.isOnline);
+                if (offline) {
+                    offlineOptimizers.push(...allOptimizer.filter(optimizer => !optimizer.isOnline).map(optimizer => optimizer._id));
+                }
+
                 return allOptimizer.map((item) => item._id);
             }));
 
+            // If there are offline optimizers, return an appropriate response
+            if (offlineOptimizers.length > 0) {
+                return res.status(503).json({ success: false, message: "Not all optimizers under all gateways in this location are online. Please try again.", key: "optimizer_status" });
+            }
+
+            // Flatten the optimizerIDS array and update settings for all optimizers
             result = await UpdateSettings(optimizerIDS.flat(), data);
         }
 
-        // reset all optimizer assign with the state => locations => gateways => optimizers
-        if (req.body.group == 'state') {
-            console.log(`Setting value state => locations => gateways => optimizers`);
+        // set all optimizer assign with the state => locations => gateways => optimizers
+        if (req.body.group === 'state') {
+            console.log(`Resetting to default value state => locations => gateways => optimizers`);
             const state_id = req.body.id;
             const State = await StateModel.findOne({ _id: state_id });
-            const allLocation = await LocationModel.find({ State_ID: State.State_ID });
+
+            const allLocation = await LocationModel.find({ Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
+
+            // Array to hold offline optimizers
+            const offlineOptimizers = [];
+
+            // Iterate through each location to retrieve gateways and their associated optimizers
             const optimizerIDS = await Promise.all(allLocation.map(async (location) => {
                 const allGateway = await GatewayModel.find({ EnterpriseInfo: location._id });
 
                 // Using Promise.all to wait for all OptimizerModel.find() queries to complete
                 const optimizerPromises = allGateway.map(async (gateway) => {
                     const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                    // Check if any optimizer is offline and push it to the offlineOptimizers array
+                    const offline = allOptimizer.some(optimizer => !optimizer.isOnline);
+                    if (offline) {
+                        offlineOptimizers.push(...allOptimizer.filter(optimizer => !optimizer.isOnline).map(optimizer => optimizer._id));
+                    }
+
                     return allOptimizer.map((item) => item._id);
                 });
 
                 return Promise.all(optimizerPromises);
             }));
+
+            // If there are offline optimizers, return an appropriate response
+            // console.log({offlineOptimizers});
+
+            if (offlineOptimizers.length > 0) {
+                return res.status(503).json({ success: false, message: "One or more optimizers are offline under this state. Please try again.", key: "optimizer_status" });
+            }
+
             const flattenedOptimizerIDs = optimizerIDS.flat();
-            // console.log(flattenedOptimizerIDs.flat());
             result = await UpdateSettings(flattenedOptimizerIDs.flat(), data);
         }
 
-        // reset all optimizer assign with the enterprise => states => locations => gateways => optimizers
+        // set all optimizer assign with the enterprise => states => locations => gateways => optimizers
         if (req.body.group === 'enterprise') {
-            console.log(`Setting value enterprise => states => locations => gateways => optimizers`);
+            console.log(`Resetting to default value enterprise => states => locations => gateways => optimizers`);
 
             const enterprise_id = req.body.id;
             const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
             const allState = await StateModel.find({ Enterprise_ID: Enterprise._id });
 
+            // Array to hold offline optimizers
+            const offlineOptimizers = [];
+
+            // Iterate through each state to retrieve locations, gateways, and their associated optimizers
             const optimizerIDS = await Promise.all(allState.map(async (state) => {
-                const allLocation = await LocationModel.find({ State_ID: state.State_ID });
+                const allLocation = await LocationModel.find({ Enterprise_ID: state.Enterprise_ID, State_ID: state.State_ID });
 
                 // Using Promise.all to wait for all OptimizerModel.find() queries to complete
                 const optimizerPromises = await Promise.all(allLocation.map(async (location) => {
                     const allGateway = await GatewayModel.find({ EnterpriseInfo: location._id });
 
+                    // Using Promise.all to wait for all OptimizerModel.find() queries to complete
                     const gatewayPromises = allGateway.map(async (gateway) => {
                         const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                        // Check if any optimizer is offline and push it to the offlineOptimizers array
+                        const offline = allOptimizer.some(optimizer => !optimizer.isOnline);
+                        if (offline) {
+                            offlineOptimizers.push(...allOptimizer.filter(optimizer => !optimizer.isOnline).map(optimizer => optimizer._id));
+                        }
+
                         return allOptimizer.map((item) => item._id);
                     });
 
@@ -394,9 +478,14 @@ exports.SetOptimizerSettingValue = async (req, res) => {
 
                 return optimizerPromises.flat();
             }));
+
+            // If there are offline optimizers, return an appropriate response
+            if (offlineOptimizers.length > 0) {
+                return res.status(503).json({ success: false, message: "One or more optimizers are offline under this enterprise. Please try again.", key: "optimizer_status" });
+            }
+
             // Flatten the array of arrays containing optimizer IDS
             const flattenedOptimizerIDs = optimizerIDS.flat();
-            // console.log(flattenedOptimizerIDs.flat());
             result = await UpdateSettings(flattenedOptimizerIDs.flat(), data);
         }
 
@@ -420,55 +509,103 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
         if (req.body.group === 'optimizer') {
             console.log(`Resetting to default value particular optimizer ${req.body.id}`);
             const optimizerIDS = [req.body.id]
-            result = await UpdateSettings(optimizerIDS, data);
+            const Optmizer = await OptimizerModel.findOne({ _id: req.body.id });
+
+            if (Optmizer.isOnline) {
+                result = await UpdateSettings(optimizerIDS, data);
+            } else {
+                return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
+            }
         }
 
         // reset all optimizer assign with the gateway => optimizers
-        if (req.body.group == 'gateway') {
+        if (req.body.group === 'gateway') {
             console.log(`Resetting to default value gateway => optimizers`);
             const gateway_id = req.body.id;
             const allOptimizer = await OptimizerModel.find({ GatewayId: gateway_id });
-            const optimizerIDS = await Promise.all(allOptimizer.map(async (item) => {
-                return item._id;
-            }));
 
+            // Check if any optimizer is offline
+            const offlineOptimizer = allOptimizer.find(optimizer => !optimizer.isOnline);
+
+            if (offlineOptimizer) {
+                return res.status(503).json({ success: false, message: "Not all optimizers under this gateway are online. Please try again.", key: "optimizer_status" });
+            }
+
+            const optimizerIDS = allOptimizer.map(item => item._id);
             result = await UpdateSettings(optimizerIDS, data);
         }
 
         // reset all optimizer assign with the location => gateways => optimizers
-        if (req.body.group == 'location') {
+        if (req.body.group === 'location') {
             console.log(`Resetting to default value location => gateways => optimizers`);
             const location_id = req.body.id;
             const Location = await LocationModel.findOne({ _id: location_id });
             const allGateway = await GatewayModel.find({ EnterpriseInfo: Location._id });
 
+            // Array to hold offline optimizers
+            const offlineOptimizers = [];
+
+            // Iterate through each gateway to retrieve optimizers
             const optimizerIDS = await Promise.all(allGateway.map(async (gateway) => {
                 const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                // Check if any optimizer is offline and push it to the offlineOptimizers array
+                const offline = allOptimizer.some(optimizer => !optimizer.isOnline);
+                if (offline) {
+                    offlineOptimizers.push(...allOptimizer.filter(optimizer => !optimizer.isOnline).map(optimizer => optimizer._id));
+                }
+
                 return allOptimizer.map((item) => item._id);
             }));
 
+            // If there are offline optimizers, return an appropriate response
+            if (offlineOptimizers.length > 0) {
+                return res.status(503).json({ success: false, message: "Not all optimizers under all gateways in this location are online. Please try again.", key: "optimizer_status" });
+            }
+
+            // Flatten the optimizerIDS array and update settings for all optimizers
             result = await UpdateSettings(optimizerIDS.flat(), data);
         }
 
         // reset all optimizer assign with the state => locations => gateways => optimizers
-        if (req.body.group == 'state') {
+        if (req.body.group === 'state') {
             console.log(`Resetting to default value state => locations => gateways => optimizers`);
             const state_id = req.body.id;
             const State = await StateModel.findOne({ _id: state_id });
-            const allLocation = await LocationModel.find({ State_ID: State.State_ID });
+
+            const allLocation = await LocationModel.find({ Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
+
+            // Array to hold offline optimizers
+            const offlineOptimizers = [];
+
+            // Iterate through each location to retrieve gateways and their associated optimizers
             const optimizerIDS = await Promise.all(allLocation.map(async (location) => {
                 const allGateway = await GatewayModel.find({ EnterpriseInfo: location._id });
 
                 // Using Promise.all to wait for all OptimizerModel.find() queries to complete
                 const optimizerPromises = allGateway.map(async (gateway) => {
                     const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                    // Check if any optimizer is offline and push it to the offlineOptimizers array
+                    const offline = allOptimizer.some(optimizer => !optimizer.isOnline);
+                    if (offline) {
+                        offlineOptimizers.push(...allOptimizer.filter(optimizer => !optimizer.isOnline).map(optimizer => optimizer._id));
+                    }
+
                     return allOptimizer.map((item) => item._id);
                 });
 
                 return Promise.all(optimizerPromises);
             }));
+
+            // If there are offline optimizers, return an appropriate response
+            // console.log({offlineOptimizers});
+
+            if (offlineOptimizers.length > 0) {
+                return res.status(503).json({ success: false, message: "One or more optimizers are offline under this state. Please try again.", key: "optimizer_status" });
+            }
+
             const flattenedOptimizerIDs = optimizerIDS.flat();
-            // console.log(flattenedOptimizerIDs.flat());
             result = await UpdateSettings(flattenedOptimizerIDs.flat(), data);
         }
 
@@ -480,15 +617,27 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
             const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
             const allState = await StateModel.find({ Enterprise_ID: Enterprise._id });
 
+            // Array to hold offline optimizers
+            const offlineOptimizers = [];
+
+            // Iterate through each state to retrieve locations, gateways, and their associated optimizers
             const optimizerIDS = await Promise.all(allState.map(async (state) => {
-                const allLocation = await LocationModel.find({ State_ID: state.State_ID });
+                const allLocation = await LocationModel.find({ Enterprise_ID: state.Enterprise_ID, State_ID: state.State_ID });
 
                 // Using Promise.all to wait for all OptimizerModel.find() queries to complete
                 const optimizerPromises = await Promise.all(allLocation.map(async (location) => {
                     const allGateway = await GatewayModel.find({ EnterpriseInfo: location._id });
 
+                    // Using Promise.all to wait for all OptimizerModel.find() queries to complete
                     const gatewayPromises = allGateway.map(async (gateway) => {
                         const allOptimizer = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                        // Check if any optimizer is offline and push it to the offlineOptimizers array
+                        const offline = allOptimizer.some(optimizer => !optimizer.isOnline);
+                        if (offline) {
+                            offlineOptimizers.push(...allOptimizer.filter(optimizer => !optimizer.isOnline).map(optimizer => optimizer._id));
+                        }
+
                         return allOptimizer.map((item) => item._id);
                     });
 
@@ -497,9 +646,14 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 
                 return optimizerPromises.flat();
             }));
+
+            // If there are offline optimizers, return an appropriate response
+            if (offlineOptimizers.length > 0) {
+                return res.status(503).json({ success: false, message: "One or more optimizers are offline under this enterprise. Please try again.", key: "optimizer_status" });
+            }
+
             // Flatten the array of arrays containing optimizer IDS
             const flattenedOptimizerIDs = optimizerIDS.flat();
-            // console.log(flattenedOptimizerIDs.flat());
             result = await UpdateSettings(flattenedOptimizerIDs.flat(), data);
         }
 
@@ -522,53 +676,23 @@ exports.BypassOptimizers = async (req, res) => {
             return res.status(404).json({ success: false, message: "Oops, there is a problem with updating!" });
         }
 
-        // Fetch device data (optimizer logs) within the last 60 seconds
-        const marginInSeconds = 60;
-        const currentTimeStamp = Math.floor(new Date().getTime() / 1000);
-        const startTimeStamp = currentTimeStamp - marginInSeconds;
-
-        // Function to compare arrays irrespective of order
-        const arraysEqual = (arr1, arr2) => {
-            if (arr1.length !== arr2.length) return false;
-            for (let i = 0; i < arr1.length; i++) {
-                if (!arr2.includes(arr1[i])) return false;
-            }
-            return true;
-        }
-
         // bypass from device level
         if (group === "optimizer") {
             const Optimizer = await OptimizerModel.findOne({ OptimizerID: id });
 
             if (Optimizer) {
-                const DeviceData_ONE = await OptimizerLogModel.find({
-                    OptimizerID: Optimizer._id,
-                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
-                });
-                if (DeviceData_ONE.length > 0) {
-                    let allOffline = true;
-                    // Iterate over DeviceData_ONE and update the isOnline flag
-                    await Promise.all(DeviceData_ONE.map(async device => {
-                        if (device.OptimizerID.toString() === Optimizer._id.toString()) {
-                            allOffline = false;
-                            await OptimizerModel.findByIdAndUpdate(
-                                { _id: Optimizer._id },
-                                {
-                                    $set: {
-                                        BypassMode: "IN_PROGRESS",
-                                        isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
-                                    }
-                                },
-                                { new: true } // This option returns the modified document rather than the original
-                            );
-                        }
-                    }));
-
-                    if (!allOffline) {
-                        return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
-                    } else {
-                        return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
-                    }
+                if (Optimizer?.isOnline) {
+                    await OptimizerModel.findByIdAndUpdate(
+                        { _id: Optimizer._id },
+                        {
+                            $set: {
+                                BypassMode: "IN_PROGRESS",
+                                isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
+                            }
+                        },
+                        { new: true } // This option returns the modified document rather than the original
+                    );
+                    return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
                 } else {
                     return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
                 }
@@ -582,56 +706,29 @@ exports.BypassOptimizers = async (req, res) => {
             const Gateway = await GatewayModel.findOne({ GatewayID: id });
 
             if (Gateway) {
-                const DeviceData_TWO = await OptimizerLogModel.find({
-                    GatewayID: Gateway._id,
-                    TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
-                });
-
+                // Find all optimizers related to the gateway
                 const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
 
                 if (Optimizers.length > 0) {
-                    if (DeviceData_TWO.length > 0) {
-                        let allOffline = true;
-                        let optimizersToUpdate = [];
+                    const allOptimizersOnline = Optimizers.every(optimizer => optimizer.isOnline);
 
-                        await Promise.all(DeviceData_TWO.map(async device => {
-                            const deviceOptimizerID = device.OptimizerID.toString();
-                            const optimizerExists = Optimizers.some(optimizer => optimizer._id.toString() === deviceOptimizerID);
-
-                            if (optimizerExists) {
-                                optimizersToUpdate.push(deviceOptimizerID);
-                            }
+                    if (allOptimizersOnline) {
+                        // If all optimizers are online, update bypass mode for each optimizer
+                        await Promise.all(Optimizers.map(async optimizer => {
+                            await OptimizerModel.findByIdAndUpdate(
+                                { _id: optimizer._id },
+                                {
+                                    $set: {
+                                        BypassMode: "IN_PROGRESS",
+                                        isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
+                                    }
+                                },
+                                { new: true }
+                            );
                         }));
-
-                        const optimizersToUpdateUnique = [...new Set(optimizersToUpdate.sort())];
-                        const AssignedOptimizersIDs = Optimizers.map(opt => opt._id.toString());
-                        const isEqual = arraysEqual(optimizersToUpdateUnique, AssignedOptimizersIDs.sort());
-
-                        // Update all optimizers together if their IDs are present in optimizersToUpdate
-                        if (isEqual) {
-                            // Update all optimizers
-                            await Promise.all(optimizersToUpdate.map(async optimizerID => {
-                                allOffline = false;
-                                await OptimizerModel.updateOne(
-                                    { _id: optimizerID },
-                                    {
-                                        $set: {
-                                            BypassMode: "Pending",
-                                            isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
-                                        }
-                                    },
-                                    { new: true } // This option returns the modified document rather than the original
-                                );
-                            }));
-                        }
-
-                        if (!allOffline) {
-                            return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
-                        } else {
-                            return res.status(503).json({ success: false, message: "All Device are not online. Please try again.", key: "optimizer_status" });
-                        }
+                        return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
                     } else {
-                        return res.status(503).json({ success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
+                        return res.status(503).json({ success: false, message: "Not all optimizers under this gateway are online. Please try again.", key: "optimizer_status" });
                     }
                 } else {
                     return res.status(404).json({ success: false, message: "Optimizers not found for this gateway." });
@@ -644,72 +741,39 @@ exports.BypassOptimizers = async (req, res) => {
         // bypass from location level
         if (group === "location") {
             const Location = await EnterpriseStateLocationModel.findOne({ _id: id });
+
             if (Location) {
                 const Gateways = await GatewayModel.find({ EnterpriseInfo: Location._id });
+
                 if (Gateways.length > 0) {
-                    let allOffline = true;
-                    let responses = [];
-                    let DeviceData_THREE = [];
+                    const allOptimizersOnline = await Promise.all(Gateways.map(async gateway => {
+                        const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+                        return Optimizers.every(optimizer => optimizer.isOnline);
+                    }));
 
-                    for (const Gateway of Gateways) {
-                        DeviceData_THREE = await OptimizerLogModel.find({
-                            GatewayID: Gateway._id,
-                            TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
-                        });
-                    };
-
-                    for (const Gateway of Gateways) {
-                        const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
-                        if (Optimizers.length > 0) {
-                            let optimizersToUpdate = [];
-
-                            if (DeviceData_THREE.length > 0) {
-                                await Promise.all(DeviceData_THREE.map(async device => {
-                                    const deviceOptimizerID = device.OptimizerID.toString();
-                                    const optimizerExists = Optimizers.some(optimizer => optimizer._id.toString() === deviceOptimizerID);
-
-                                    if (optimizerExists) {
-                                        optimizersToUpdate.push(deviceOptimizerID);
-                                    }
-                                }));
-
-                                const optimizersToUpdateUnique = [...new Set(optimizersToUpdate.sort())];
-                                const AssignedOptimizersIDs = Optimizers.map(opt => opt._id.toString());
-                                const isEqual = arraysEqual(optimizersToUpdateUnique, AssignedOptimizersIDs.sort());
-
-                                if (isEqual) {
-                                    await Promise.all(optimizersToUpdate.map(async optimizerID => {
-                                        allOffline = false;
-                                        await OptimizerModel.updateOne(
-                                            { _id: optimizerID },
-                                            {
-                                                $set: {
-                                                    BypassMode: "Pending",
-                                                    isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
-                                                }
-                                            },
-                                            { new: true }
-                                        );
-                                    }));
-                                }
-
-                                if (!allOffline) {
-                                    responses.push({ status: 200, success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
-                                } else {
-                                    responses.push({ status: 503, success: false, message: "All Device are not online. Please try again.", key: "optimizer_status" });
-                                }
-                            } else {
-                                responses.push({ status: 503, success: false, message: "No device data found within the specified time frame.", key: "optimizer_status" });
-                            }
-                        } else {
-                            responses.push({ status: 404, success: false, message: "Optimizers not found for this gateway." });
-                        }
+                    if (allOptimizersOnline.every(online => online)) {
+                        // If all optimizers under all gateways are online, update bypass mode for all optimizers
+                        await Promise.all(Gateways.map(async gateway => {
+                            const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+                            await Promise.all(Optimizers.map(async optimizer => {
+                                await OptimizerModel.findByIdAndUpdate(
+                                    { _id: optimizer._id },
+                                    {
+                                        $set: {
+                                            BypassMode: "IN_PROGRESS",
+                                            isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
+                                        }
+                                    },
+                                    { new: true }
+                                );
+                            }));
+                        }));
+                        return res.status(200).json({ success: true, message: state ? "Bypass mode is in on state" : "Bypass mode is in off state" });
+                    } else {
+                        return res.status(503).json({ success: false, message: "Not all optimizers under all gateways in this location are online. Please try again.", key: "optimizer_status" });
                     }
-
-                    // Sending the response after the loop
-                    return res.status(responses[0]?.status).json({ success: responses[0]?.success, message: responses[0]?.message, key: responses[0]?.key });
                 } else {
-                    return res.status(404).json({ success: false, message: "Gateways not found." });
+                    return res.status(404).json({ success: false, message: "No gateways found for this location." });
                 }
             } else {
                 return res.status(404).json({ success: false, message: "Location not found." });

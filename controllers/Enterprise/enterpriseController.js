@@ -407,6 +407,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         };
 
         // Step 7: Return the response
+        console.log({response});
         return res.status(200).json(response);
 
     } catch (err) {

@@ -18,8 +18,8 @@ const EnterpriseStateLocationSchema = new mongoose.Schema({
     isDelete: {
         type: Boolean,
         default: false
-    }
-    // Other relevant fields for Enterprise entity
+    },
+    BypassMode: { type: String, default: "" },
 }, { timestamps: true });
 // Middleware to convert timestamps to IST before saving
 EnterpriseStateLocationSchema.pre('save', function (next) {

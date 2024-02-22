@@ -140,6 +140,7 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
+    console.log("Device Data======>", req.body);
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
@@ -718,6 +719,16 @@ exports.BypassOptimizers = async (req, res) => {
                     const allOptimizersOnline = Optimizers.every(optimizer => optimizer.isOnline);
 
                     if (allOptimizersOnline) {
+                        // // Update the gateway model bypass mode
+                        // await GatewayModel.findByIdAndUpdate(
+                        //     { _id: Gateway._id },
+                        //     {
+                        //         $set: {
+                        //             BypassMode: "IN_PROGRESS",
+                        //         }
+                        //     },
+                        //     { new: true }
+                        // );
                         // If all optimizers are online, update bypass mode for each optimizer
                         await Promise.all(Optimizers.map(async optimizer => {
                             await OptimizerModel.findByIdAndUpdate(
@@ -757,6 +768,16 @@ exports.BypassOptimizers = async (req, res) => {
                     }));
 
                     if (allOptimizersOnline.every(online => online)) {
+                        // // Update the location model bypass mode
+                        // await EnterpriseStateLocationModel.findByIdAndUpdate(
+                        //     { _id: Location._id },
+                        //     {
+                        //         $set: {
+                        //             BypassMode: "IN_PROGRESS",
+                        //         }
+                        //     },
+                        //     { new: true }
+                        // );
                         // If all optimizers under all gateways are online, update bypass mode for all optimizers
                         await Promise.all(Gateways.map(async gateway => {
                             const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });

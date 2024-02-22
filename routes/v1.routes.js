@@ -7,6 +7,7 @@ const routeAccessMiddleware = require('../middleware/access.middleware');
 const router = express.Router();
 const TestController = require('../fake/controller/testController');
 const SateModel = require('../models/state.model');
+const OptimizerModel = require('../models/optimizer.model');
 
 
 // router.get('/hi/dude', routeAccessMiddleware(), UserController.index).name = "DudeRoute";
@@ -326,6 +327,11 @@ router.get('/states/upload', async (req, res) => {
         }).save();
     }
     return res.send('Done...');
+});
+
+router.get('/all/optimizers', async (req, res) => {
+    const AllOptimizers = await OptimizerModel.find();
+    return res.send({ AllOptimizers });
 });
 
 

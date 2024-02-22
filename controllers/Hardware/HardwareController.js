@@ -140,7 +140,6 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
-    console.log("Device Data======>", req.body);
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
@@ -162,13 +161,10 @@ exports.Store = async (req, res) => {
             { $set: { isOnline: false } }
         );
 
-        console.log("OnlineOptimizers====>", OnlineOptimizers);
-        console.log("AssignedOptimizers====>", AssignedOptimizers);
-
         // Then, mark online optimizers
         await Promise.all(OnlineOptimizers.map(async optimizer => {
             const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
-            console.log({ isAssigned, OptimizerID: optimizer.OptimizerID, AssignedOptimizerIDs });
+            
             await OptimizerModel.updateOne(
                 { OptimizerID: optimizer.OptimizerID },
                 {

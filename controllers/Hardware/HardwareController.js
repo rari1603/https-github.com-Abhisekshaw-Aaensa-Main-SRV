@@ -148,7 +148,7 @@ exports.Store = async (req, res) => {
     try {
         const gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
         if (!gateway) {
-            return res.status(401).send(`Gateway with ID ${req.body.GatewayID} not found`);
+            return res.status(404).send(`Gateway with ID ${req.body.GatewayID} not found`);
         }
         const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
         const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID);

@@ -168,7 +168,7 @@ exports.Store = async (req, res) => {
         // Then, mark online optimizers
         await Promise.all(OnlineOptimizers.map(async optimizer => {
             const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
-            console.log({ isAssigned, OptimizerID: optimizer.OptimizerID });
+            console.log({ isAssigned, OptimizerID: optimizer.OptimizerID, AssignedOptimizerIDs });
             await OptimizerModel.updateOne(
                 { OptimizerID: optimizer.OptimizerID },
                 {

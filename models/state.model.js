@@ -25,6 +25,6 @@ StateSchema.pre('save', function (next) {
     next();
 });
 
-const StateModel = mongoose.model('State', StateSchema);
+const StateModel = mongoose.model('State1', StateSchema);
 
 module.exports = StateModel;

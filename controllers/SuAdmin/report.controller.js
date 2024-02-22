@@ -236,7 +236,7 @@ exports.AllMeterData = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching data:", error);
-        return res.status(500).json("Internal server error");
+        return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };
 

@@ -152,7 +152,7 @@ exports.Store = async (req, res) => {
             return res.status(404).send(`Gateway with ID ${req.body.GatewayID} not found`);
         }
         const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
-        const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID);
+        const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim());
 
         const OnlineOptimizers = optimizers;
 

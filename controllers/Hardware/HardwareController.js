@@ -162,6 +162,9 @@ exports.Store = async (req, res) => {
             { $set: { isOnline: false } }
         );
 
+        console.log("OnlineOptimizers====>", OnlineOptimizers);
+        console.log("AssignedOptimizers====>", AssignedOptimizers);
+        
         // Then, mark online optimizers
         await Promise.all(OnlineOptimizers.map(async optimizer => {
             const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);

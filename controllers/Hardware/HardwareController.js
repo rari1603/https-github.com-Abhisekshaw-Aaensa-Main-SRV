@@ -136,7 +136,6 @@ exports.ConfigureableData = async (req, res) => {
 
 // Store Gateway & Optimizer Log data 
 exports.Store = async (req, res) => {
-    console.log(req.body);
     const data = req.body;
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;

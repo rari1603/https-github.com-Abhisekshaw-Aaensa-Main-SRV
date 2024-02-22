@@ -147,6 +147,9 @@ exports.Store = async (req, res) => {
 
     try {
         const gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        if (!gateway) {
+            return res.status(401).send(`Gateway with ID ${req.body.GatewayID} not found`);
+        }
         const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
         const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID);
 
@@ -172,9 +175,6 @@ exports.Store = async (req, res) => {
             );
         }));
 
-        if (!gateway) {
-            throw new Error(`Gateway with ID ${req.body.GatewayID} not found`);
-        }
 
         const gatewayId = gateway._id;
         const { TimeStamp, Phases, KVAH, KWH, PF } = data;
@@ -237,7 +237,12 @@ exports.InstallationProperty = async (req, res) => {
     const { gateway_id } = req.params;
 
     const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+    if (!Gateway) {
+        return res.status(404).json({ success: false, message: "Gateway not found." });
+    }
+
     const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
+    
     const optObject = Optimizers.map(element =>
         element.OptimizerID,
     );

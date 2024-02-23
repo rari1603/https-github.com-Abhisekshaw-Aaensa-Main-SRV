@@ -356,25 +356,6 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
             return res.status(404).send({ success: false, message: 'No data found for the given ID.' });
         }
 
-        // Step 3: Fetch device data (optimizer logs) within the last 60 seconds
-        const marginInSeconds = 60;
-        const currentTimeStamp = Math.floor(new Date().getTime() / 1000);
-        const startTimeStamp = currentTimeStamp - marginInSeconds;
-
-        const DeviceData = await OptimizerLogModel.find({
-            GatewayID: Gateway._id,
-            TimeStamp: { $gte: startTimeStamp.toString(), $lte: currentTimeStamp.toString() }
-        });
-
-        // Step 4: Iterate over DeviceData and update the isOnline flag
-        DeviceData.forEach(device => {
-            AllEnterpriseStateLocationGatewayOptimizer.forEach(optimizer => {
-                if (device.OptimizerID.toString() === optimizer._id.toString()) {
-                    optimizer.isOnline = true;
-                }
-            });
-        });
-
         // Step 5: Extract common data fields
         // Extract the common Enterprise_ID data from the first object
         const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId.EnterpriseInfo.Enterprise_ID;
@@ -426,6 +407,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         };
 
         // Step 7: Return the response
+
         return res.status(200).json(response);
 
     } catch (err) {
@@ -454,6 +436,7 @@ exports.OptimizerDetails = async (req, res) => {
                     _id: Optimizer._id,
                     OptimizerID: Optimizer.OptimizerID,
                     OptimizerName: Optimizer.OptimizerName,
+                    isOnline: Optimizer.isOnline,
                     isBypass: Optimizer.isBypass,
                     isReset: Optimizer.isReset,
                     isSetting: Optimizer.isSetting,

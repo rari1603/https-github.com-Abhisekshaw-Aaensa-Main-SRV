@@ -25,6 +25,7 @@ const GatewaySchema = new mongoose.Schema({
     },
     isConfigure: { type: Boolean, default: false },
     is_Ready_toConfig: { type: Boolean, default: false },
+    BypassMode: { type: String, default: "" },
 }, { timestamps: true });
 
 

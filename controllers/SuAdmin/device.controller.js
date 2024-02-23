@@ -64,14 +64,18 @@ exports.AddOptimizer = async (req, res) => {
     const { GatewayId, OptimizerID, OptimizerName } = req.body;
     try {
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
-        const NewOptimizer = new OptimizerModel({
-            GatewayId: GATEWAY._id, // primary _id of that Gateway
-            OptimizerID,
-            OptimizerName,
-        });
+        if (GATEWAY) {
+            const NewOptimizer = new OptimizerModel({
+                GatewayId: GATEWAY._id, // primary _id of that Gateway
+                OptimizerID,
+                OptimizerName,
+            });
 
-        await NewOptimizer.save();
-        return res.status(201).json({ success: true, message: "Optimizer added successfully." });
+            await NewOptimizer.save();
+            return res.status(201).json({ success: true, message: "Optimizer added successfully." });
+        } else {
+            return res.status(404).json({ success: false, message: "Gateway not found." });
+        }
     } catch (err) {
         console.error(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });

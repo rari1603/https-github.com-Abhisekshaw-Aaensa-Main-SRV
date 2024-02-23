@@ -13,11 +13,23 @@ const { duplicateUserCheck, duplicateEnterpriseCheck } = require('../middleware/
 const router = express.Router();
 
 
-
+/************* START REPORT *************/
+// Device Data report api
 router.post('/get/all/device/data', ReportController.AllDeviceData);
+// Meter Data report api
 router.post('/get/all/meter/data', ReportController.AllMeterData);
+
+// Download device report
+router.post('/download/all/devicedata/report', ReportController.DownloadDeviceDataReport);
+// Download meter report
+router.post('/download/all/meterdata/report', ReportController.DownloadMeterDataReport);
+
+
 // router.post('/get/all/device/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
 router.get('/get/all/demo/data', ReportController.AllDataLogDemo);
+/************* END REPORT *************/
+
+
 // enterprise list
 router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.EnterpriseListData); // flag should be "data"/"name"
 

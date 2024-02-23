@@ -70,5 +70,5 @@ function fetchData() {
         });
 }
 
-// Call fetchData every 10 seconds
-setInterval(fetchData, 20000);
+// Call fetchData every 7 seconds
+setInterval(fetchData, 7000);

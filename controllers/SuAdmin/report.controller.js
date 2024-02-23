@@ -6,23 +6,25 @@ const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const StateModel = require('../../models/state.model');
-
+const { parse } = require('json2csv');
+const fs = require('fs');
 
 
 exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
-    try {
-        const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
-        const endUtcTimestamp = (new Date(endDate).getTime() / 1000);
+    const { page, pageSize } = req.query;
 
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 50;
-        const skip = (page - 1) * pageSize;
+    try {
+        const startUtcTimestamp = new Date(startDate).getTime() / 1000;
+        const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+
+        const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
+        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+        const skip = (validatedPage - 1) * validatedPageSize;
 
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
 
-        // Fetch states for the current page only
         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
 
         const responseData = [{
@@ -30,10 +32,10 @@ exports.AllDeviceData = async (req, res) => {
             State: [],
         }];
 
-        for (const State of EntStates) {
-            const locationQuery = location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
-            const Location = await EnterpriseStateLocationModel.find(locationQuery);
+        let totalResults; // Initialize total count
 
+        for (const State of EntStates) {
+            const Location = await EnterpriseStateLocationModel.find(location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
             const state = await StateModel.findOne({ _id: State.State_ID });
 
             if (Location.length > 0) {
@@ -61,6 +63,9 @@ exports.AllDeviceData = async (req, res) => {
                             optimizer: []
                         };
 
+                        // Object to store optimizer logs grouped by timestamp
+                        const groupedOptimizerLogs = {};
+
                         for (const optimizer of Optimizers) {
                             const query = {
                                 OptimizerID: optimizer._id,
@@ -77,22 +82,30 @@ exports.AllDeviceData = async (req, res) => {
                                 .limit(pageSize)
                                 .lean();
 
-                            // Sort the array based on the TimeStamp field in descending order
-                            // OptimizerLogs.sort((a, b) => {
-                            //     const timestampA = new Date(a.TimeStamp);
-                            //     const timestampB = new Date(b.TimeStamp);
-
-                            //     return timestampB - timestampA;
-                            // });
-
-                            const optimizerData = {
-                                optimizerName: optimizer.OptimizerID,
-                                optimizer_ID: optimizer._id,
-                                optimizerLogs: OptimizerLogs.map(optimizerLog => (optimizerLog))
-                            };
-                            if (OptimizerLogs.length > 0) {
-                                gatewayData.optimizer.push(optimizerData);
+                            // Group optimizer logs based on their timestamps
+                            for (const optimizerLog of OptimizerLogs) {
+                                const timestamp = optimizerLog.TimeStamp;
+                                if (!groupedOptimizerLogs[timestamp]) {
+                                    groupedOptimizerLogs[timestamp] = [];
+                                }
+                                groupedOptimizerLogs[timestamp].push(optimizerLog);
                             }
+
+                            // Increment totalCount for each optimizer log
+                            totalResults = await OptimizerLogModel.find({
+                                OptimizerID: optimizer._id,
+                                TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                            });
+                        }
+
+                        // Create optimizer data for each unique timestamp and push grouped logs into it
+                        for (const timestamp in groupedOptimizerLogs) {
+                            const optimizerLogsForTimestamp = groupedOptimizerLogs[timestamp];
+                            const optimizerData = {
+                                timestamp: timestamp,
+                                optimizerLogs: optimizerLogsForTimestamp
+                            };
+                            gatewayData.optimizer.push(optimizerData);
                         }
 
                         locationData.gateway.push(gatewayData);
@@ -105,13 +118,15 @@ exports.AllDeviceData = async (req, res) => {
             }
         }
 
-        const totalCount = await EnterpriseStateModel.countDocuments(enterpriseStateQuery);
-        const totalPages = Math.ceil(totalCount / pageSize);
-
         return res.send({
-            totalPages,
-            currentPage: page,
-            data: responseData
+            success: true,
+            message: "Data fetched successfully",
+            data: responseData,
+            pagination: {
+                page: validatedPage,
+                pageSize: validatedPageSize,
+                totalResults: totalResults.length, // You may need to adjust this based on your actual total count
+            },
         });
 
     } catch (error) {
@@ -131,7 +146,7 @@ exports.AllMeterData = async (req, res) => {
 
         // Validate page and pageSize parameters
         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
-        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
+        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;
         // Fetch Enterprise data
         const enterprise = await EnterpriseModel.findOne({ _id: Customer });
         if (!enterprise) {
@@ -408,5 +423,200 @@ exports.AllDataLogDemo = async (req, res) => {
         return res.status(200).json({ success: true, message: 'Data fetched successfully', data: allData });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
+    }
+};
+
+
+/******************************* R E P O R T  D O W N L O A D *********************************/
+// DownloadDeviceDataReport
+exports.DownloadDeviceDataReport = async (req, res) => {
+    try {
+        const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
+
+        const startUtcTimestamp = new Date(startDate).getTime() / 1000;
+        const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+
+        const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
+        if (!Enterprise) {
+            return res.status(404).json({
+                success: false,
+                message: "Enterprise not found",
+            });
+        }
+
+        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+
+        const allData = [];
+
+        for (const State of EntStates) {
+            const Location = await EnterpriseStateLocationModel.find(location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
+
+            for (const loc of Location) {
+                const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
+                const Gateways = await GatewayModel.find(gatewayQuery);
+
+                for (const gateway of Gateways) {
+                    const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+
+                    for (const optimizer of Optimizers) {
+                        const query = {
+                            OptimizerID: optimizer._id,
+                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                        };
+
+                        const OptimizerLogs = await OptimizerLogModel.find(query).lean();
+
+                        const mappedData = OptimizerLogs.map(log => ({
+                            OptimizerID: optimizer.OptimizerID, // Assuming OptimizerID is the field you want from the Optimizer model
+                            GatewayID: gateway.GatewayID,
+                            Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+                            Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+                            RoomTemperature: log.RoomTemperature,
+                            Humidity: log.Humidity,
+                            CoilTemperature: log.CoilTemperature,
+                            OptimizerMode: log.OptimizerMode
+                        }));
+
+                        allData.push(...mappedData);
+                    }
+                }
+            }
+        }
+
+        // Fields that are included in the CSV output
+        const fields = ['OptimizerID', 'GatewayID', 'Date', 'Time', 'RoomTemperature', 'Humidity', 'CoilTemperature', 'OptimizerMode'];
+
+        // Add a heading to the CSV data
+        const heading = [`Device Data Report from ${startDate} to ${endDate}`];
+        const csvData = parse([heading, ...allData], { fields, header: true });
+
+        // Generate filename dynamically
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+        const formattedTime = `${currentDate.getHours().toString().padStart(2, '0')}-${currentDate.getMinutes().toString().padStart(2, '0')}`;
+        const filename = `Report_${formattedDate}_${formattedTime}.csv`;
+
+        // Set headers for file download with dynamic filename
+        res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+        res.set('Content-Type', 'text/csv');
+
+        // Send CSV data as response
+        res.status(200).send(csvData);
+
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    }
+};
+
+// DownloadMeterDataReport
+exports.DownloadMeterDataReport = async (req, res) => {
+    try {
+        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
+
+        const startUtcTimestamp = new Date(startDate).getTime() / 1000;
+        const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+
+        const enterprise = await EnterpriseModel.findOne({ _id: Customer });
+        if (!enterprise) {
+            return res.status(404).json({
+                success: false,
+                message: "This enterprise is not available",
+            });
+        } else if (!startDate || !endDate) {
+            return res.status(404).json({
+                success: false,
+                message: "Please provide Start and End Date and time ",
+            });
+        }
+
+        // Aggregation Pipeline
+        let aggregationPipeline = [];
+        const enterpriseStateQuery = Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id };
+
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+
+        const allData = [];
+
+        for (const States of EntStates) {
+            const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
+            const Location = await EnterpriseStateLocationModel.find(locationQuery);
+
+            for (const loc of Location) {
+                const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
+                const GatewayData = await GatewayModel.find(gatewayQuery);
+
+                for (const gateway of GatewayData) {
+                    let GatewayLogData = await GatewayLogModel.find({
+                        GatewayID: gateway._id,
+                        TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                    });
+
+                    // Map GatewayLogData to include only desired fields
+                    const mappedData = GatewayLogData.map(log => ({
+                        GatewayID: gateway.GatewayID,
+                        Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+                        Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+                        'Ph1:Voltage': log.Phases.Ph1.Voltage,
+                        'Ph1:Current': log.Phases.Ph1.Current,
+                        'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
+                        'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
+                        'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
+
+                        'Ph2:Voltage': log.Phases.Ph2.Voltage,
+                        'Ph2:Current': log.Phases.Ph2.Current,
+                        'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
+                        'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
+                        'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
+
+                        'Ph3:Voltage': log.Phases.Ph3.Voltage,
+                        'Ph3:Current': log.Phases.Ph3.Current,
+                        'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
+                        'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
+                        'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
+
+                        'KVAH': log.KVAH,
+                        'KWH': log.KWH,
+                        'PF': log.PF,
+                    }));
+
+                    // Push mappedData into allData array
+                    allData.push(...mappedData);
+                }
+            }
+        }
+        // Fields that are included in the CSV output
+        const fields = [
+            'GatewayID',
+            'Date',
+            'Time',
+            'Ph1:Voltage', 'Ph1:Current', 'Ph1:ActivePower', 'Ph1:PowerFactor', 'Ph1:ApparentPower',
+            'Ph2:Voltage', 'Ph2:Current', 'Ph2:ActivePower', 'Ph2:PowerFactor', 'Ph2:ApparentPower',
+            'Ph3:Voltage', 'Ph3:Current', 'Ph3:ActivePower', 'Ph3:PowerFactor', 'Ph3:ApparentPower',
+            'KVAH', 'KWH', 'PF'
+        ];
+
+
+        // Add a heading to the CSV data
+        const heading = [`Device Meter Report from ${startDate} to ${endDate}`];
+        const csvData = parse([heading, ...allData], { fields, header: true });
+
+        // Generate filename dynamically
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+        const formattedTime = `${currentDate.getHours().toString().padStart(2, '0')}-${currentDate.getMinutes().toString().padStart(2, '0')}`;
+        const filename = `MeterData_${formattedDate}_${formattedTime}.csv`;
+
+        // Set headers for file download with dynamic filename
+        res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+        res.set('Content-Type', 'text/csv');
+
+        // Send CSV data as response
+        res.status(200).send(csvData);
+
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };

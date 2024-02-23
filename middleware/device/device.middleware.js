@@ -81,43 +81,49 @@ exports.CheckEntStateLocation = async (req, res, next) => {
 
 // Add gateway empty field check
 exports.CheckGateway = async (req, res, next) => {
-    const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
+    let { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
     const { gateway_id } = req.params;
 
+    // Remove blank spaces from NetworkSSID, NetworkPassword, and GatewayID
+    NetworkSSID = NetworkSSID.trim().replace(/\s+/g, '');
+    NetworkPassword = NetworkPassword.trim().replace(/\s+/g, '');
+    GatewayID = GatewayID.trim().replace(/\s+/g, '');
+
+    console.log((NetworkPassword));
+
     try {
+        // Additional validation for NetworkSSID
+        if (!NetworkSSID || NetworkSSID.length <= 8) {
+            return res.status(401).json({ success: false, message: "NetworkSSID should contain a minimum of 8 characters!", key: "NetworkSSID" });
+        }
+
+        // Additional validation for NetworkPassword
+        if (!NetworkPassword || NetworkPassword.length <= 8 || !(/^(?=.*[@_!#*])[A-Za-z0-9@_!#*]+$/g.test(NetworkPassword))) {
+            return res.status(401).json({ success: false, message: "Network Password should contain a minimum of 8 characters and include at least one of @, _, !, #, or *", key: "NetworkPassword" });
+        }
 
         if (!EnterpriseInfo) {
             return res.status(401).json({ success: false, message: "Enterprise Information is required!", key: "EnterpriseInfo" });
-
         }
         if (!OnboardingDate) {
             return res.status(401).json({ success: false, message: "Onboarding Date is required!", key: "OnboardingDate" });
-
         }
         if (!GatewayID) {
             return res.status(401).json({ success: false, message: "GatewayID is required!", key: "GatewayID" });
-
-        }
-        if (!NetworkSSID) {
-            return res.status(401).json({ success: false, message: "NetworkSSID is required!", key: "NetworkSSID" });
-
-        }
-        if (!NetworkPassword) {
-            return res.status(401).json({ success: false, message: "Network Password is required!", key: "NetworkPassword" });
-
         }
         if (!EnterpriseUserID) {
             return res.status(401).json({ success: false, message: "Enterprise User is required!", key: "EnterpriseUser" });
-
         }
 
         if (!gateway_id) {
-            const ExsistingGateway = await GatewayModel.findOne({ GatewayID });
-            if (ExsistingGateway) {
+            const ExistingGateway = await GatewayModel.findOne({ GatewayID });
+            if (ExistingGateway) {
                 return res.status(409).json({ success: false, message: 'A gateway with the provided ID already exists. Please choose a different ID.', key: 'GatewayID' });
             }
         }
 
+        // Passing processed data to the controller
+        req.body = { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID };
         next();
 
     } catch (error) {
@@ -128,8 +134,12 @@ exports.CheckGateway = async (req, res, next) => {
 
 // Add optimizer empty field check
 exports.CheckOptimizer = async (req, res, next) => {
-    const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    let { GatewayId, OptimizerID, OptimizerName } = req.body;
     const { optimizer_id } = req.params;
+
+    // Remove blank spaces from OptimizerID
+    OptimizerID = OptimizerID.trim().replace(/\s+/g, '');
+    GatewayId = GatewayId.trim().replace(/\s+/g, '');
 
     try {
 
@@ -146,12 +156,14 @@ exports.CheckOptimizer = async (req, res, next) => {
 
         }
         if (!optimizer_id) {
-            const ExsistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
-            if (ExsistingOptimizer) {
-                return res.status(409).json({ success: false, message: 'A optimizer with the provided ID already exists. Please choose a different ID.', key: 'OptimizerID' });
+            const ExistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
+            if (ExistingOptimizer) {
+                return res.status(409).json({ success: false, message: 'An optimizer with the provided ID already exists. Please choose a different ID.', key: 'OptimizerID' });
             }
         }
 
+        // Passing processed data to the controller
+        req.body = { GatewayId, OptimizerID, OptimizerName };
         next();
 
     } catch (error) {

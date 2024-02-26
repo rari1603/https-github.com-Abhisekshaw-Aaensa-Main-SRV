@@ -140,6 +140,7 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
     console.log({ data });
+    console.log({ optimizers });
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
@@ -203,7 +204,7 @@ exports.Store = async (req, res) => {
 
         const optimizerLogPromises = optimizers.map(async element => {
             const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
-            // return console.log(optimizer);
+            console.log({ optimizer });
             if (!optimizer) {
                 console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
             }

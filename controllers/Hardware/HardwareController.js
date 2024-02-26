@@ -851,10 +851,10 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
             }
 
             if (purpose === "bypass_on" || purpose === "bypass_off") {
-                const OPTIMIZER = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
-                if (OPTIMIZER) {
-                    const Optimizer = await OptimizerModel.findByIdAndUpdate(
+                if (Optimizer) {
+                    await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
                         {
                             $set: {

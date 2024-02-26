@@ -164,7 +164,7 @@ exports.Store = async (req, res) => {
         // Then, mark online optimizers
         await Promise.all(OnlineOptimizers.map(async optimizer => {
             const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
-            
+
             await OptimizerModel.updateOne(
                 { OptimizerID: optimizer.OptimizerID },
                 {
@@ -815,7 +815,7 @@ exports.BypassOptimizers = async (req, res) => {
 // Settings acknowledgement after set/rest
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
-
+    console.log({ DATA });
     try {
         const results = await Promise.all(DATA.map(async item => {
             const { purpose, OptimizerID } = item;
@@ -854,7 +854,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
                 if (Optimizer) {
-                    await OptimizerModel.findByIdAndUpdate(
+                    const Optimizer = await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
                         {
                             $set: {
@@ -865,6 +865,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                         },
                         { new: true }
                     );
+                    console.log({ Optimizer });
                     return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };

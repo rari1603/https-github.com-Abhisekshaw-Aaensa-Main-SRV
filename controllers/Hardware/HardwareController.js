@@ -9,6 +9,7 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
+const fs = require('fs');
 
 
 
@@ -75,6 +76,8 @@ exports.ConfigureableData = async (req, res) => {
         const { gateway_id } = req.params;
 
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        // console.log({ Gateway });
+
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
         };
@@ -125,11 +128,13 @@ exports.ConfigureableData = async (req, res) => {
             "optimizer": optObject
 
         };
+        // console.log({ ConfigureableData: NewObj });
+        // console.log({ Optimizers: NewObj.optimizer });
         return res.status(200).send(NewObj);
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
-        console.log(error);
+        console.log({ error: error.message });
         return res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -164,7 +169,7 @@ exports.Store = async (req, res) => {
         // Then, mark online optimizers
         await Promise.all(OnlineOptimizers.map(async optimizer => {
             const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
-            
+
             await OptimizerModel.updateOne(
                 { OptimizerID: optimizer.OptimizerID },
                 {
@@ -203,7 +208,7 @@ exports.Store = async (req, res) => {
 
         const optimizerLogPromises = optimizers.map(async element => {
             const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
-            // return console.log(optimizer);
+
             if (!optimizer) {
                 console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
             }
@@ -815,7 +820,7 @@ exports.BypassOptimizers = async (req, res) => {
 // Settings acknowledgement after set/rest
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
-
+    // console.log({ Acknowledgement: DATA });
     try {
         const results = await Promise.all(DATA.map(async item => {
             const { purpose, OptimizerID } = item;
@@ -852,7 +857,6 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
 
             if (purpose === "bypass_on" || purpose === "bypass_off") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
-
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },

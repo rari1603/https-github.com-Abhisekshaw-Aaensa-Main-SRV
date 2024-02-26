@@ -76,8 +76,8 @@ exports.ConfigureableData = async (req, res) => {
         const { gateway_id } = req.params;
 
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
-        console.log({ Gateway });
-        
+        // console.log({ Gateway });
+
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
         };
@@ -128,13 +128,13 @@ exports.ConfigureableData = async (req, res) => {
             "optimizer": optObject
 
         };
-        console.log({ ConfigureableData: NewObj });
-        console.log({ Optimizers: NewObj.optimizer });
+        // console.log({ ConfigureableData: NewObj });
+        // console.log({ Optimizers: NewObj.optimizer });
         return res.status(200).send(NewObj);
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
-        console.log(error);
+        console.log({ error: error.message });
         return res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -820,8 +820,7 @@ exports.BypassOptimizers = async (req, res) => {
 // Settings acknowledgement after set/rest
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
-    console.log({ Acknowledgement: DATA });
-    // writeToLog({ Acknowledgement: DATA });
+    // console.log({ Acknowledgement: DATA });
     try {
         const results = await Promise.all(DATA.map(async item => {
             const { purpose, OptimizerID } = item;
@@ -858,7 +857,6 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
 
             if (purpose === "bypass_on" || purpose === "bypass_off") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
-                console.log({ Optimizer });
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
@@ -871,8 +869,6 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                         },
                         { new: true }
                     );
-                    console.log({ Optimizer });
-                    // writeToLog({ Optimizer: Optimizer });
                     return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };

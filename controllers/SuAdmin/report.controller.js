@@ -7,7 +7,7 @@ const OptimizerModel = require('../../models/optimizer.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const StateModel = require('../../models/state.model');
 const { parse } = require('json2csv');
-const fs = require('fs');
+
 
 
 // exports.AllDeviceData = async (req, res) => {
@@ -16,7 +16,7 @@ const fs = require('fs');
 
 //     try {
 //         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
-//         const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+//         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
 //         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
 //         const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -140,7 +140,7 @@ exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
     try {
         const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
-        const endUtcTimestamp = (new Date(endDate).getTime() / 1000);
+        const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 50;
@@ -254,7 +254,7 @@ exports.AllMeterData = async (req, res) => {
         const { page, pageSize } = req.query;
 
         const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
-        const endUtcTimestamp = (new Date(endDate).getTime() / 1000);
+        const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
         // Validate page and pageSize parameters
         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
@@ -368,86 +368,6 @@ exports.AllMeterData = async (req, res) => {
 };
 
 
-
-// exports.AllMeterData = async (req, res) => {
-//     try {
-//         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
-//         const { page, pageSize } = req.query;
-
-//         if (!startDate || !endDate) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Please provide Start and End Date and time",
-//             });
-//         }
-
-//         const startUtcTimestamp = new Date(startDate).getTime();
-//         const endUtcTimestamp = new Date(endDate).getTime();
-
-//         const enterprise = await EnterpriseModel.findById(Customer);
-//         if (!enterprise) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "This enterprise is not available",
-//             });
-//         }
-
-//         const skip = (page - 1) * pageSize;
-
-//         const EntStates = await EnterpriseStateModel.find(Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id });
-
-//         const responseData = [];
-
-//         for (const state of EntStates) {
-//             const locations = await EnterpriseStateLocationModel.find(Locationid ? { _id: Locationid } : { Enterprise_ID: state.Enterprise_ID, State_ID: state.State_ID });
-
-//             for (const location of locations) {
-//                 const gateways = await GatewayModel.find(Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: location._id });
-
-//                 const locationData = {
-//                     locationName: location.LocationName,
-//                     location_ID: location._id,
-//                     gateway: []
-//                 };
-
-//                 for (const gateway of gateways) {
-//                     const GatewayLogData = await GatewayLogModel.find({
-//                         GatewayID: gateway._id,
-//                         TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp }
-//                     }).sort({ TimeStamp: -1 }).skip(skip).limit(pageSize);
-
-//                     if (GatewayLogData.length > 0) {
-//                         locationData.gateway.push({
-//                             GatewayName: gateway.GatewayID,
-//                             Gateway_ID: gateway._id,
-//                             GatewayLogs: GatewayLogData
-//                         });
-//                     }
-//                 }
-
-//                 if (locationData.gateway.length > 0) {
-//                     responseData.push(locationData);
-//                 }
-//             }
-//         }
-
-//         return res.json({
-//             success: true,
-//             message: "Data fetched successfully",
-//             response: responseData,
-//             pagination: {
-//                 page: parseInt(page),
-//                 pageSize: parseInt(pageSize),
-//                 totalResults: responseData.length
-//             },
-//         });
-//     } catch (error) {
-//         console.error("Error fetching data:", error);
-//         return res.status(500).json("Internal server error");
-//     }
-// };
-
-
 exports.AllDataLogDemo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -547,7 +467,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
 
         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
-        const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+        const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
         if (!Enterprise) {
@@ -629,7 +549,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
 
         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
-        const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+        const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
         const enterprise = await EnterpriseModel.findOne({ _id: Customer });
         if (!enterprise) {

@@ -76,6 +76,7 @@ exports.ConfigureableData = async (req, res) => {
         const { gateway_id } = req.params;
 
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        console.log({ Gateway });
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
         };
@@ -126,6 +127,7 @@ exports.ConfigureableData = async (req, res) => {
             "optimizer": optObject
 
         };
+        console.log({ ConfigureableData: NewObj });
         return res.status(200).send(NewObj);
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
@@ -817,7 +819,7 @@ exports.BypassOptimizers = async (req, res) => {
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
     console.log({ Acknowledgement: DATA });
-    writeToLog({ Acknowledgement: DATA });
+    // writeToLog({ Acknowledgement: DATA });
     try {
         const results = await Promise.all(DATA.map(async item => {
             const { purpose, OptimizerID } = item;
@@ -868,7 +870,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                         { new: true }
                     );
                     console.log({ Optimizer });
-                    writeToLog({ Optimizer: Optimizer });
+                    // writeToLog({ Optimizer: Optimizer });
                     return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };

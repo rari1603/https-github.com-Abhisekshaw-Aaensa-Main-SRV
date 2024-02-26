@@ -868,6 +868,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                         { new: true }
                     );
                     console.log({ Optimizer });
+                    writeToLog({ Optimizer: Optimizer });
                     return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
                 } else {
                     return { success: false, message: "No document found for this OptimizerID." };

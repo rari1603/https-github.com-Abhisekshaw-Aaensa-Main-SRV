@@ -582,7 +582,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
 
                         const mappedData = OptimizerLogs.map(log => ({
                             OptimizerID: optimizer.OptimizerID, // Assuming OptimizerID is the field you want from the Optimizer model
-                            GatewayID: gateway.GatewayID,
+                            GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
                             Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
                             Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
                             RoomTemperature: log.RoomTemperature,
@@ -668,7 +668,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
 
                     // Map GatewayLogData to include only desired fields
                     const mappedData = GatewayLogData.map(log => ({
-                        GatewayID: gateway.GatewayID,
+                        GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
                         Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
                         Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
                         'Ph1:Voltage': log.Phases.Ph1.Voltage,

@@ -9,6 +9,7 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
+const fs = require('fs');
 
 
 
@@ -126,7 +127,6 @@ exports.ConfigureableData = async (req, res) => {
 
         };
         return res.status(200).send(NewObj);
-        console.log({ NewObj });
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
@@ -817,6 +817,7 @@ exports.BypassOptimizers = async (req, res) => {
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
     console.log({ Acknowledgement: DATA });
+    writeToLog({ Acknowledgement: DATA });
     try {
         const results = await Promise.all(DATA.map(async item => {
             const { purpose, OptimizerID } = item;
@@ -853,7 +854,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
 
             if (purpose === "bypass_on" || purpose === "bypass_off") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
-
+                console.log({ Optimizer });
                 if (Optimizer) {
                     await OptimizerModel.findByIdAndUpdate(
                         { _id: Optimizer._id },
@@ -885,3 +886,20 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
+
+// Function to write log to file
+function writeToLog(logData) {
+    const logFilePath = 'logfile.txt';
+
+    // Convert log data to string
+    const logMessage = JSON.stringify(logData, null, 2);
+
+    // Append log message to the log file
+    fs.appendFile(logFilePath, logMessage + '\n', (err) => {
+        if (err) {
+            console.error('Error writing to log file:', err);
+        } else {
+            console.log('Log message written to file:', logData);
+        }
+    });
+}

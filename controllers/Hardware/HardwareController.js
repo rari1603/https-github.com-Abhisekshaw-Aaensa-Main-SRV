@@ -139,7 +139,7 @@ exports.Store = async (req, res) => {
     const data = req.body;
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
-
+    console.log({ data });
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);

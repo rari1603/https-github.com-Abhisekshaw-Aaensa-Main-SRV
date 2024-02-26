@@ -77,7 +77,7 @@ exports.ConfigureableData = async (req, res) => {
 
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
         console.log({ Gateway });
-        console.log({ Optimizers: Gateway.optimizer });
+        
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
         };
@@ -129,6 +129,7 @@ exports.ConfigureableData = async (req, res) => {
 
         };
         console.log({ ConfigureableData: NewObj });
+        console.log({ Optimizers: NewObj.optimizer });
         return res.status(200).send(NewObj);
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 

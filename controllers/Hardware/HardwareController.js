@@ -126,6 +126,7 @@ exports.ConfigureableData = async (req, res) => {
 
         };
         return res.status(200).send(NewObj);
+        console.log({ NewObj });
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
@@ -139,8 +140,7 @@ exports.Store = async (req, res) => {
     const data = req.body;
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
-    console.log({ data });
-    console.log({ optimizers });
+
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
@@ -204,7 +204,7 @@ exports.Store = async (req, res) => {
 
         const optimizerLogPromises = optimizers.map(async element => {
             const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
-            console.log({ optimizer });
+
             if (!optimizer) {
                 console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
             }
@@ -816,7 +816,7 @@ exports.BypassOptimizers = async (req, res) => {
 // Settings acknowledgement after set/rest
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
-    console.log({ DATA });
+    console.log({ Acknowledgement: DATA });
     try {
         const results = await Promise.all(DATA.map(async item => {
             const { purpose, OptimizerID } = item;

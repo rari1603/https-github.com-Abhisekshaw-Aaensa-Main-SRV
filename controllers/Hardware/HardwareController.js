@@ -887,20 +887,3 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
-
-// Function to write log to file
-function writeToLog(logData) {
-    const logFilePath = 'logfile.txt';
-
-    // Convert log data to string
-    const logMessage = JSON.stringify(logData, null, 2);
-
-    // Append log message to the log file
-    fs.appendFile(logFilePath, logMessage + '\n', (err) => {
-        if (err) {
-            console.error('Error writing to log file:', err);
-        } else {
-            console.log('Log message written to file:', logData);
-        }
-    });
-}

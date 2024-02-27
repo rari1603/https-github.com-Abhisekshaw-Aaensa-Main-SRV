@@ -9,7 +9,6 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
-const fs = require('fs');
 
 
 
@@ -219,6 +218,7 @@ exports.Store = async (req, res) => {
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
+                    DeviceStatus: optimizer.isOnline,
                     TimeStamp: TimeStamp,
                     RoomTemperature: element.RoomTemperature,
                     Humidity: element.Humidity,
@@ -724,16 +724,16 @@ exports.BypassOptimizers = async (req, res) => {
                     const allOptimizersOnline = Optimizers.every(optimizer => optimizer.isOnline);
 
                     if (allOptimizersOnline) {
-                        // // Update the gateway model bypass mode
-                        // await GatewayModel.findByIdAndUpdate(
-                        //     { _id: Gateway._id },
-                        //     {
-                        //         $set: {
-                        //             BypassMode: "IN_PROGRESS",
-                        //         }
-                        //     },
-                        //     { new: true }
-                        // );
+                        // Update the gateway model bypass mode
+                        await GatewayModel.findByIdAndUpdate(
+                            { _id: Gateway._id },
+                            {
+                                $set: {
+                                    BypassMode: "IN_PROGRESS",
+                                }
+                            },
+                            { new: true }
+                        );
                         // If all optimizers are online, update bypass mode for each optimizer
                         await Promise.all(Optimizers.map(async optimizer => {
                             await OptimizerModel.findByIdAndUpdate(
@@ -773,20 +773,31 @@ exports.BypassOptimizers = async (req, res) => {
                     }));
 
                     if (allOptimizersOnline.every(online => online)) {
-                        // // Update the location model bypass mode
-                        // await EnterpriseStateLocationModel.findByIdAndUpdate(
-                        //     { _id: Location._id },
-                        //     {
-                        //         $set: {
-                        //             BypassMode: "IN_PROGRESS",
-                        //         }
-                        //     },
-                        //     { new: true }
-                        // );
+                        // Update the location model bypass mode
+                        await EnterpriseStateLocationModel.findByIdAndUpdate(
+                            { _id: Location._id },
+                            {
+                                $set: {
+                                    BypassMode: "IN_PROGRESS",
+                                }
+                            },
+                            { new: true }
+                        );
                         // If all optimizers under all gateways are online, update bypass mode for all optimizers
                         await Promise.all(Gateways.map(async gateway => {
+                            // Update the gateway model bypass mode
+                            await GatewayModel.findByIdAndUpdate(
+                                { _id: gateway._id },
+                                {
+                                    $set: {
+                                        BypassMode: "IN_PROGRESS",
+                                    }
+                                },
+                                { new: true }
+                            );
                             const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
                             await Promise.all(Optimizers.map(async optimizer => {
+                                // Update the optimizer model bypass mode
                                 await OptimizerModel.findByIdAndUpdate(
                                     { _id: optimizer._id },
                                     {
@@ -822,8 +833,12 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
     // console.log({ Acknowledgement: DATA });
     try {
+        const gatewayLocationMap = {};
+        let purpose;
+
         const results = await Promise.all(DATA.map(async item => {
-            const { purpose, OptimizerID } = item;
+            const { OptimizerID } = item;
+            purpose = item.purpose;
 
             if (purpose === "set") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
@@ -856,27 +871,95 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
             }
 
             if (purpose === "bypass_on" || purpose === "bypass_off") {
-                const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
-                if (Optimizer) {
-                    await OptimizerModel.findByIdAndUpdate(
-                        { _id: Optimizer._id },
-                        {
-                            $set: {
-                                BypassMode: (purpose === "bypass_on") ? "ON" : "OFF",
-                                isBypass: { is_schedule: false, type: "default", time: "" }
-                            },
-
-                        },
-                        { new: true }
-                    );
-                    return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
-                } else {
-                    return { success: false, message: "No document found for this OptimizerID." };
+                const optimizer = await OptimizerModel.findOne({ OptimizerID });
+                if (optimizer) {
+                    const gateway = await GatewayModel.findOne({ _id: optimizer.GatewayId });
+                    if (gateway) {
+                        const location = await LocationModel.findOne({ _id: gateway.EnterpriseInfo });
+                        if (location) {
+                            if (!gatewayLocationMap[gateway._id]) {
+                                gatewayLocationMap[gateway._id] = location._id;
+                            }
+                            // Update Optimizer bypass mode
+                            await OptimizerModel.findByIdAndUpdate(optimizer._id, {
+                                $set: {
+                                    BypassMode: (purpose === "bypass_on") ? "ON" : "OFF",
+                                    isBypass: { is_schedule: false, type: "default", time: "" }
+                                }
+                            });
+                            return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
+                        }
+                    }
                 }
             }
-
             return { success: false, message: "Invalid purpose." };
         }));
+
+        if (purpose === "bypass_on" || purpose === "bypass_off") {
+            const gatewayPromises = Object.keys(gatewayLocationMap).map(async gatewayID => {
+                const gateway = await GatewayModel.findById(gatewayID);
+                if (gateway) {
+                    const allOptimizersUpdated = await OptimizerModel.find({ GatewayId: gatewayID }).then(optimizers =>
+                        optimizers.every(optimizer => optimizer.BypassMode === (purpose === "bypass_on" ? "ON" : "OFF"))
+                    );
+                    if (allOptimizersUpdated) {
+                        // Update Gateway Bypass Mode
+                        await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: purpose === "bypass_on" ? "ON" : "OFF" } });
+                    } else {
+                        // Store the last known mode of the gateway
+                        const gatewayMode = "OFF" // "IN_PROGRESS" // gateway.BypassMode;
+                        // Update Gateway Bypass Mode to the last known mode
+                        await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: gatewayMode } });
+                    }
+                    return { gatewayID, locationID: gatewayLocationMap[gatewayID], allOptimizersUpdated };
+                }
+                return null;
+            });
+
+            const locationPromises = Promise.all(gatewayPromises).then(async gateways => {
+                // Extract location IDs from gateways
+                const locationIDs = gateways.map(gateway => gateway.locationID);
+
+                // Remove duplicate location IDs
+                const uniqueLocationIDs = [...new Set(locationIDs)];
+
+                // Iterate over unique location IDs
+                const locationUpdatePromises = uniqueLocationIDs.map(async locationID => {
+                    // Fetch all gateways for the current location
+                    const gatewaysForLocation = gateways.filter(gateway => gateway.locationID === locationID);
+
+                    // Check if all gateways for the location have their bypass modes updated
+                    const allGatewaysUpdated = gatewaysForLocation.every(gateway => gateway.allOptimizersUpdated);
+
+                    if (allGatewaysUpdated) {
+                        // Retrieve all gateways associated with the current location
+                        const locationGateways = await GatewayModel.find({ EnterpriseInfo: locationID });
+
+                        // Check the bypass mode of each gateway
+                        const gatewayStatuses = locationGateways.map(gateway => gateway.BypassMode);
+
+                        // Determine the overall bypass mode for the location
+                        let locationBypassMode = "";
+                        if (gatewayStatuses.every(status => status === "ON")) {
+                            locationBypassMode = "ON";
+                        } else if (gatewayStatuses.every(status => status === "OFF")) {
+                            locationBypassMode = "OFF";
+                        }
+                        // Update Location Bypass Mode
+                        await LocationModel.findByIdAndUpdate(locationID, { $set: { BypassMode: locationBypassMode } });
+                    } else {
+                        // Store the last known mode of the location
+                        const locationMode = "OFF" // (await LocationModel.findById(locationID)).BypassMode;
+                        // Update Location Bypass Mode to the last known mode
+                        await LocationModel.findByIdAndUpdate(locationID, { $set: { BypassMode: locationMode } });
+                    }
+                });
+
+                return Promise.all(locationUpdatePromises);
+            });
+
+            await locationPromises;
+        }
 
         const isSuccess = results.every(result => result.success);
         const statusCode = isSuccess ? 200 : 500;

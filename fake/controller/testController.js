@@ -129,13 +129,13 @@ const generateRandomData = async (GatewayID, OptimizerID) => ({
 
 
 exports.addManyDataDB = async (req, res) => {
-    await GatewayModel.updateMany({}, { $set: { BypassMode: "" } });
-    await StateLocationModel.updateMany({}, { $set: { BypassMode: "" } });
-    // await OptimizerModel.updateMany({}, {
-    //     $set: {
-    //         BypassMode: ""
-    //     }
-    // });
+    // await GatewayModel.updateMany({}, { $set: { BypassMode: "" } });
+    // await StateLocationModel.updateMany({}, { $set: { BypassMode: "" } });
+    await OptimizerLogModel.updateMany({}, {
+        $set: {
+            DeviceStatus: false
+        }
+    });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });
     // await UserModel.updateMany({}, { $set: { isDelete: false } });
     // await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });

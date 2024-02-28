@@ -252,7 +252,7 @@ exports.Store = async (req, res) => {
                     RoomTemperature: 0,
                     Humidity: 0,
                     CoilTemperature: 0,
-                    OptimizerMode: "",
+                    OptimizerMode: "N/A",
                 }).save();
             }
         }));

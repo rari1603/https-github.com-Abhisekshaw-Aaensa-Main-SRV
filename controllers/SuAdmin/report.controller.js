@@ -10,11 +10,20 @@ const { parse } = require('json2csv');
 
 
 
+// AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
     const { page, pageSize } = req.query;
 
     try {
+        // Validate the mandatory filters
+        // if (!enterprise_id) {
+        //     return res.status(400).json({ success: false, message: "Missing required field: Customer", key: "customer" });
+        // }
+        // if (!(startDate & endDate)) {
+        //     return res.status(400).json({ success: false, message: "Missing required field: Date Range", key: "date" });
+        // }
+
         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
@@ -136,122 +145,19 @@ exports.AllDeviceData = async (req, res) => {
 };
 
 
-// exports.AllDeviceData = async (req, res) => {
-//     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
-//     try {
-//         const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
-//         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
-
-//         const page = parseInt(req.query.page) || 1;
-//         const pageSize = parseInt(req.query.pageSize) || 50;
-//         const skip = (page - 1) * pageSize;
-
-//         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
-//         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
-
-//         // Fetch states for the current page only
-//         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
-
-//         const responseData = [{
-//             EnterpriseName: Enterprise.EnterpriseName,
-//             State: [],
-//         }];
-
-//         for (const State of EntStates) {
-//             const locationQuery = location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
-//             const Location = await EnterpriseStateLocationModel.find(locationQuery);
-
-//             const state = await StateModel.findOne({ _id: State.State_ID });
-
-//             if (Location.length > 0) {
-//                 const stateData = {
-//                     stateName: state.name,
-//                     state_ID: state._id,
-//                     location: []
-//                 };
-
-//                 for (const loc of Location) {
-//                     const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
-//                     const Gateways = await GatewayModel.find(gatewayQuery);
-//                     const locationData = {
-//                         locationName: loc.LocationName,
-//                         location_ID: loc._id,
-//                         gateway: []
-//                     };
-
-//                     for (const gateway of Gateways) {
-//                         const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
-
-//                         const gatewayData = {
-//                             GatewayName: gateway.GatewayID,
-//                             Gateway_ID: gateway._id,
-//                             optimizer: []
-//                         };
-
-//                         for (const optimizer of Optimizers) {
-//                             const query = {
-//                                 OptimizerID: optimizer._id,
-//                                 TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
-//                             };
-
-//                             const OptimizerLogs = await OptimizerLogModel.find(query)
-//                                 .populate({
-//                                     path: "OptimizerID",
-//                                     OptimizerModel: "Optimizer",
-//                                     options: { lean: true }
-//                                 })
-//                                 .skip(skip)
-//                                 .limit(pageSize)
-//                                 .lean();
-
-//                             // Sort the array based on the TimeStamp field in descending order
-//                             // OptimizerLogs.sort((a, b) => {
-//                             //     const timestampA = new Date(a.TimeStamp);
-//                             //     const timestampB = new Date(b.TimeStamp);
-
-//                             //     return timestampB - timestampA;
-//                             // });
-
-//                             const optimizerData = {
-//                                 optimizerName: optimizer.OptimizerID,
-//                                 optimizer_ID: optimizer._id,
-//                                 optimizerLogs: OptimizerLogs.map(optimizerLog => (optimizerLog))
-//                             };
-//                             if (OptimizerLogs.length > 0) {
-//                                 gatewayData.optimizer.push(optimizerData);
-//                             }
-//                         }
-
-//                         locationData.gateway.push(gatewayData);
-//                     }
-
-//                     stateData.location.push(locationData);
-//                 }
-
-//                 responseData[0].State.push(stateData);
-//             }
-//         }
-
-//         const totalCount = await EnterpriseStateModel.countDocuments(enterpriseStateQuery);
-//         const totalPages = Math.ceil(totalCount / pageSize);
-
-//         return res.send({
-//             totalPages,
-//             currentPage: page,
-//             data: responseData
-//         });
-
-//     } catch (error) {
-//         console.error(error.message);
-//         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
-//     }
-// };
-
-
+// AllMeterData report
 exports.AllMeterData = async (req, res) => {
     try {
         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
         const { page, pageSize } = req.query;
+
+        // Validate the mandatory filters
+        // if (!Customer) {
+        //     return res.status(400).json({ success: false, message: "Missing required field: Customer", key: "customer" });
+        // }
+        // if (!(startDate & endDate)) {
+        //     return res.status(400).json({ success: false, message: "Missing required field: Date Range", key: "date" });
+        // }
 
         const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
@@ -368,6 +274,9 @@ exports.AllMeterData = async (req, res) => {
 };
 
 
+
+
+// AllDataLogDemo
 exports.AllDataLogDemo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -458,6 +367,7 @@ exports.AllDataLogDemo = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
+
 
 
 /******************************* R E P O R T  D O W N L O A D *********************************/
@@ -653,3 +563,116 @@ exports.DownloadMeterDataReport = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };
+
+
+/********************** NOT IN USE************************/ 
+// exports.AllDeviceData = async (req, res) => {
+//     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
+//     try {
+//         const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
+//         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
+
+//         const page = parseInt(req.query.page) || 1;
+//         const pageSize = parseInt(req.query.pageSize) || 50;
+//         const skip = (page - 1) * pageSize;
+
+//         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
+//         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+
+//         // Fetch states for the current page only
+//         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+
+//         const responseData = [{
+//             EnterpriseName: Enterprise.EnterpriseName,
+//             State: [],
+//         }];
+
+//         for (const State of EntStates) {
+//             const locationQuery = location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
+//             const Location = await EnterpriseStateLocationModel.find(locationQuery);
+
+//             const state = await StateModel.findOne({ _id: State.State_ID });
+
+//             if (Location.length > 0) {
+//                 const stateData = {
+//                     stateName: state.name,
+//                     state_ID: state._id,
+//                     location: []
+//                 };
+
+//                 for (const loc of Location) {
+//                     const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
+//                     const Gateways = await GatewayModel.find(gatewayQuery);
+//                     const locationData = {
+//                         locationName: loc.LocationName,
+//                         location_ID: loc._id,
+//                         gateway: []
+//                     };
+
+//                     for (const gateway of Gateways) {
+//                         const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+
+//                         const gatewayData = {
+//                             GatewayName: gateway.GatewayID,
+//                             Gateway_ID: gateway._id,
+//                             optimizer: []
+//                         };
+
+//                         for (const optimizer of Optimizers) {
+//                             const query = {
+//                                 OptimizerID: optimizer._id,
+//                                 TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+//                             };
+
+//                             const OptimizerLogs = await OptimizerLogModel.find(query)
+//                                 .populate({
+//                                     path: "OptimizerID",
+//                                     OptimizerModel: "Optimizer",
+//                                     options: { lean: true }
+//                                 })
+//                                 .skip(skip)
+//                                 .limit(pageSize)
+//                                 .lean();
+
+//                             // Sort the array based on the TimeStamp field in descending order
+//                             // OptimizerLogs.sort((a, b) => {
+//                             //     const timestampA = new Date(a.TimeStamp);
+//                             //     const timestampB = new Date(b.TimeStamp);
+
+//                             //     return timestampB - timestampA;
+//                             // });
+
+//                             const optimizerData = {
+//                                 optimizerName: optimizer.OptimizerID,
+//                                 optimizer_ID: optimizer._id,
+//                                 optimizerLogs: OptimizerLogs.map(optimizerLog => (optimizerLog))
+//                             };
+//                             if (OptimizerLogs.length > 0) {
+//                                 gatewayData.optimizer.push(optimizerData);
+//                             }
+//                         }
+
+//                         locationData.gateway.push(gatewayData);
+//                     }
+
+//                     stateData.location.push(locationData);
+//                 }
+
+//                 responseData[0].State.push(stateData);
+//             }
+//         }
+
+//         const totalCount = await EnterpriseStateModel.countDocuments(enterpriseStateQuery);
+//         const totalPages = Math.ceil(totalCount / pageSize);
+
+//         return res.send({
+//             totalPages,
+//             currentPage: page,
+//             data: responseData
+//         });
+
+//     } catch (error) {
+//         console.error(error.message);
+//         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
+//     }
+// };

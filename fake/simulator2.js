@@ -10,13 +10,13 @@ const DATA = {
             "OptimizerID": "1234567890OPTIMIZER_TEN",
             "OptimizerMode": "NON-OPTIMIZATION"
         },
-        // {
-        //     "RoomTemperature": 26.9,
-        //     "Humidity": 0.0,
-        //     "CoilTemperature": 25.6,
-        //     "OptimizerID": "1234567890OPTIMIZER_NINE",
-        //     "OptimizerMode": "NON-OPTIMIZATION"
-        // },
+        {
+            "RoomTemperature": 26.9,
+            "Humidity": 0.0,
+            "CoilTemperature": 25.6,
+            "OptimizerID": "1234567890OPTIMIZER_NINE",
+            "OptimizerMode": "NON-OPTIMIZATION"
+        },
     ],
     "Phases": {
         "Ph1": {

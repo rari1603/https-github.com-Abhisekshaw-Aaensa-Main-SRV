@@ -158,6 +158,9 @@ exports.Store = async (req, res) => {
         const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim());
 
         const OnlineOptimizers = optimizers;
+        const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID);
+
+        const OfflineOptimizerIDs = AssignedOptimizerIDs.filter(id => !OnlineOptimizerIDs.includes(id));
 
         // First, mark all optimizers as offline
         await OptimizerModel.updateMany(
@@ -229,6 +232,30 @@ exports.Store = async (req, res) => {
         });
 
         await Promise.all(optimizerLogPromises);
+
+        // console.log({ AssignedOptimizerIDs, OnlineOptimizerIDs, OfflineOptimizerIDs });
+
+        await Promise.all(OfflineOptimizerIDs.map(async id => {
+            const optimizer = await OptimizerModel.findOne({ OptimizerID: id });
+
+            if (!optimizer) {
+                console.log(`Optimizer with ID ${id} not found`);
+            }
+
+            if (optimizer) {
+                return OptimizerLogModel({
+                    OptimizerID: optimizer._id,
+                    GatewayID: gatewayId,
+                    GatewayLogID: gatewayLog._id,
+                    DeviceStatus: optimizer.isOnline,
+                    TimeStamp: TimeStamp,
+                    RoomTemperature: 0,
+                    Humidity: 0,
+                    CoilTemperature: 0,
+                    OptimizerMode: "",
+                }).save();
+            }
+        }));
 
         return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 

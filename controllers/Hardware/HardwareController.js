@@ -92,8 +92,12 @@ exports.ConfigureableData = async (req, res) => {
                     //  check current time with bypass time
                     var currentTimestamp = Math.floor(Date.now() / 1000);
                     var scheduleTimestamp = new Date(element.isBypass.time).getTime() / 1000;
+                    console.log("Out Side Condition:3===>", {
+                        currentTimestamp,
+                        scheduleTimestamp
+                    });
                     if (currentTimestamp >= scheduleTimestamp) {
-                        console.log("Condition:3===>", {
+                        console.log("In Side Condition:3===>", {
                             currentTimestamp,
                             scheduleTimestamp
                         });

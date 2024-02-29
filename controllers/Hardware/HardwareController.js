@@ -86,23 +86,12 @@ exports.ConfigureableData = async (req, res) => {
             const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element._id });
             var bypassType = "default";
             if (element.isBypass.type === "true") {
-                console.log("Condition:1===>", element.isBypass.type);
                 if (element.isBypass.is_schedule) {
-                    console.log("Condition:2", element.isBypass.is_schedule);
                     //  check current time with bypass time
                     var currentTimestamp = Math.floor(Date.now() / 1000);
                     var scheduleTimestamp = new Date(element.isBypass.time).getTime() / 1000;
-                    console.log("Out Side Condition:3===>", {
-                        currentTimestamp,
-                        scheduleTimestamp
-                    });
                     if (currentTimestamp >= scheduleTimestamp) {
-                        console.log("In Side Condition:3===>", {
-                            currentTimestamp,
-                            scheduleTimestamp
-                        });
                         bypassType = element.isBypass.type;
-                        console.log("Condition:3 (bypassType)===>", bypassType);
                     } else {
                         bypassType = "default";
                     }
@@ -861,7 +850,7 @@ exports.BypassOptimizers = async (req, res) => {
         }
 
     } catch (error) {
-        console.log(error.message);
+        console.log({ error: error.message });
         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };

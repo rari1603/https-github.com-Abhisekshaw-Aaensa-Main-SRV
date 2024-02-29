@@ -224,14 +224,7 @@ exports.AllMeterData = async (req, res) => {
                         let GatewayLogData = await GatewayLogModel.find({
                             GatewayID: gateway._id,
                             TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
-                        }).skip(skip).limit(validatedPageSize);
-
-                        // Sort the array based on the TimeStamp field in descending order
-                        GatewayLogData.sort((a, b) => {
-                            const timeDifferenceA = Math.abs(a.TimeStamp - startUtcTimestamp);
-                            const timeDifferenceB = Math.abs(b.TimeStamp - startUtcTimestamp);
-                            return timeDifferenceA - timeDifferenceB;
-                        });
+                        }).skip(skip).limit(validatedPageSize);                          
 
                         totalResults = await GatewayLogModel.find({
                             GatewayID: gateway._id,

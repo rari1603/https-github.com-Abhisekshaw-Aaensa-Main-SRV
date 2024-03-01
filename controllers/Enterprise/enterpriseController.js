@@ -462,8 +462,8 @@ exports.OptimizerDetails = async (req, res) => {
                     updatedAt: Gateway.updatedAt,
                 },
                 optimizer_mode: OptimizerLogData.OptimizerMode,
-                outside_temp: "29", // static_data
-                outside_humidity: "20", // static_data
+                outside_temp: "N/A",
+                outside_humidity: "N/A",
                 room_temp: OptimizerLogData.RoomTemperature,
                 coil_temp: OptimizerLogData.CoilTemperature,
                 humidity: OptimizerLogData.Humidity,

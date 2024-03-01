@@ -934,7 +934,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                         await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: purpose === "bypass_on" ? "ON" : "OFF" } });
                     } else {
                         // Store the last known mode of the gateway
-                        const gatewayMode = "OFF" // "IN_PROGRESS" // gateway.BypassMode;
+                        const gatewayMode = gateway.BypassMode // "OFF" // "IN_PROGRESS";
                         // Update Gateway Bypass Mode to the last known mode
                         await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: gatewayMode } });
                     }
@@ -971,12 +971,18 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                             locationBypassMode = "ON";
                         } else if (gatewayStatuses.every(status => status === "OFF")) {
                             locationBypassMode = "OFF";
+                        } else {
+                            // Retain previous bypass mode if neither all ON nor all OFF
+                            const locationModeDocument = await LocationModel.findById(locationID);
+                            locationBypassMode = locationModeDocument.BypassMode;
                         }
+
                         // Update Location Bypass Mode
                         await LocationModel.findByIdAndUpdate(locationID, { $set: { BypassMode: locationBypassMode } });
                     } else {
                         // Store the last known mode of the location
-                        const locationMode = "OFF" // (await LocationModel.findById(locationID)).BypassMode;
+                        const locationModeDocument = await LocationModel.findById(locationID);
+                        const locationMode = locationModeDocument.BypassMode; // Access the mode after awaiting the document retrieval
                         // Update Location Bypass Mode to the last known mode
                         await LocationModel.findByIdAndUpdate(locationID, { $set: { BypassMode: locationMode } });
                     }

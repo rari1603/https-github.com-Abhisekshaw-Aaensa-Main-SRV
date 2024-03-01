@@ -133,7 +133,7 @@ exports.addManyDataDB = async (req, res) => {
     // await StateLocationModel.updateMany({}, { $set: { BypassMode: "" } });
     await OptimizerLogModel.updateMany({}, {
         $set: {
-            DeviceStatus: false
+            DeviceStatus: true
         }
     });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });

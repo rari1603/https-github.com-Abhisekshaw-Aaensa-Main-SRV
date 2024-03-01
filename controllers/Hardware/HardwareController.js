@@ -724,7 +724,7 @@ exports.BypassOptimizers = async (req, res) => {
                     { _id: Optimizer._id },
                     {
                         $set: {
-                            BypassMode: "IN_PROGRESS",
+                            BypassMode: `IN_PROGRESS_${state}`,
                             isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
                         }
                     },
@@ -756,7 +756,7 @@ exports.BypassOptimizers = async (req, res) => {
                         { _id: Gateway._id },
                         {
                             $set: {
-                                BypassMode: "IN_PROGRESS",
+                                BypassMode: `IN_PROGRESS_${state}`,
                             }
                         },
                         { new: true }
@@ -767,7 +767,7 @@ exports.BypassOptimizers = async (req, res) => {
                             { _id: optimizer._id },
                             {
                                 $set: {
-                                    BypassMode: "IN_PROGRESS",
+                                    BypassMode: `IN_PROGRESS_${state}`,
                                     isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
                                 }
                             },
@@ -805,7 +805,7 @@ exports.BypassOptimizers = async (req, res) => {
                         { _id: Location._id },
                         {
                             $set: {
-                                BypassMode: "IN_PROGRESS",
+                                BypassMode: `IN_PROGRESS_${state}`,
                             }
                         },
                         { new: true }
@@ -817,7 +817,7 @@ exports.BypassOptimizers = async (req, res) => {
                             { _id: gateway._id },
                             {
                                 $set: {
-                                    BypassMode: "IN_PROGRESS",
+                                    BypassMode: `IN_PROGRESS_${state}`,
                                 }
                             },
                             { new: true }
@@ -829,7 +829,7 @@ exports.BypassOptimizers = async (req, res) => {
                                 { _id: optimizer._id },
                                 {
                                     $set: {
-                                        BypassMode: "IN_PROGRESS",
+                                        BypassMode: `IN_PROGRESS_${state}`,
                                         isBypass: state ? { is_schedule, type: "true", time: schedule_time } : { is_schedule, type: "false", time: "" }
                                     }
                                 },

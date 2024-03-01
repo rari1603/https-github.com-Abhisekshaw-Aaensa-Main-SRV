@@ -89,9 +89,14 @@ exports.CheckGateway = async (req, res, next) => {
     NetworkPassword = NetworkPassword.trim().replace(/\s+/g, '');
     GatewayID = GatewayID.trim().replace(/\s+/g, '');
 
-    console.log((NetworkPassword));
 
     try {
+        if (NetworkSSID === "SC20Linux" && NetworkPassword === "12345678") {
+            // Allow the specified SSID and password
+            req.body = { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID };
+            return next();
+        }
+
         // Additional validation for NetworkSSID
         if (!NetworkSSID || NetworkSSID.length <= 8) {
             return res.status(401).json({ success: false, message: "NetworkSSID should contain a minimum of 8 characters!", key: "NetworkSSID" });

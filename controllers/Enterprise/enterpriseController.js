@@ -431,12 +431,20 @@ exports.OptimizerDetails = async (req, res) => {
                 .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
                 .limit(1);
 
+            const currentTime = new Date();
+            const timestamp = parseInt(OptimizerLogData.TimeStamp, 10) * 1000; // Convert seconds to milliseconds
+            const logTime = new Date(timestamp);
+
+            const fiveMinutesAgo = new Date(currentTime - 5 * 60 * 1000); // 5 minutes ago
+
+            const is_Online = (logTime > fiveMinutesAgo) && (OptimizerLogData.OptimizerMode !== "N/A") ? Optimizer.isOnline : false;
+
             const DATA = {
                 Optimizer: {
                     _id: Optimizer._id,
                     OptimizerID: Optimizer.OptimizerID,
                     OptimizerName: Optimizer.OptimizerName,
-                    isOnline: Optimizer.isOnline,
+                    isOnline: is_Online,
                     isBypass: Optimizer.isBypass,
                     isReset: Optimizer.isReset,
                     isSetting: Optimizer.isSetting,
@@ -490,6 +498,7 @@ exports.OptimizerDetails = async (req, res) => {
                 },
             };
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: DATA });
+
         } else {
             return res.status(404).json({ success: false, message: "Optimizer not found", data: null });
         }
@@ -510,9 +519,16 @@ exports.GatewayDetails = async (req, res) => {
                 'select': '_id OnboardingDate GatewayID EnterpriseUserID Switch isDelete isConfigure is_Ready_toConfig createdAt updatedAt'
             }).sort({ createdAt: -1 });
 
+            const currentTime = new Date();
+            const timestamp = parseInt(GatewayLogData.TimeStamp, 10) * 1000; // Convert seconds to milliseconds
+            const logTime = new Date(timestamp);
+
+            const fiveMinutesAgo = new Date(currentTime - 5 * 60 * 1000); // 5 minutes ago
+
             const DATA = {
                 ...GatewayLogData.toObject(),
                 Gateway: GatewayLogData.GatewayID,  // Rename GatewayID to Gateway
+                isOnline: (logTime > fiveMinutesAgo) ? true : false,
             };
 
             delete DATA.GatewayID;  // Remove the original GatewayID field

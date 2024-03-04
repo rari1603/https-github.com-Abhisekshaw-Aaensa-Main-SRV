@@ -100,6 +100,8 @@ exports.AllDeviceData = async (req, res) => {
                                 groupedOptimizerLogs[timestamp].push(optimizerLog);
                             }
 
+                            console.log({ DeviceData: totalResults });
+
                             // Increment totalCount for each optimizer log
                             totalResults = await OptimizerLogModel.find({
                                 OptimizerID: optimizer._id,
@@ -230,6 +232,8 @@ exports.AllMeterData = async (req, res) => {
                             GatewayID: gateway._id,
                             TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
                         });
+
+                        console.log({ MeterData: totalResults });
 
                         if (GatewayLogData.length > 0) {
                             locationData.gateway.push({

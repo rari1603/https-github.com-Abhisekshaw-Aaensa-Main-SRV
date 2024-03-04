@@ -78,7 +78,7 @@ exports.AllDeviceData = async (req, res) => {
                         for (const optimizer of Optimizers) {
                             const query = {
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                                TimeStamp: { $gte:endUtcTimestamp , $lte: startUtcTimestamp },
                             };
 
                             const OptimizerLogs = await OptimizerLogModel.find(query)
@@ -104,7 +104,7 @@ exports.AllDeviceData = async (req, res) => {
                             // Increment totalCount for each optimizer log
                             totalResults = await OptimizerLogModel.find({
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                                TimeStamp: { $gte:endUtcTimestamp , $lte: startUtcTimestamp },
                             });
                         }
 
@@ -224,12 +224,15 @@ exports.AllMeterData = async (req, res) => {
                     for (const gateway of GatewayData) {
                         let GatewayLogData = await GatewayLogModel.find({
                             GatewayID: gateway._id,
-                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
-                        }).sort({ createdAt: -1 }).skip(skip).limit(validatedPageSize);                          
+                            TimeStamp: { $gte:endUtcTimestamp , $lte: startUtcTimestamp },
+                        })
+                        .sort({ createdAt: -1 })
+                        .skip(skip)
+                        .limit(validatedPageSize);                          
 
                         totalResults = await GatewayLogModel.find({
                             GatewayID: gateway._id,
-                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                            TimeStamp: { $gte:endUtcTimestamp , $lte: startUtcTimestamp },
                         });
 
                         if (GatewayLogData.length > 0) {

@@ -87,6 +87,7 @@ exports.AllDeviceData = async (req, res) => {
                                     OptimizerModel: "Optimizer",
                                     options: { lean: true }
                                 })
+                                .sort({ createdAt: -1 })
                                 .skip(skip)
                                 .limit(pageSize)
                                 .lean();
@@ -224,7 +225,7 @@ exports.AllMeterData = async (req, res) => {
                         let GatewayLogData = await GatewayLogModel.find({
                             GatewayID: gateway._id,
                             TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
-                        }).skip(skip).limit(validatedPageSize);                          
+                        }).sort({ createdAt: -1 }).skip(skip).limit(validatedPageSize);                          
 
                         totalResults = await GatewayLogModel.find({
                             GatewayID: gateway._id,

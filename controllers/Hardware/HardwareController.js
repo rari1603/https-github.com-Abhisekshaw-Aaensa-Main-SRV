@@ -158,7 +158,7 @@ exports.Store = async (req, res) => {
         const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim());
 
         const OnlineOptimizers = optimizers;
-        const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID);
+        const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID.trim());
 
         const OfflineOptimizerIDs = AssignedOptimizerIDs.filter(id => !OnlineOptimizerIDs.includes(id));
 

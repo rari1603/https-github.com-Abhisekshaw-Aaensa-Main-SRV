@@ -9,6 +9,11 @@ const StateModel = require('../../models/state.model');
 const { parse } = require('json2csv');
 
 
+function istToTimestamp(dateString) {
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5.5
+    return new Date(dateString).getTime() + istOffset;
+}
+
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
@@ -24,8 +29,18 @@ exports.AllDeviceData = async (req, res) => {
         //     return res.status(400).json({ success: false, message: "Missing required field: Date Range", key: "date" });
         // }
 
-        const startUtcTimestamp = new Date(startDate).getTime() / 1000;
-        const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
+        // const startUtcTimestamp = new Date(startDate).getTime() / 1000;
+        // const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+
+        const startIstTimestamp = istToTimestamp(startDate) / 1000;
+        const endIstTimestamp = istToTimestamp(endDate) / 1000;
+
+        const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
+        // Adjust timestamps for IST
+        const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+
+        console.log({startIstTimestamp, endIstTimestamp});
 
         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
         const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
@@ -78,7 +93,7 @@ exports.AllDeviceData = async (req, res) => {
                         for (const optimizer of Optimizers) {
                             const query = {
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                             };
 
                             const OptimizerLogs = await OptimizerLogModel.find(query)
@@ -103,7 +118,7 @@ exports.AllDeviceData = async (req, res) => {
                             // Increment totalCount for each optimizer log
                             totalResults = await OptimizerLogModel.find({
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                             });
                         }
 
@@ -159,8 +174,16 @@ exports.AllMeterData = async (req, res) => {
         //     return res.status(400).json({ success: false, message: "Missing required field: Date Range", key: "date" });
         // }
 
-        const startUtcTimestamp = (new Date(startDate).getTime() / 1000);
-        const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
+        // const startUtcTimestamp = new Date(startDate).getTime() / 1000;
+        // const endUtcTimestamp = new Date(endDate).getTime() / 1000;
+
+        const startIstTimestamp = istToTimestamp(startDate) / 1000;
+        const endIstTimestamp = istToTimestamp(endDate) / 1000;
+
+        const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
+        // Adjust timestamps for IST
+        const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
         // Validate page and pageSize parameters
         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
@@ -223,14 +246,14 @@ exports.AllMeterData = async (req, res) => {
                     for (const gateway of GatewayData) {
                         let GatewayLogData = await GatewayLogModel.find({
                             GatewayID: gateway._id,
-                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         })
                         .skip(skip)
                         .limit(validatedPageSize);                          
 
                         totalResults = await GatewayLogModel.find({
                             GatewayID: gateway._id,
-                            TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         });
 
                         if (GatewayLogData.length > 0) {

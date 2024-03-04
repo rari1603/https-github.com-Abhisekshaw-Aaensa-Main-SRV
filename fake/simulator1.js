@@ -3,13 +3,13 @@ const DATA = {
     "GatewayID": "9876543210GATEWAYSIX",
     "TimeStamp": "",
     "OptimizerDetails": [
-        // {
-        //     "RoomTemperature": 26.9,
-        //     "Humidity": 0.0,
-        //     "CoilTemperature": 25.6,
-        //     "OptimizerID": "1234567890OPTIMIZER_TWELVE",
-        //     "OptimizerMode": "NON-OPTIMIZATION"
-        // },
+        {
+            "RoomTemperature": 26.9,
+            "Humidity": 0.0,
+            "CoilTemperature": 25.6,
+            "OptimizerID": "1234567890OPTIMIZER_TWELVE",
+            "OptimizerMode": "NON-OPTIMIZATION"
+        },
         {
             "RoomTemperature": 26.9,
             "Humidity": 0.0,
@@ -48,10 +48,18 @@ const DATA = {
 
 function fetchData() {
     // Generate current local timestamp
-    const currentTimestamp = Math.floor(Date.now() / 1000);
+    // Get the current timestamp in UTC
+    const currentUtcTimestamp = Math.floor(Date.now() / 1000);
 
-    // Update the DATA object with current timestamp
-    const updatedData = { ...DATA, TimeStamp: currentTimestamp };
+    // Define the IST offset (UTC+5.5 for Indian Standard Time)
+    const istOffsetSeconds = 5.5 * 60 * 60; // 5.5 hours in seconds
+
+    // Calculate the current timestamp in IST
+    const currentIstTimestamp = currentUtcTimestamp + istOffsetSeconds;
+
+    // Update the DATA object with the current IST timestamp
+    const updatedData = { ...DATA, TimeStamp: currentIstTimestamp };
+
     fetch('http://localhost:3000/api/hardware/gateway/save/data', {
         method: 'POST',
         headers: {

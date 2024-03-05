@@ -539,7 +539,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
         // Add a heading to the CSV data
         const heading = [`Device Meter Report from ${startDate} to ${endDate}`];
         const csvData = parse([heading, ...allData], { fields, header: true });
-        return csvData;
+        return res.status(200).send(csvData);
 
         // Generate filename dynamically
         const currentDate = new Date();

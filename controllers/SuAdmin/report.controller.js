@@ -551,7 +551,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
         res.set('Content-Type', 'text/csv');
 
         // Send CSV data as response
-        res.status(200).send(csvData);
+        return res.status(200).send(csvData);
 
     } catch (error) {
         console.error("Meter Data Error:", error.message);

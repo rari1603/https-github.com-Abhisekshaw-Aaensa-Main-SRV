@@ -490,45 +490,42 @@ exports.DownloadMeterDataReport = async (req, res) => {
                         GatewayID: gateway._id,
                         TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
                     });
-                    const mappedData = [];
+                    
+                    const batchSize = 1000; // Adjust batch size as needed
+
                     // Iterate through GatewayLogData and process in batches
-                    for (const log of GatewayLogData) {
-                        const phases = log.Phases;
-                        const timestamp = new Date(log.TimeStamp * 1000);
-                        
-                        // Cache frequently accessed properties
-                        const formattedDate = `${timestamp.getFullYear()}-${(timestamp.getMonth() + 1).toString().padStart(2, '0')}-${timestamp.getDate().toString().padStart(2, '0')}`;
-                        const formattedTime = `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
-                        
-                        // Push processed data into mappedData array
-                        mappedData.push({
+                    for (let i = 0; i < GatewayLogData.length; i += batchSize) {
+                        const batch = GatewayLogData.slice(i, i + batchSize);
+
+                        // Process the current batch
+                        const mappedData = batch.map(log => ({
                             GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
-                            Date: formattedDate,
-                            Time: formattedTime,
-                            'Ph1:Voltage': phases.Ph1.Voltage,
-                            'Ph1:Current': phases.Ph1.Current,
-                            'Ph1:ActivePower': phases.Ph1.ActivePower,
-                            'Ph1:PowerFactor': phases.Ph1.PowerFactor,
-                            'Ph1:ApparentPower': phases.Ph1.ApparentPower,
-                            'Ph2:Voltage': phases.Ph2.Voltage,
-                            'Ph2:Current': phases.Ph2.Current,
-                            'Ph2:ActivePower': phases.Ph2.ActivePower,
-                            'Ph2:PowerFactor': phases.Ph2.PowerFactor,
-                            'Ph2:ApparentPower': phases.Ph2.ApparentPower,
-                            'Ph3:Voltage': phases.Ph3.Voltage,
-                            'Ph3:Current': phases.Ph3.Current,
-                            'Ph3:ActivePower': phases.Ph3.ActivePower,
-                            'Ph3:PowerFactor': phases.Ph3.PowerFactor,
-                            'Ph3:ApparentPower': phases.Ph3.ApparentPower,
+                            Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+                            Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+                            'Ph1:Voltage': log.Phases.Ph1.Voltage,
+                            'Ph1:Current': log.Phases.Ph1.Current,
+                            'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
+                            'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
+                            'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
+                            'Ph2:Voltage': log.Phases.Ph2.Voltage,
+                            'Ph2:Current': log.Phases.Ph2.Current,
+                            'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
+                            'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
+                            'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
+                            'Ph3:Voltage': log.Phases.Ph3.Voltage,
+                            'Ph3:Current': log.Phases.Ph3.Current,
+                            'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
+                            'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
+                            'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
                             'KVAH': log.KVAH,
                             'KWH': log.KWH,
                             'PF': log.PF,
-                        });
-                    }
+                        }));
 
-                    console.log(mappedData);
-                    // Push mappedData into allData array
-                    // allData.push(...mappedData);
+                        // Push processed data into allData array
+                        console.log(mappedData);
+                        // allData.push(...mappedData);
+                    }
                 }
             }
             

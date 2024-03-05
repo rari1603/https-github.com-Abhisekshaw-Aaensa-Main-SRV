@@ -370,6 +370,7 @@ exports.AllDataLogDemo = async (req, res) => {
 exports.DownloadDeviceDataReport = async (req, res) => {
     try {
         const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
+        return res.send({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate });
 
         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;

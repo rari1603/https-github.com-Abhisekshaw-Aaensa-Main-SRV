@@ -443,8 +443,8 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         return res.status(200).send(csvData);
 
     } catch (error) {
-        console.error("Error:", error);
-        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+        console.error("Device Data Error:", error.message);
+        return res.status(500).json({ success: false, message: "Internal server error", err: error.message });
     }
 };
 
@@ -539,7 +539,6 @@ exports.DownloadMeterDataReport = async (req, res) => {
         // Add a heading to the CSV data
         const heading = [`Device Meter Report from ${startDate} to ${endDate}`];
         const csvData = parse([heading, ...allData], { fields, header: true });
-        return res.status(200).send(csvData);
 
         // Generate filename dynamically
         const currentDate = new Date();
@@ -555,8 +554,8 @@ exports.DownloadMeterDataReport = async (req, res) => {
         return res.status(200).send(csvData);
 
     } catch (error) {
-        console.error("Error fetching data:", error);
-        return res.status(500).json({ success: false, message: "Internal server error", err: error });
+        console.error("Meter Data Error:", error.message);
+        return res.status(500).json({ success: false, message: "Internal server error", err: error.message });
     }
 };
 

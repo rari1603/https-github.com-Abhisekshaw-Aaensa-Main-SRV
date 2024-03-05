@@ -37,7 +37,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(morgan('dev'));
 // app.use(helmet());
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: 'https://enterprise.climatenextgen.com',
+}));
 
 // views
 app.set("view engine", "ejs");

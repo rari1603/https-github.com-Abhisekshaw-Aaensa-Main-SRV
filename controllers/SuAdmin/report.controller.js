@@ -481,50 +481,51 @@ exports.DownloadMeterDataReport = async (req, res) => {
             const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
             const Location = await EnterpriseStateLocationModel.find(locationQuery);
 
-            for (const loc of Location) {
-                const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
-                const GatewayData = await GatewayModel.find(gatewayQuery);
+            // for (const loc of Location) {
+            //     const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
+            //     const GatewayData = await GatewayModel.find(gatewayQuery);
 
-                for (const gateway of GatewayData) {
-                    let GatewayLogData = await GatewayLogModel.find({
-                        GatewayID: gateway._id,
-                        TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
-                    });
+            //     for (const gateway of GatewayData) {
+            //         let GatewayLogData = await GatewayLogModel.find({
+            //             GatewayID: gateway._id,
+            //             TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
+            //         });
 
-                    // Map GatewayLogData to include only desired fields
-                    const mappedData = GatewayLogData.map(log => ({
-                        GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
-                        Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
-                        Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
-                        'Ph1:Voltage': log.Phases.Ph1.Voltage,
-                        'Ph1:Current': log.Phases.Ph1.Current,
-                        'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
-                        'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
-                        'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
+            //         // Map GatewayLogData to include only desired fields
+            //         const mappedData = GatewayLogData.map(log => ({
+            //             GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
+            //             Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+            //             Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+            //             'Ph1:Voltage': log.Phases.Ph1.Voltage,
+            //             'Ph1:Current': log.Phases.Ph1.Current,
+            //             'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
+            //             'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
+            //             'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
 
-                        'Ph2:Voltage': log.Phases.Ph2.Voltage,
-                        'Ph2:Current': log.Phases.Ph2.Current,
-                        'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
-                        'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
-                        'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
+            //             'Ph2:Voltage': log.Phases.Ph2.Voltage,
+            //             'Ph2:Current': log.Phases.Ph2.Current,
+            //             'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
+            //             'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
+            //             'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
 
-                        'Ph3:Voltage': log.Phases.Ph3.Voltage,
-                        'Ph3:Current': log.Phases.Ph3.Current,
-                        'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
-                        'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
-                        'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
+            //             'Ph3:Voltage': log.Phases.Ph3.Voltage,
+            //             'Ph3:Current': log.Phases.Ph3.Current,
+            //             'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
+            //             'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
+            //             'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
 
-                        'KVAH': log.KVAH,
-                        'KWH': log.KWH,
-                        'PF': log.PF,
-                    }));
+            //             'KVAH': log.KVAH,
+            //             'KWH': log.KWH,
+            //             'PF': log.PF,
+            //         }));
 
-                    // Push mappedData into allData array
-                    allData.push(...mappedData);
-                }
-            }
+            //         // Push mappedData into allData array
+            //         allData.push(...mappedData);
+            //     }
+            // }
+            console.log(Location);
         }
-        return console.log(allData);
+        return;
         // Fields that are included in the CSV output
         const fields = [
             'GatewayID',

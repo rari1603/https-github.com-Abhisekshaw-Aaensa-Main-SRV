@@ -389,7 +389,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         return res.status(200).send(finalCsvData);
 
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error:", error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
@@ -502,10 +502,10 @@ exports.DownloadMeterDataReport = async (req, res) => {
         res.set('Content-Type', 'text/csv');
 
         // Send CSV data as response
-        res.status(200).send(csvData);
+        return res.status(200).send(csvData);
 
     } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data:", error.message);
         return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };

@@ -155,12 +155,18 @@ exports.Store = async (req, res) => {
             return res.status(404).send(`Gateway with ID ${req.body.GatewayID} not found`);
         }
         const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+        console.log({ AssignedOptimizers });
         const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim());
+        console.log({ AssignedOptimizerIDs });
 
         const OnlineOptimizers = optimizers;
+        console.log({ OnlineOptimizers });
+
         const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID.trim());
+        console.log({ OnlineOptimizerIDs });
 
         const OfflineOptimizerIDs = AssignedOptimizerIDs.filter(id => !OnlineOptimizerIDs.includes(id));
+        console.log({ OfflineOptimizerIDs });
 
         // First, mark all optimizers as offline
         await OptimizerModel.updateMany(

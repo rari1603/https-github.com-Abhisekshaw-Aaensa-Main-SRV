@@ -242,8 +242,8 @@ exports.AllMeterData = async (req, res) => {
                             GatewayID: gateway._id,
                             TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         })
-                        .skip(skip)
-                        .limit(validatedPageSize);                          
+                            .skip(skip)
+                            .limit(validatedPageSize);
 
                         totalResults = await GatewayLogModel.find({
                             GatewayID: gateway._id,
@@ -350,12 +350,23 @@ exports.DownloadDeviceDataReport = async (req, res) => {
             }
         }
 
+        // Group data by timestamp
+        const groupedData = {};
+        allData.forEach(item => {
+            const timestamp = item.Time;
+            if (!groupedData[timestamp]) {
+                groupedData[timestamp] = [];
+            }
+            groupedData[timestamp].push(item);
+        });
+
         // Fields that are included in the CSV output
         const fields = ['OptimizerID', 'GatewayID', 'Date', 'Time', 'RoomTemperature', 'Humidity', 'CoilTemperature', 'OptimizerMode'];
 
-        // Add a heading to the CSV data
-        const heading = [`Device Data Report from ${startDate} to ${endDate}`];
-        const csvData = parse([heading, ...allData], { fields, header: true });
+        // Generate CSV sections
+        const csvSections = Object.keys(groupedData).map(timestamp => {
+            return groupedData[timestamp];
+        });
 
         // Generate filename dynamically
         const currentDate = new Date();
@@ -367,8 +378,15 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         res.setHeader('Content-disposition', `attachment; filename=${filename}`);
         res.set('Content-Type', 'text/csv');
 
+        // Convert data to CSV
+        const csvData = parse(csvSections.flat(), { header: false });
+
+        // Add header row at H1
+        const headerRow = fields.map(field => `"${field}"`).join(',') + '\r\n';
+        const finalCsvData = headerRow + csvData;
+
         // Send CSV data as response
-        res.status(200).send(csvData);
+        return res.status(200).send(finalCsvData);
 
     } catch (error) {
         console.error("Error:", error);
@@ -496,7 +514,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
 
 
 
-/********************** NOT IN USE************************/ 
+/********************** NOT IN USE************************/
 // AllDataLogDemo
 exports.AllDataLogDemo = async (req, res) => {
     try {

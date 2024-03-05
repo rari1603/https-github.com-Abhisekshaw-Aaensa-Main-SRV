@@ -370,7 +370,6 @@ exports.AllDataLogDemo = async (req, res) => {
 exports.DownloadDeviceDataReport = async (req, res) => {
     try {
         const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
-        return res.send({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate });
 
         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
@@ -441,7 +440,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         res.set('Content-Type', 'text/csv');
 
         // Send CSV data as response
-        res.status(200).send(csvData);
+        return res.status(200).send(csvData);
 
     } catch (error) {
         console.error("Error:", error);
@@ -552,7 +551,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
         res.set('Content-Type', 'text/csv');
 
         // Send CSV data as response
-        res.status(200).send(csvData);
+        return res.status(200).send(csvData);
 
     } catch (error) {
         console.error("Error fetching data:", error);

@@ -356,6 +356,26 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
             return res.status(404).send({ success: false, message: 'No data found for the given ID.' });
         }
 
+        // Step 3: Determine offline optimizers
+        const offlineThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
+
+        // Inside your try block
+        const optimizerUpdates = await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
+            const latestLog = await OptimizerLogModel.findOne({ OptimizerID: optimizer._id }).sort({ createdAt: -1 });
+            // Set isOnline to false if no log entry found, otherwise check the timestamp
+            const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
+            return {
+                id: optimizer._id,
+                isOnline: isOnline
+            };
+        }));
+
+
+        // Update each optimizer in the database
+        await Promise.all(optimizerUpdates.map(async optimizerUpdate => {
+            await OptimizerModel.updateOne({ _id: optimizerUpdate.id }, { isOnline: optimizerUpdate.isOnline });
+        }));
+
         // Step 5: Extract common data fields
         // Extract the common Enterprise_ID data from the first object
         const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId.EnterpriseInfo.Enterprise_ID;

@@ -492,7 +492,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
                     });
                     
                     // Map GatewayLogData to include only desired fields
-                    const mappedData = await Promise.all(GatewayLogData.map(log => ({
+                    const mappedData = GatewayLogData.map(log => ({
                         GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
                         Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
                         Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
@@ -517,15 +517,15 @@ exports.DownloadMeterDataReport = async (req, res) => {
                         'KVAH': log.KVAH,
                         'KWH': log.KWH,
                         'PF': log.PF,
-                    })));
+                    }));
 
+                    console.log(mappedData);
                     // Push mappedData into allData array
-                    allData.push(...mappedData);
+                    // allData.push(...mappedData);
                 }
             }
             
         }
-        console.log(allData);
         return;
         // Fields that are included in the CSV output
         const fields = [

@@ -484,53 +484,46 @@ exports.DownloadMeterDataReport = async (req, res) => {
             for (const loc of Location) {
                 const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
                 const GatewayData = await GatewayModel.find(gatewayQuery);
-                
+
                 for (const gateway of GatewayData) {
                     let GatewayLogData = await GatewayLogModel.find({
                         GatewayID: gateway._id,
                         TimeStamp: { $gte: startUtcTimestamp, $lte: endUtcTimestamp },
                     });
-                    
-                    const batchSize = 1000; // Adjust batch size as needed
 
-                    // Iterate through GatewayLogData and process in batches
-                    for (let i = 0; i < GatewayLogData.length; i += batchSize) {
-                        const batch = GatewayLogData.slice(i, i + batchSize);
+                    // Map GatewayLogData to include only desired fields
+                    const mappedData = GatewayLogData.map(log => ({
+                        GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
+                        Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+                        Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+                        'Ph1:Voltage': log.Phases.Ph1.Voltage,
+                        'Ph1:Current': log.Phases.Ph1.Current,
+                        'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
+                        'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
+                        'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
 
-                        // Process the current batch
-                        const mappedData = batch.map(log => ({
-                            GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
-                            Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
-                            Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
-                            'Ph1:Voltage': log.Phases.Ph1.Voltage,
-                            'Ph1:Current': log.Phases.Ph1.Current,
-                            'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
-                            'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
-                            'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
-                            'Ph2:Voltage': log.Phases.Ph2.Voltage,
-                            'Ph2:Current': log.Phases.Ph2.Current,
-                            'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
-                            'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
-                            'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
-                            'Ph3:Voltage': log.Phases.Ph3.Voltage,
-                            'Ph3:Current': log.Phases.Ph3.Current,
-                            'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
-                            'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
-                            'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
-                            'KVAH': log.KVAH,
-                            'KWH': log.KWH,
-                            'PF': log.PF,
-                        }));
+                        'Ph2:Voltage': log.Phases.Ph2.Voltage,
+                        'Ph2:Current': log.Phases.Ph2.Current,
+                        'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
+                        'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
+                        'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
 
-                        // Push processed data into allData array
-                        console.log(mappedData);
-                        // allData.push(...mappedData);
-                    }
+                        'Ph3:Voltage': log.Phases.Ph3.Voltage,
+                        'Ph3:Current': log.Phases.Ph3.Current,
+                        'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
+                        'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
+                        'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
+
+                        'KVAH': log.KVAH,
+                        'KWH': log.KWH,
+                        'PF': log.PF,
+                    }));
+
+                    // Push mappedData into allData array
+                    allData.push(...mappedData);
                 }
             }
-            
         }
-        return;
         // Fields that are included in the CSV output
         const fields = [
             'GatewayID',
@@ -547,8 +540,6 @@ exports.DownloadMeterDataReport = async (req, res) => {
         const heading = [`Device Meter Report from ${startDate} to ${endDate}`];
         const csvData = parse([heading, ...allData], { fields, header: true });
 
-        console.table(csvData);
-
         // Generate filename dynamically
         const currentDate = new Date();
         const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
@@ -560,7 +551,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
         res.set('Content-Type', 'text/csv');
 
         // Send CSV data as response
-        return res.status(200).send(csvData);
+        res.status(200).send(csvData);
 
     } catch (error) {
         console.error("Meter Data Error:", error.message);

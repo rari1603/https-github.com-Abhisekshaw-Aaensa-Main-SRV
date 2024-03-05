@@ -453,8 +453,6 @@ exports.DownloadMeterDataReport = async (req, res) => {
     try {
         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
 
-        console.log(req.body);
-
         const startUtcTimestamp = new Date(startDate).getTime() / 1000;
         const endUtcTimestamp = new Date(endDate).setHours(23, 59, 59, 999) / 1000;
 
@@ -526,6 +524,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
                 }
             }
         }
+        return console.log(allData);
         // Fields that are included in the CSV output
         const fields = [
             'GatewayID',

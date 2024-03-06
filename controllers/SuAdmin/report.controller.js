@@ -111,7 +111,7 @@ exports.AllDeviceData = async (req, res) => {
                             }
 
                             // Increment totalCount for each optimizer log
-                            totalResults = await OptimizerLogModel.find({
+                            totalResults = await OptimizerLogModel.countDocuments({
                                 OptimizerID: optimizer._id,
                                 TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                             });
@@ -248,7 +248,7 @@ exports.AllMeterData = async (req, res) => {
                             .skip(skip)
                             .limit(validatedPageSize);
 
-                        totalResults = await GatewayLogModel.find({
+                        totalResults = await GatewayLogModel.countDocuments({
                             GatewayID: gateway._id,
                             TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         });

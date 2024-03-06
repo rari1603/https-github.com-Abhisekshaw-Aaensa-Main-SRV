@@ -96,7 +96,7 @@ exports.AllDeviceData = async (req, res) => {
                                     OptimizerModel: "Optimizer",
                                     options: { lean: true }
                                 })
-                                .sort({ TimeStamp: 1 })
+                                .sort({ TimeStamp: -1 })
                                 .skip(skip)
                                 .limit(pageSize)
                                 .lean();
@@ -239,10 +239,12 @@ exports.AllMeterData = async (req, res) => {
                     };
 
                     for (const gateway of GatewayData) {
-                        let GatewayLogData = await GatewayLogModel.find({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                        })
+                        let GatewayLogData = await GatewayLogModel
+                            .find({
+                                GatewayID: gateway._id,
+                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                            })
+                            .sort({ TimeStamp: -1 })
                             .skip(skip)
                             .limit(validatedPageSize);
 
@@ -332,7 +334,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
                             TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         };
 
-                        const OptimizerLogs = await OptimizerLogModel.find(query).sort({ TimeStamp: 1 }).lean();
+                        const OptimizerLogs = await OptimizerLogModel.find(query).sort({ TimeStamp: -1 }).lean();
 
                         const mappedData = OptimizerLogs.map(log => ({
                             OptimizerID: optimizer.OptimizerID, // Assuming OptimizerID is the field you want from the Optimizer model
@@ -441,7 +443,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
                     let GatewayLogData = await GatewayLogModel.find({
                         GatewayID: gateway._id,
                         TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                    });
+                    }).sort({ TimeStamp: -1 });
 
                     // Map GatewayLogData to include only desired fields
                     const mappedData = GatewayLogData.map(log => ({

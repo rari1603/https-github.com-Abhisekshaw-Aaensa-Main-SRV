@@ -144,7 +144,7 @@ exports.AllDeviceData = async (req, res) => {
             pagination: {
                 page: validatedPage,
                 pageSize: validatedPageSize,
-                totalResults: totalResults.length, // You may need to adjust this based on your actual total count
+                totalResults: totalResults
             },
         });
 
@@ -279,7 +279,7 @@ exports.AllMeterData = async (req, res) => {
             pagination: {
                 page: validatedPage,
                 pageSize: validatedPageSize,
-                totalResults: totalResults.length, // You may need to adjust this based on your actual total count
+                totalResults: totalResults,
             },
         });
     } catch (error) {

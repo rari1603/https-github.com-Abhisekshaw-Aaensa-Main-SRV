@@ -445,7 +445,7 @@ exports.OptimizerDetails = async (req, res) => {
                 .limit(1);
 
             const currentTime = new Date();
-            const timestamp = parseInt(OptimizerLogData.TimeStamp, 10) * 1000; // Convert seconds to milliseconds
+            const timestamp = parseInt(OptimizerLogData?.TimeStamp, 10) * 1000; // Convert seconds to milliseconds
             const logTime = new Date(timestamp);
 
             const fiveMinutesAgo = new Date(currentTime - 5 * 60 * 1000); // 5 minutes ago

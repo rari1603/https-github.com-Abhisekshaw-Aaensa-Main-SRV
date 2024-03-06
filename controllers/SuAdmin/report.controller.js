@@ -87,7 +87,8 @@ exports.AllDeviceData = async (req, res) => {
                         for (const optimizer of Optimizers) {
                             const query = {
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                                TimeStamp: { $gte: endIstTimestampUTC, $lte: startIstTimestampUTC },
+                                // TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                             };
 
                             const OptimizerLogs = await OptimizerLogModel.find(query)
@@ -113,7 +114,8 @@ exports.AllDeviceData = async (req, res) => {
                             // Increment totalCount for each optimizer log
                             totalResults = await OptimizerLogModel.find({
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                                TimeStamp: { $gte: endIstTimestampUTC, $lte: startIstTimestampUTC },
+                                // TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                             });
                         }
 
@@ -331,7 +333,8 @@ exports.DownloadDeviceDataReport = async (req, res) => {
                     for (const optimizer of Optimizers) {
                         const query = {
                             OptimizerID: optimizer._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                            TimeStamp: { $gte: endIstTimestampUTC, $lte: startIstTimestampUTC },
+                            // TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         };
 
                         const OptimizerLogs = await OptimizerLogModel.find(query).sort({ TimeStamp: -1 }).lean();

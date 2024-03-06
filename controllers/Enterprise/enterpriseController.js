@@ -360,20 +360,13 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         const offlineThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
 
         // Inside your try block
-        const optimizerUpdates = await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
+        await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
             const latestLog = await OptimizerLogModel.findOne({ OptimizerID: optimizer._id }).sort({ createdAt: -1 });
             // Set isOnline to false if no log entry found, otherwise check the timestamp
             const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
-            return {
-                id: optimizer._id,
-                isOnline: isOnline
-            };
-        }));
 
-
-        // Update each optimizer in the database
-        await Promise.all(optimizerUpdates.map(async optimizerUpdate => {
-            await OptimizerModel.updateOne({ _id: optimizerUpdate.id }, { isOnline: optimizerUpdate.isOnline });
+            // Update the optimizer status directly in the database
+            await OptimizerModel.updateOne({ _id: optimizer._id }, { isOnline: isOnline });
         }));
 
         // Step 5: Extract common data fields

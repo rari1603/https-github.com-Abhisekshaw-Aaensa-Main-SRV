@@ -96,6 +96,7 @@ exports.AllDeviceData = async (req, res) => {
                                     OptimizerModel: "Optimizer",
                                     options: { lean: true }
                                 })
+                                .sort({ TimeStamp: 1 })
                                 .skip(skip)
                                 .limit(pageSize)
                                 .lean();
@@ -331,7 +332,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
                             TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         };
 
-                        const OptimizerLogs = await OptimizerLogModel.find(query).lean();
+                        const OptimizerLogs = await OptimizerLogModel.find(query).sort({ TimeStamp: 1 }).lean();
 
                         const mappedData = OptimizerLogs.map(log => ({
                             OptimizerID: optimizer.OptimizerID, // Assuming OptimizerID is the field you want from the Optimizer model

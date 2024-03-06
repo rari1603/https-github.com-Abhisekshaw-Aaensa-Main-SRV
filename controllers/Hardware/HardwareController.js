@@ -214,6 +214,7 @@ exports.Store = async (req, res) => {
             PF: handleNaN(PF).toFixed(5),
         }).save();
 
+        // Store online optimizer's data
         const optimizerLogPromises = optimizers.map(async element => {
             const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
 
@@ -227,7 +228,7 @@ exports.Store = async (req, res) => {
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
-                    DeviceStatus: optimizer.isOnline,
+                    DeviceStatus: true, // optimizer.isOnline,
                     TimeStamp: TimeStamp,
                     RoomTemperature: element.RoomTemperature,
                     Humidity: element.Humidity,
@@ -239,8 +240,7 @@ exports.Store = async (req, res) => {
 
         await Promise.all(optimizerLogPromises);
 
-        // console.log({ AssignedOptimizerIDs, OnlineOptimizerIDs, OfflineOptimizerIDs });
-
+        // Store offline optimizer's data
         await Promise.all(OfflineOptimizerIDs.map(async id => {
             const optimizer = await OptimizerModel.findOne({ OptimizerID: id });
 
@@ -253,7 +253,7 @@ exports.Store = async (req, res) => {
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
-                    DeviceStatus: optimizer.isOnline,
+                    DeviceStatus: false, // optimizer.isOnline,
                     TimeStamp: TimeStamp,
                     RoomTemperature: 0,
                     Humidity: 0,

@@ -155,18 +155,18 @@ exports.Store = async (req, res) => {
             return res.status(404).send(`Gateway with ID ${req.body.GatewayID} not found`);
         }
         const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
-        // console.log({ AssignedOptimizers });
+        console.log({ AssignedOptimizers });
         const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim());
-        // console.log({ AssignedOptimizerIDs });
+        console.log({ AssignedOptimizerIDs });
 
         const OnlineOptimizers = optimizers;
-        // console.log({ OnlineOptimizers });
+        console.log({ OnlineOptimizers });
 
         const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID.trim());
-        // console.log({ OnlineOptimizerIDs });
+        console.log({ OnlineOptimizerIDs });
 
         const OfflineOptimizerIDs = AssignedOptimizerIDs.filter(id => !OnlineOptimizerIDs.includes(id));
-        // console.log({ OfflineOptimizerIDs });
+        console.log({ OfflineOptimizerIDs });
 
         // First, mark all optimizers as offline
         await OptimizerModel.updateMany(
@@ -935,9 +935,8 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                     const allOptimizersUpdated = await OptimizerModel.find({ GatewayId: gatewayID }).then(optimizers =>
                         optimizers.every(optimizer => optimizer.BypassMode === (purpose === "bypass_on" ? "ON" : "OFF"))
                     );
-                    console.log({ OutSiedeIf_gateway: allOptimizersUpdated });
+                    
                     if (allOptimizersUpdated) {
-                        console.log({ InSiedeIf_gateway: allOptimizersUpdated });
                         // Update Gateway Bypass Mode
                         await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: purpose === "bypass_on" ? "ON" : "OFF" } });
                     } else {

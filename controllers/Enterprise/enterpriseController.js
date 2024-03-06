@@ -418,7 +418,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
             commonGatewayData: commonGatewayDataDoc,
             AllEntStateLocationGatewayOptimizer
         };
-
+        console.log({ OptimizerList: response });
         // Step 7: Return the response
 
         return res.status(200).json(response);

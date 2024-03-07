@@ -4,6 +4,7 @@ const UserController = require('../controllers/SuAdmin/user.controller');
 const EnterpriseController = require('../controllers/Enterprise/enterpriseController');
 const CommonController = require('../controllers/CommonController');
 const DeviceController = require('../controllers/SuAdmin/device.controller');
+const AuthController = require('../controllers/auth.controller');
 const verifyToken = require('../middleware/authentication.middleware');
 const routeAccessMiddleware = require('../middleware/access.middleware');
 const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/enterprise.middleware');
@@ -105,6 +106,13 @@ router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIn
 
 // Get all enterprise & system integrator user
 router.get('/get/dashboard/details/data', [verifyToken], CommonController.DashboardDetails);
+
+
+/**** Delete User ****/
+// Delete user
+router.post('/delete/user/:user_id', [verifyToken, routeAccessMiddleware()], AuthController.DeleteUser);
+
+
 
 
 /**** Test Delete Optimizer ****/

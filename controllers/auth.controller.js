@@ -9,7 +9,7 @@ const { decode, ExtractToken } = require('../utility/JwtDecoder');
 
 
 
-
+// login
 exports.login = async (req, res) => {
     try {
         const email = req.body.email;
@@ -45,6 +45,7 @@ exports.login = async (req, res) => {
 }
 
 
+// register
 exports.register = async (req, res) => {
 
     try {
@@ -94,6 +95,7 @@ exports.register = async (req, res) => {
 }
 
 
+// ForgetPassword
 exports.ForgetPassword = async (req, res) => {
     const { email } = req.body;
     try {
@@ -119,6 +121,7 @@ exports.ForgetPassword = async (req, res) => {
 }
 
 
+// ForgetPasswordView
 exports.ForgetPasswordView = async (req, res) => {
     try {
         const url = process.env.HOST;
@@ -158,6 +161,7 @@ exports.ForgetPasswordView = async (req, res) => {
 }
 
 
+// ResetNewPassword
 exports.ResetNewPassword = async (req, res) => {
     const { _token, password } = req.body;
     try {
@@ -186,5 +190,21 @@ exports.ResetNewPassword = async (req, res) => {
     }
 }
 
-
+// EnterpriseUser & System Integrator delete
+exports.DeleteUser = async (req, res) => {
+    const { user_id } = req.params;
+    try {
+        const user = await User.findByIdAndUpdate(
+            { _id: user_id },
+            { isDelete: true }, // Updating isDelete field to true
+            { new: true });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+        return res.status(200).json({ success: true, message: "User deleted successfully." });
+    } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+};
 

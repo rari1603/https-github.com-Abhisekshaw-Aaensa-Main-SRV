@@ -13,6 +13,10 @@ exports.HandleLoginError = async (req, res, next) => {
 
         const user = await UserModel.findOne({ email });
 
+        if (user.isDelete === true) {
+            return res.status(403).json({ success: false, message: 'Your account has been deleted. Please contact support for further assistance.', key: 'user' });
+        }
+
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(user ? 401 : 404).send({ success: false, message: !user ? 'User not found!' : 'Invalid password!', key: !user ? 'user' : 'password' });
         }

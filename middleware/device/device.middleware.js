@@ -89,8 +89,26 @@ exports.CheckGateway = async (req, res, next) => {
     NetworkPassword = NetworkPassword.trim().replace(/\s+/g, '');
     GatewayID = GatewayID.trim().replace(/\s+/g, '');
 
-
     try {
+        if (!EnterpriseInfo) {
+            return res.status(401).json({ success: false, message: "Enterprise Information is required!", key: "EnterpriseInfo" });
+        }
+        if (!OnboardingDate) {
+            return res.status(401).json({ success: false, message: "Onboarding Date is required!", key: "OnboardingDate" });
+        }
+        if (!GatewayID) {
+            return res.status(401).json({ success: false, message: "GatewayID is required!", key: "GatewayID" });
+        }
+        if (!EnterpriseUserID) {
+            return res.status(401).json({ success: false, message: "Enterprise User is required!", key: "EnterpriseUser" });
+        }
+        if (!gateway_id) {
+            const ExistingGateway = await GatewayModel.findOne({ GatewayID });
+            if (ExistingGateway) {
+                return res.status(409).json({ success: false, message: 'A gateway with the provided ID already exists. Please choose a different ID.', key: 'GatewayID' });
+            }
+        }
+
         if (NetworkSSID === "SC20Linux" && NetworkPassword === "12345678") {
             // Allow the specified SSID and password
             req.body = { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID };
@@ -107,25 +125,6 @@ exports.CheckGateway = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Network Password should contain a minimum of 8 characters and include at least one of @, _, !, #, or *", key: "NetworkPassword" });
         }
 
-        if (!EnterpriseInfo) {
-            return res.status(401).json({ success: false, message: "Enterprise Information is required!", key: "EnterpriseInfo" });
-        }
-        if (!OnboardingDate) {
-            return res.status(401).json({ success: false, message: "Onboarding Date is required!", key: "OnboardingDate" });
-        }
-        if (!GatewayID) {
-            return res.status(401).json({ success: false, message: "GatewayID is required!", key: "GatewayID" });
-        }
-        if (!EnterpriseUserID) {
-            return res.status(401).json({ success: false, message: "Enterprise User is required!", key: "EnterpriseUser" });
-        }
-
-        if (!gateway_id) {
-            const ExistingGateway = await GatewayModel.findOne({ GatewayID });
-            if (ExistingGateway) {
-                return res.status(409).json({ success: false, message: 'A gateway with the provided ID already exists. Please choose a different ID.', key: 'GatewayID' });
-            }
-        }
 
         // Passing processed data to the controller
         req.body = { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID };

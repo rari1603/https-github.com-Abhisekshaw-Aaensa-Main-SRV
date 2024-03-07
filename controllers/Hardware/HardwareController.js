@@ -864,7 +864,7 @@ exports.BypassOptimizers = async (req, res) => {
 // Settings acknowledgement after set/rest
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     const DATA = req.body;
-    // console.log({ Acknowledgement: DATA });
+    console.log({ Acknowledgement: DATA });
     try {
         const gatewayLocationMap = {};
         let purpose;

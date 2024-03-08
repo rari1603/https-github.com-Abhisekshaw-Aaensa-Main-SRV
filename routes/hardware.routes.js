@@ -21,10 +21,14 @@ router.post('/check/all/device/online/status', HardwareController.CheckAllDevice
 router.get('/connectivity/config/service/:gateway_id', HardwareController.InstallationProperty);
 
 // Optimizer Setting Value
-router.post('/optimizer/setting/default/value/:flag?', HardwareController.OptimizerDefaultSettingValue);  // need middleware here to prevent unwanted access.
-router.get('/optimizer/setting/default/value/:flag?', HardwareController.OptimizerDefaultSettingValue);  // need middleware here to prevent unwanted access.
-router.post('/optimizer/setting/value/update', [verifyToken, CheckSetOptimizerSetting], HardwareController.SetOptimizerSettingValue);  // need middleware here to prevent unwanted access.
-router.post('/reset/optimizer', [verifyToken, CheckResetOptimizerSetting], HardwareController.ResetOptimizerSettingValue);  // need middleware here to prevent unwanted access.
+router.post('/optimizer/setting/default/value/:flag?', HardwareController.OptimizerDefaultSettingValue);
+router.get('/optimizer/setting/default/value/:flag?', HardwareController.OptimizerDefaultSettingValue);
+router.post('/optimizer/setting/value/update', [verifyToken, CheckSetOptimizerSetting], HardwareController.SetOptimizerSettingValue);
+router.post('/reset/optimizer', [verifyToken, CheckResetOptimizerSetting], HardwareController.ResetOptimizerSettingValue);
+
+// Get Optimizer Current Setting Value
+router.post('/get/optimizer/current/settings/:optimzerID', [verifyToken, routeAccessMiddleware()], HardwareController.GetOptimizerCurrentSettingValue);
+
 // Acknowledgement from the configured gateway API
 router.post('/acknowledge/from/conf/gateway/:gateway_id', HardwareController.AcknowledgeFromConfGateway);
 // Settings Acknowledgement after set/reset

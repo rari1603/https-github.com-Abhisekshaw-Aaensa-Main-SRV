@@ -935,7 +935,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                     const allOptimizersUpdated = await OptimizerModel.find({ GatewayId: gatewayID }).then(optimizers =>
                         optimizers.every(optimizer => optimizer.BypassMode === (purpose === "bypass_on" ? "ON" : "OFF"))
                     );
-                    
+
                     if (allOptimizersUpdated) {
                         // Update Gateway Bypass Mode
                         await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: purpose === "bypass_on" ? "ON" : "OFF" } });
@@ -1005,6 +1005,32 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
         const statusCode = isSuccess ? 200 : 500;
 
         return res.status(statusCode).send({ success: isSuccess, results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
+};
+
+// GetOptimizerCurrentSettingValue 
+exports.GetOptimizerCurrentSettingValue = async (req, res) => {
+    const { optimzerID } = req.params;
+    try {
+        const Optmizer = await OptimizerModel.findOne({ OptimizerID: optimzerID });
+        if (Optmizer) {
+            const LatestOptimizerSettingsValue = await OptimizerSettingValueModel
+                .findOne({ optimizerID: Optmizer._id })
+                .sort({ updatedAt: -1 });
+
+            return res.status(200).json({ success: true, message: "Data fetched successfully.", data: LatestOptimizerSettingsValue });
+        } else {
+            return res.status(404).json({ success: false, message: "Optimizer Not Found.", key: "optimizer" });
+        }
+
+        // if (Optmizer.isOnline) {
+        //     result = await UpdateSettings(optimizerIDS, data);
+        // } else {
+        //     return res.status(503).json({ success: false, message: "Device is not online. Please try again.", key: "optimizer_status" });
+        // }
     } catch (error) {
         console.error(error);
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });

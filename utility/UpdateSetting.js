@@ -6,25 +6,26 @@ const OptimizerSettingValueModel = require('../models/OptimizerSettingValue.mode
 // Common UpdateSettings functions for both set and reset
 const UpdateSettings = async (optimizerIDS, data) => {
     // first get the optimizer default value
-    const defaultValue = await OptimizerDefaultSettingValueModel.find();
-    let resetValues = {
-        firstPowerOnObservationTime: data ? data.firstPowerOnObservationTime : defaultValue.firstPowerOnObservationTime,
-        maxObservatioTime: data ? data.maxObservatioTime : defaultValue.maxObservatioTime,
-        OptimizationOnTime: data ? data.OptimizationOnTime : defaultValue.OptimizationOnTime,
-        thermostatMonitoringInterval: data ? data.thermostatMonitoringInterval : defaultValue.thermostatMonitoringInterval,
-        thermostatMonitoringTimeIncrement: data ? data.thermostatMonitoringTimeIncrement : defaultValue.thermostatMonitoringTimeIncrement,
-        steadyStateTimeRoomTempTolerance: data ? data.steadyStateTimeRoomTempTolerance : defaultValue.steadyStateTimeRoomTempTolerance,
-        steadyStateCoilTempTolerance: data ? data.steadyStateCoilTempTolerance : defaultValue.steadyStateCoilTempTolerance
-    };
+    const defaultValue = await OptimizerDefaultSettingValueModel.findOne();
 
     return await Promise.all(optimizerIDS.map(async id => {
-        resetValues.optimizerID = id.toString();
+        let resetValues = {
+            firstPowerOnObservationTime: data ? data.firstPowerOnObservationTime : defaultValue.firstPowerOnObservationTime,
+            maxObservatioTime: data ? data.maxObservatioTime : defaultValue.maxObservatioTime,
+            OptimizationOnTime: data ? data.OptimizationOnTime : defaultValue.OptimizationOnTime,
+            thermostatMonitoringInterval: data ? data.thermostatMonitoringInterval : defaultValue.thermostatMonitoringInterval,
+            thermostatMonitoringTimeIncrement: data ? data.thermostatMonitoringTimeIncrement : defaultValue.thermostatMonitoringTimeIncrement,
+            steadyStateTimeRoomTempTolerance: data ? data.steadyStateTimeRoomTempTolerance : defaultValue.steadyStateTimeRoomTempTolerance,
+            steadyStateCoilTempTolerance: data ? data.steadyStateCoilTempTolerance : defaultValue.steadyStateCoilTempTolerance,
+            optimizerID: id.toString()
+        };
+
         await OptimizerModel.findByIdAndUpdate({ _id: id.toString() },
             {
                 isReset: data ? false : true,
                 isSetting: data ? true : false,
             },
-            { new: true } // This option returns the modified document rather than the original
+            { new: true }
         );
 
         return await OptimizerSettingValueModel.findOneAndUpdate(

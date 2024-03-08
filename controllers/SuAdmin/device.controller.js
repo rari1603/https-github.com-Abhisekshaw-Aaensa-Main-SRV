@@ -144,22 +144,29 @@ exports.UpdateGateway = async (req, res) => {
     const { gateway_id } = req.params;
 
     try {
-        const Gateway = await GatewayModel.find({ _id: gateway_id, EnterpriseInfo: EnterpriseInfo, GatewayID: GatewayID, EnterpriseUserID: EnterpriseUserID });
-        if (Gateway.length > 0) {
-            await GatewayModel.findByIdAndUpdate({ _id: gateway_id },
-                {
-                    EnterpriseInfo,
-                    OnboardingDate,
-                    GatewayID,
-                    NetworkSSID,
-                    NetworkPassword,
-                    EnterpriseUserID,
-                },
-                { new: true } // This option returns the modified document rather than the original
-            );
-            return res.status(200).json({ success: true, message: "Gateway updated successfully." });
+        const Gateway = await GatewayModel.findOne({ _id: gateway_id, EnterpriseInfo: EnterpriseInfo, GatewayID: GatewayID, EnterpriseUserID: EnterpriseUserID });
+        const PreviousNetworkSSID = (Gateway?.NetworkSSID === NetworkSSID);
+        const PreviousNetworkPassword = (Gateway?.NetworkPassword === NetworkPassword);
+
+        if (PreviousNetworkSSID && PreviousNetworkPassword) {
+            return res.status(403).json({ success: false, message: "SSID & Password Found Same For The Gateway." });
         } else {
-            return res.status(404).json({ success: false, message: "Gateway not found." });
+            if (Gateway) {
+                await GatewayModel.findByIdAndUpdate({ _id: gateway_id },
+                    {
+                        EnterpriseInfo,
+                        OnboardingDate,
+                        GatewayID,
+                        NetworkSSID,
+                        NetworkPassword,
+                        EnterpriseUserID,
+                    },
+                    { new: true } // This option returns the modified document rather than the original
+                );
+                return res.status(200).json({ success: true, message: "Gateway updated successfully." });
+            } else {
+                return res.status(404).json({ success: false, message: "Gateway not found." });
+            }
         }
 
     } catch (err) {

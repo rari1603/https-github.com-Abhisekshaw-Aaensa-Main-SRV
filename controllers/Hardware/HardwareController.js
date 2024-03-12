@@ -153,7 +153,7 @@ exports.Store = async (req, res) => {
             gateway_id,
             optimizers
         });
-        return;
+        // return;
     }
 
     if (gateway_id == '67') {
@@ -161,7 +161,7 @@ exports.Store = async (req, res) => {
             message: 'Glitch',
             gateway_id
         });
-        return;
+        // return;
     }
 
     // Helper function to handle "nan" values

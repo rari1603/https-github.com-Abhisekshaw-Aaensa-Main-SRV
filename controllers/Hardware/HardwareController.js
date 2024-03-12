@@ -156,6 +156,14 @@ exports.Store = async (req, res) => {
         return;
     }
 
+    if (gateway_id == '67') {
+        console.log({
+            message: 'Glitch',
+            gateway_id
+        });
+        return;
+    }
+
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);

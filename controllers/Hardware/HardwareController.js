@@ -149,9 +149,7 @@ exports.Store = async (req, res) => {
 
     if (gateway_id == '864292049542374') {
         console.log({
-            data,
-            gateway_id,
-            optimizers
+            BODY: req.body
         });
         // return;
     }

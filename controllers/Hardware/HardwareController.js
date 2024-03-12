@@ -144,14 +144,17 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
-    // 864292049541566
-    // 864292049542374
+    // 864292049541566 -> office
+    // 864292049542374 -> field
 
-    console.log({
-        // data,
-        gateway_id,
-        // optimizers
-    });
+    if (gateway_id == '864292049542374') {
+        console.log({
+            data,
+            gateway_id,
+            optimizers
+        });
+        return;
+    }
 
     // Helper function to handle "nan" values
     const handleNaN = (value) => {

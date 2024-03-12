@@ -30,7 +30,7 @@ exports.DeviceReadyToConfig = async (req, res) => {
         }
 
     } catch (error) {
-        console.error(error);
+        console.error({ DeviceReadyToConfigError: error.message });
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
@@ -64,7 +64,7 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
         }
 
     } catch (error) {
-        console.error(error.message);
+        console.error({ CheckAllDevicesOnlineStatusError: error.message });
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
@@ -133,7 +133,7 @@ exports.ConfigureableData = async (req, res) => {
         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
 
     } catch (error) {
-        console.log({ error: error.message });
+        console.log({ ConfigureableDataError: error.message });
         return res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -286,7 +286,7 @@ exports.Store = async (req, res) => {
         return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
-        console.error(error);
+        console.error({ StoreError: error.message });
         res.status(404).send({ success: false, message: error.message });
     }
 };

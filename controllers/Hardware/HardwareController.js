@@ -75,7 +75,7 @@ exports.ConfigureableData = async (req, res) => {
         const { gateway_id } = req.params;
 
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
-        // console.log({ Gateway });
+        console.log({ Gateway_id: gateway_id, ConfigureableData: Gateway });
 
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });

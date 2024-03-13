@@ -1039,7 +1039,7 @@ exports.GetOptimizerCurrentSettingValue = async (req, res) => {
                 .findOne({ optimizerID: Optmizer._id })
                 .sort({ updatedAt: -1 });
 
-            return res.status(200).json({ success: true, message: "Data fetched successfully.", data: LatestOptimizerSettingsValue });
+            return res.status(200).json({ success: true, message: "Data fetched successfully.", data: LatestOptimizerSettingsValue ?? "No previous data"});
         } else {
             return res.status(404).json({ success: false, message: "Optimizer Not Found.", key: "optimizer" });
         }

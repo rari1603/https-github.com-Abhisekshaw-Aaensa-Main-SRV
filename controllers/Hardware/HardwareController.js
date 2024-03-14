@@ -150,7 +150,7 @@ exports.Store = async (req, res) => {
     console.log({
         BODY: req.body
     });
-    
+
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
@@ -879,7 +879,7 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
         const results = await Promise.all(DATA.map(async item => {
             const { OptimizerID } = item;
             purpose = item.purpose;
-
+            console.log({ BypassSetRestSettingsAcknowledgement: OptimizerID });
             if (purpose === "set") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
@@ -1028,7 +1028,7 @@ exports.GetOptimizerCurrentSettingValue = async (req, res) => {
                 .findOne({ optimizerID: Optmizer._id })
                 .sort({ updatedAt: -1 });
 
-            return res.status(200).json({ success: true, message: "Data fetched successfully.", data: LatestOptimizerSettingsValue ?? "No previous data"});
+            return res.status(200).json({ success: true, message: "Data fetched successfully.", data: LatestOptimizerSettingsValue ?? "No previous data" });
         } else {
             return res.status(404).json({ success: false, message: "Optimizer Not Found.", key: "optimizer" });
         }

@@ -721,6 +721,7 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 
 // Optimizer switch bypass
 exports.BypassOptimizers = async (req, res) => {
+    console.log({BypassOptimizersCommand: req.body});
     const { is_schedule, schedule_time, state, group, id } = req.body;
     try {
         if (!(state === true || state === false) || !group || !id) {

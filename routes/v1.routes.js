@@ -334,7 +334,7 @@ router.get('/all/optimizers', async (req, res) => {
     return res.send({ AllOptimizers });
 });
 
-
+router.post('/password', TestController.passwordCheck);
 
 
 module.exports = router;

@@ -58,10 +58,10 @@ app.get('/health', (req, res) => {
             .map(interfaceInfo => interfaceInfo.address);
         if (mongoose.connection.name) {
             const message = {
-                host: ipv4Addresses,
+                host: ipv4Addresses[0],
                 message: 'Healthy',
                 status: true,
-                time: new Date()
+                time: (new Date()).toString()
             };
             console.table(message);
             return res.status(200).json({ response: message });
@@ -70,7 +70,7 @@ app.get('/health', (req, res) => {
                 host: ipv4Addresses,
                 message: 'Unhealthy.',
                 status: false,
-                time: new Date()
+                time: (new Date()).toString()
             };
             console.table(message);
             return res.status(200).json({ response: message });

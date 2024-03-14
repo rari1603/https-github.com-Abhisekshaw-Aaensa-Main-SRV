@@ -210,3 +210,54 @@ exports.addFakeGatewayOptimizerData = async (req, res) => {
         res.status(404).send({ success: false, message: error.message });
     }
 }
+
+exports.passwordCheck = async (req, res) => {
+    const { password, username } = req.body;
+    const isStrong = isStrongPassword(password);
+    const isLength = isPasswordLength(password);
+    const isUsernameSame = containsUsername(password, username);
+    console.log({ isStrong, isUsernameSame, isLength });
+
+    let response = {};
+
+    if (!isStrong) {
+        response.success = false;
+        response.message = "Password must contain at least one uppercase letter, one special character, and one number.";
+    } else if (!isLength) {
+        response.success = false;
+        response.message = "Password must be at least 8 characters long.";
+    } else if (isUsernameSame) {
+        response.success = false;
+        response.message = "Password cannot contain the username or its variations.";
+    } else {
+        response.success = true;
+        response.message = "Password is strong and meets all criteria.";
+    }
+
+    res.send(response);
+}
+
+function isPasswordLength(password) {
+    return password.length >= 8;
+}
+
+function isStrongPassword(password) {
+    // Define your password strength criteria here
+    const uppercaseRegex = /[A-Z]/;
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    const numberRegex = /[0-9]/;
+
+    return (
+        uppercaseRegex.test(password) &&
+        specialCharRegex.test(password) &&
+        numberRegex.test(password)
+    );
+}
+
+
+function containsUsername(password, username) {
+    const usernameVariations = [username, username.toLowerCase(), username.toUpperCase()];
+
+    // Check if any part of the password contains the username or its variations
+    return usernameVariations.some(variation => password.toLowerCase().includes(variation.toLowerCase()));
+}

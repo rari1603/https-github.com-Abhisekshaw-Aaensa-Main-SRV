@@ -127,40 +127,40 @@ exports.addEnterpriseUser = async (req, res) => {
     }
 };
 
-// Add System itigrator user
+// Add System integrator user
 exports.addSystemInt = async (req, res) => {
     const { username, email, phone } = req.body;
     try {
-        const SyetmInit = new SystemInitModel({
+        const SystemInit = new SystemInitModel({
             username: username,
             email: email,
             phone: phone,
             isDelete: false
         });
 
-        const savedSyetmInit = await SyetmInit.save();
-        if (savedSyetmInit) {
+        const savedSystemInit = await SystemInit.save();
+        if (savedSystemInit) {
             const password = new Date().getTime().toString();
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            const newSyetmInit = new UserModel({
-                username: savedSyetmInit.username,
-                email: savedSyetmInit.email,
+            const newSystemInit = new UserModel({
+                username: savedSystemInit.username,
+                email: savedSystemInit.email,
                 password: hashedPassword,
                 role: "SystemInt",
                 type: "System-integrator",
                 permission: ["Read"],
                 enterpriseUserId: null,
-                systemIntegratorId: savedSyetmInit._id,
+                systemIntegratorId: savedSystemInit._id,
                 isDelete: false
             });
 
 
-            const SavedSyetmInit = await newSyetmInit.save();
+            const SavedSystemInit = await newSystemInit.save();
 
-            if (SavedSyetmInit) {
+            if (SavedSystemInit) {
                 const expiresIn = "24h";
-                const HashValue = hashValue(SavedSyetmInit?.email, expiresIn);
+                const HashValue = hashValue(SavedSystemInit?.email, expiresIn);
 
                 const url = process.env.HOST + "/api/system/set/new/password/" + HashValue;
                 const templatePath = path.resolve('./views/Email/set_password_email.ejs');
@@ -168,12 +168,12 @@ exports.addSystemInt = async (req, res) => {
                 // console.log(url);
                 // return;
                 const renderHTML = ejs.render(templateContent, {
-                    Name: SavedSyetmInit?.username,
+                    Name: SavedSystemInit?.username,
                     Url: url,
                 });
 
                 // Call the sendEmail function
-                await SendMail(SavedSyetmInit?.email, "Set New Password mail", renderHTML);
+                await SendMail(SavedSystemInit?.email, "Set New Password mail", renderHTML);
                 return res.status(201).json({ success: true, message: "System intigrator added successfully!" });
             }
         } else {
@@ -205,7 +205,6 @@ exports.GetEnterpriseSystemIntUsers = async (req, res) => {
         return res.status(500).json({ success: false, message: "Something Went wrong please try again later.", error: err.message });
     }
 }
-
 
 // UPDATE ENTERPRISE ADMIN
 exports.UpdateEnterprise = async (req, res) => {

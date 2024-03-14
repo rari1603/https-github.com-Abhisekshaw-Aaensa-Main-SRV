@@ -147,21 +147,10 @@ exports.Store = async (req, res) => {
     // 864292049541566 -> office
     // 864292049542374 -> field
 
-    if (gateway_id == '864292049542374') {
-        console.log({
-            BODY: req.body
-        });
-        // return;
-    }
-
-    if (gateway_id == '67') {
-        console.log({
-            message: 'Glitch',
-            gateway_id
-        });
-        // return;
-    }
-
+    console.log({
+        BODY: req.body
+    });
+    
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);

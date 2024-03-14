@@ -755,6 +755,7 @@ exports.BypassOptimizers = async (req, res) => {
         // bypass from gateway level
         if (group === "gateway") {
             const Gateway = await GatewayModel.findOne({ GatewayID: id });
+            console.log({ BypassOptimizers_gateway: Gateway });
 
             if (Gateway) {
                 // Find all optimizers related to the gateway

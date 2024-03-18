@@ -194,10 +194,12 @@ exports.ResetNewPassword = async (req, res) => {
 exports.DeleteUser = async (req, res) => {
     const { user_id } = req.params;
     try {
-        const user = await User.findByIdAndUpdate(
-            { _id: user_id },
-            { isDelete: true }, // Updating isDelete field to true
-            { new: true });
+        // const user = await User.findByIdAndUpdate(
+        //     { _id: user_id },
+        //     { isDelete: true }, // Updating isDelete field to true
+        //     { new: true });
+        const user = await User.findOneAndDelete({ _id: user_id });
+
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
         }

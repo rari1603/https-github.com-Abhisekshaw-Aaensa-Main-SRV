@@ -10,6 +10,12 @@ const UserSchema = new mongoose.Schema({
     role: { type: String }, // SuAdmin, Enterprise, SystemInt
     type: { type: String }, // Webmaster, Enterprise, EnterpriseUser, System-integrator
     permission: { type: Array }, // *, Read, Add, Edit, Delete, 
+    enterpriseId: {
+        type: Schema.Types.ObjectId,
+        ref: "Enterprise",
+        require: false,
+        default: null
+    },
     enterpriseUserId: {
         type: Schema.Types.ObjectId,
         ref: "EnterpriseUser",

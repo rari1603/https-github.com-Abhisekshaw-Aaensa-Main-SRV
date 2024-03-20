@@ -12,6 +12,8 @@ const { SendMail } = require('../../utility/SendMail');
 
 // ADD ENTERPRISE ADMIN
 exports.addEnterprise = async (req, res) => {
+    // console.log("ADD ENT", req.body);
+    // return;
     try {
         const newEnterprise = new EnterpriseAdminModel({
             EnterpriseName: req.body.EnterpriseName,
@@ -30,6 +32,7 @@ exports.addEnterprise = async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             const newEnterpriseAdmin = new UserModel({
+                enterpriseId: SavedEnterprise._id,
                 username: SavedEnterprise.ContactInfo.Name,
                 email: SavedEnterprise.ContactInfo.Email,
                 password: hashedPassword,
@@ -71,6 +74,8 @@ exports.addEnterprise = async (req, res) => {
 // ADD ENTERPRISE USER
 exports.addEnterpriseUser = async (req, res) => {
     const { EnterpriseID, username, email, phone } = req.body;
+    // console.log("AddEnt", req.body);
+    // return;
 
     try {
         const EnterpriseUser = new EnterpriseUserModel({

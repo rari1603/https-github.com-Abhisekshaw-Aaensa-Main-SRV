@@ -204,20 +204,7 @@ exports.DeleteUser = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found." });
         }
         // check user type
-        if (user.type == "System-integrator") {
-            // await User.findOneAndDelete({ _id: user_id });
-        } else {
-            // recursion delete
-            // User -> enterpriseUserId.
-            // 1. Delete enterpriseusers TGT -> _id <== User -> enterpriseUserId
-            // 2. Delete enterprises TGT -> _id <== enterpriseusers -> EnterpriseID
-            // 3. Delete gateways TGT -> _id <== enterpriseusers -> GatewayIDs
-
-
-
-        }
-        console.log(user);
-        return;
+        await User.findOneAndDelete({ _id: user_id });
 
         return res.status(200).json({ success: true, message: "User deleted successfully." });
     } catch (err) {

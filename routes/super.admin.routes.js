@@ -105,7 +105,7 @@ router.post('/delete/all', [verifyToken, routeAccessMiddleware()], DeviceControl
 router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIntUsers);
 
 // Get all enterprise & system integrator user
-router.get('/get/dashboard/details/data', [verifyToken], CommonController.DashboardDetails);
+router.get('/get/dashboard/details/data', [verifyToken, routeAccessMiddleware()], CommonController.DashboardDetails);
 
 
 /**** Delete User ****/

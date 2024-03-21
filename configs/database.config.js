@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const connectToDatabase = async () => {
     console.log("Trying to connect DB...");
-    let currentDate = new Date();
+    let currentDate = (new Date()).toString();
 
     try {
         await mongoose.connect(process.env.MONGODB_URI);

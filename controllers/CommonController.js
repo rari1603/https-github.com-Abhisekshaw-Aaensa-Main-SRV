@@ -4,6 +4,7 @@ const EnterpriseStateModel = require('../models/enterprise_state.model');
 const EnterpriseStateLocationModel = require('../models/enterprise_state_location.model');
 const GatewayModel = require('../models/gateway.model');
 const OptimizerModel = require('../models/optimizer.model');
+const EnterpriseUserModel = require('../models/enterprise_user.model');
 
 exports.getStates = async (req, res) => {
     try {
@@ -17,11 +18,40 @@ exports.getStates = async (req, res) => {
 
 // Get dashboard details 
 exports.DashboardDetails = async (req, res) => {
+    // const { user,
+    //     path,
+    //     baseUrl,
+    //     originalUrl,
+    //     route, decodedData } = req;
+    // console.log({
+    //     user,
+    //     path,
+    //     baseUrl,
+    //     originalUrl,
+    //     route, decodedData
+    // });
     try {
-        const TotalEnterpriseCount = await EnterpriseModel.countDocuments({});
-        const TotalEnterpriseStateCount = await EnterpriseStateModel.countDocuments({});
-        const TotalGatewayCount = await GatewayModel.countDocuments({});
-        const TotalOptimizerCount = await OptimizerModel.countDocuments({});
+        var EnterpriseQuery = {};
+        var EnterpriseStateQuery = {};
+        var GatewayQuery = {};
+        var OptimizerQuery = {};
+        if (user.role == "Enterprise") {
+            const enterpriseUserId = decodedData.user.enterpriseUserId
+            const ENT = await this.findEnterprise({ _id: enterpriseUserId });
+            console.log({ ENT });
+            EnterpriseQuery = { _id: ENT.EnterpriseID };
+            EnterpriseStateQuery = { Enterprise_ID: ENT.EnterpriseID };
+        }
+        // if (user.role == "SystemInt") {
+        //     const enterpriseUserId = decodedData.user.enterpriseUserId
+        //     const ENT = await this.findEnterprise({ systemIntegratorId: enterpriseUserId });
+        //     console.log({ ENT });
+        //     EnterpriseQuery = { _id: ENT.EnterpriseID };
+        // }
+        const TotalEnterpriseCount = await EnterpriseModel.countDocuments(EnterpriseQuery);
+        const TotalEnterpriseStateCount = await EnterpriseStateModel.countDocuments(EnterpriseStateQuery);
+        const TotalGatewayCount = await GatewayModel.countDocuments(GatewayQuery);
+        const TotalOptimizerCount = await OptimizerModel.countDocuments(OptimizerQuery);
 
         return res.send({
             TotalEnterprise: TotalEnterpriseCount,
@@ -36,6 +66,11 @@ exports.DashboardDetails = async (req, res) => {
     }
 };
 
+
+
+exports.findEnterprise = async (enterpriseUserId) => {
+    return await EnterpriseUserModel.findOne(enterpriseUserId);
+}
 
 // exports.DashboardDetails = async (req, res) => {
 //     try {

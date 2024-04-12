@@ -1,0 +1,1049 @@
+{
+    "success": true,
+    "message": "Data fetched successfully",
+    "response": [
+        {
+            "EnterpriseName": "Testing",
+            "State": [
+                {
+                    "stateName": "Chandigarh",
+                    "state_ID": "658024a27c64bcd8e249a073",
+                    "location": [
+                        {
+                            "locationName": "Dhakoli",
+                            "location_ID": "65fbe12fc939e0589f097e74",
+                            "gateway": [
+                                {
+                                    "GatewayName": "864292049541566",
+                                    "Gateway_ID": "65fbe148c939e0589f097e82",
+                                    "GatewayLogs": [
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.69,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.81,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604ba26199cf2c64ea724cb",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711585829",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:30:30.687Z",
+                                            "updatedAt": "2024-03-28T00:30:30.687Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.86,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.98,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604ba40199cf2c64ea72520",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711585855",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:30:56.649Z",
+                                            "updatedAt": "2024-03-28T00:30:56.649Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 244,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 244.06,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 244.15,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604ba64199cf2c64ea72597",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711585890",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:31:32.112Z",
+                                            "updatedAt": "2024-03-28T00:31:32.112Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 244,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 244.1,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 244.22,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604ba7d199cf2c64ea725ee",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711585916",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:31:57.445Z",
+                                            "updatedAt": "2024-03-28T00:31:57.445Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.74,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.87,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604ba9f199cf2c64ea72668",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711585949",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:32:31.341Z",
+                                            "updatedAt": "2024-03-28T00:32:31.341Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.46,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.58,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bac1199cf2c64ea726dc",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711585983",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:33:05.241Z",
+                                            "updatedAt": "2024-03-28T00:33:05.241Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.5,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.63,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bada199cf2c64ea72739",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586008",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:33:30.252Z",
+                                            "updatedAt": "2024-03-28T00:33:30.252Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.31,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.42,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bafb199cf2c64ea727ad",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586042",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:34:03.485Z",
+                                            "updatedAt": "2024-03-28T00:34:03.485Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 243,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.2,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 243.33,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bb14199cf2c64ea7280a",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586067",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:34:28.478Z",
+                                            "updatedAt": "2024-03-28T00:34:28.478Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 243.95,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.07,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bb36199cf2c64ea7287e",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586100",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:35:02.421Z",
+                                            "updatedAt": "2024-03-28T00:35:02.421Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.75,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.83,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bb4f199cf2c64ea728db",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586126",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:35:27.968Z",
+                                            "updatedAt": "2024-03-28T00:35:27.968Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.63,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.71,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bb72199cf2c64ea7294f",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586160",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:36:02.102Z",
+                                            "updatedAt": "2024-03-28T00:36:02.102Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.64,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.77,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bb8b199cf2c64ea729ac",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586185",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:36:27.209Z",
+                                            "updatedAt": "2024-03-28T00:36:27.209Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.38,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.5,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bbac199cf2c64ea72a20",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586219",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:37:00.523Z",
+                                            "updatedAt": "2024-03-28T00:37:00.523Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.34,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.46,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bbce199cf2c64ea72a9a",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586253",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:37:34.491Z",
+                                            "updatedAt": "2024-03-28T00:37:34.491Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.33,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.45,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bbe7199cf2c64ea72af1",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586278",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:38:00.000Z",
+                                            "updatedAt": "2024-03-28T00:38:00.000Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.57,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.7,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bc09199cf2c64ea72b6b",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586312",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:38:33.590Z",
+                                            "updatedAt": "2024-03-28T00:38:33.590Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.36,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.47,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bc22199cf2c64ea72bc2",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586337",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:38:58.896Z",
+                                            "updatedAt": "2024-03-28T00:38:58.896Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.18,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.31,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bc44199cf2c64ea72c3c",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586371",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:39:32.434Z",
+                                            "updatedAt": "2024-03-28T00:39:32.434Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.19,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.3,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bc5e199cf2c64ea72c93",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586396",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:39:58.113Z",
+                                            "updatedAt": "2024-03-28T00:39:58.113Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.03,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.15,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bc7f199cf2c64ea72d0d",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586430",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:40:31.680Z",
+                                            "updatedAt": "2024-03-28T00:40:31.680Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.86,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.96,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bca1199cf2c64ea72d81",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586463",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:41:05.104Z",
+                                            "updatedAt": "2024-03-28T00:41:05.104Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 242,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 242.02,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 242.14,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bcba199cf2c64ea72dde",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586489",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:41:30.665Z",
+                                            "updatedAt": "2024-03-28T00:41:30.665Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.81,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.93,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bcdd199cf2c64ea72e4f",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586523",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:42:05.444Z",
+                                            "updatedAt": "2024-03-28T00:42:05.444Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.74,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.86,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bcf8199cf2c64ea72eaa",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586550",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:42:32.293Z",
+                                            "updatedAt": "2024-03-28T00:42:32.293Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.59,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.78,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bd12199cf2c64ea72f01",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586576",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:42:58.337Z",
+                                            "updatedAt": "2024-03-28T00:42:58.337Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.84,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.96,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bd34199cf2c64ea72f7b",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586610",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:43:32.125Z",
+                                            "updatedAt": "2024-03-28T00:43:32.125Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.76,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.87,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bd4d199cf2c64ea72fd2",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586635",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:43:57.090Z",
+                                            "updatedAt": "2024-03-28T00:43:57.090Z",
+                                            "__v": 0
+                                        },
+                                        {
+                                            "Phases": {
+                                                "Ph1": {
+                                                    "Voltage": 241,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph2": {
+                                                    "Voltage": 241.78,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                },
+                                                "Ph3": {
+                                                    "Voltage": 241.9,
+                                                    "Current": 0,
+                                                    "ActivePower": 0,
+                                                    "PowerFactor": 0,
+                                                    "ApparentPower": 0
+                                                }
+                                            },
+                                            "_id": "6604bd55199cf2c64ea72fef",
+                                            "GatewayID": "65fbe148c939e0589f097e82",
+                                            "TimeStamp": "1711586644",
+                                            "KVAH": 137,
+                                            "KWH": 130,
+                                            "PF": 0,
+                                            "isDelete": false,
+                                            "createdAt": "2024-03-28T00:44:05.689Z",
+                                            "updatedAt": "2024-03-28T00:44:05.689Z",
+                                            "__v": 0
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "pageSize": 100,
+        "totalResults": 4990
+    }
+}

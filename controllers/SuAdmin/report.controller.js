@@ -9,12 +9,31 @@ const StateModel = require('../../models/state.model');
 const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 
+const INTERVAL_ARRAY = {
+    "Actual": '--',
+    "15s": 15,
+    "30s": 30,
+    "1m": 60,
+    "5m": 5 * 60,
+    "10m": 10 * 60,
+    "15m": 15 * 60,
+    "30m": 30 * 60,
+    "1h": 60 * 60,
+    "2h": 2 * 60 * 60,
+    "4h": 4 * 60 * 60,
+    "8h": 8 * 60 * 60,
+    "12h": 12 * 60 * 60
+};
+
+
 
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
-    const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
+    const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval } = req.body;
     const { page, pageSize } = req.query;
+    const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
+    console.log({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate, page, pageSize, Interval, param: req.params, INTERVAL_IN_SEC });
 
     try {
         // Validate the mandatory filters
@@ -51,6 +70,8 @@ exports.AllDeviceData = async (req, res) => {
         }];
 
         let totalResults; // Initialize total count
+
+
 
         for (const State of EntStates) {
             const Location = await EnterpriseStateLocationModel.find(location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
@@ -149,7 +170,7 @@ exports.AllDeviceData = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error.message);
+        console.error(error);
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
@@ -161,6 +182,8 @@ exports.AllMeterData = async (req, res) => {
         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
         const { page, pageSize } = req.query;
 
+        const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
+        console.log({ Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval, page, pageSize, param: req.params, INTERVAL_IN_SEC });
         // Validate the mandatory filters
         // if (!Customer) {
         //     return res.status(400).json({ success: false, message: "Missing required field: Customer", key: "customer" });
@@ -268,9 +291,26 @@ exports.AllMeterData = async (req, res) => {
                 responseData.push(stateData);
             }
         }
+        const UtilInter = require('../../utility/Interval');
 
-
-
+        if (INTERVAL_IN_SEC != '--') {
+            const NewResponseData = await UtilInter.MeterData(INTERVAL_IN_SEC, {
+                success: true,
+                message: "Data fetched successfully",
+                response: responseData
+            });
+            // console.log(responseData);
+            return res.send({
+                success: true,
+                message: "Data fetched successfully",
+                response: NewResponseData,
+                pagination: {
+                    // page: validatedPage,
+                    // pageSize: validatedPageSize,
+                    // totalResults: totalResults,
+                },
+            });
+        }
 
         return res.send({
             success: true,

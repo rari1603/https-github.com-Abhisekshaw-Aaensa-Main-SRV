@@ -38,7 +38,7 @@ app.use(express.static('public'));
 app.use(morgan('dev'));
 // app.use(helmet());
 app.use(cors());
-
+app.use(require('express-status-monitor')());
 // views
 app.set("view engine", "ejs");
 app.set("views", "views");

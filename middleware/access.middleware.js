@@ -22,15 +22,24 @@ function checkRoles() {
             req.user = {
                 role: decodedData.user.role, // or 'Manager', 'Webmaster'
             }
+            req.decodedData = decodedData;
             // Assuming you have a user object attached to the request
             const userRole = req.user && req.user.role;
             const requestedRoute = req.path;
-            const baseUrl = req.baseUrl; // Should be '/api/srv-1'
-            const originalUrl = req.originalUrl; // Should be '/api/srv-1/hi'
+            const baseUrl = req.baseUrl; // Should be '/api/admin'
+            const originalUrl = req.originalUrl; // Should be '/api/admin/hi'
             const routeName = req.route.name; // The name of the route (if you've set it)
-
+            console.log({
+                userRole,
+                requestedRoute,
+                baseUrl,
+                originalUrl,
+                routeName,
+                rolePermissions: rolePermissions[userRole],
+                allowedRoutes: rolePermissions[userRole].allowedRoutes
+            });
             if (!userRole || !rolePermissions[userRole] || !checkPermission(requestedRoute, rolePermissions[userRole].allowedRoutes)) {
-                return res.status(403).json({ success: false, error: 'Access forbidden' });
+                return res.status(403).json({ success: false, error: 'Route Access forbidden' });
             }
 
             next();

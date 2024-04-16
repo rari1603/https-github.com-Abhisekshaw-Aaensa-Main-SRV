@@ -15,6 +15,8 @@ const EnterpriseStateLocationSchema = new mongoose.Schema({
     },
     LocationName: { type: String },
     Address: { type: String },
+    Lat: { type: String, default: false },
+    Long: { type: String, default: false },
     isDelete: {
         type: Boolean,
         default: false

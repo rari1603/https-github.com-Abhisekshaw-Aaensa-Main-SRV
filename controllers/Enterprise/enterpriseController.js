@@ -438,7 +438,8 @@ exports.OptimizerDetails = async (req, res) => {
         if (Optimizer) {
             const Gateway = await GatewayModel.findOne({ _id: Optimizer.GatewayId });
             const GatewayLogData = await GatewayLogModel.findOne({ GatewayID: Gateway._id }).sort({ createdAt: -1 });
-
+            const Location = await EnterpriseStateLocationModel.findOne({_id: Gateway.EnterpriseInfo});
+            
             const OptimizerLogData = await OptimizerLogModel
                 .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
                 .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
@@ -481,6 +482,7 @@ exports.OptimizerDetails = async (req, res) => {
                 coil_temp: OptimizerLogData?.CoilTemperature,
                 humidity: OptimizerLogData?.Humidity,
                 TimeStamp: OptimizerLogData?.TimeStamp,
+                Location,
                 unit: {
                     temperature: "C",
                     voltage: "V",

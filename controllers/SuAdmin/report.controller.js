@@ -166,7 +166,7 @@ exports.AllDeviceData = async (req, res) => {
                 response: responseData
             });
             // return console.log({NewResponseData});
-            
+
             return res.send({
                 success: true,
                 message: "Data fetched successfully",
@@ -178,7 +178,7 @@ exports.AllDeviceData = async (req, res) => {
                 },
             });
         }
-console.log({responseData});
+        console.log({ responseData });
         return res.send({
             success: true,
             message: "Data fetched successfully",
@@ -312,7 +312,7 @@ exports.AllMeterData = async (req, res) => {
                 responseData.push(stateData);
             }
         }
-        
+
 
         if (INTERVAL_IN_SEC != '--') {
             const NewResponseData = await UtilInter.MeterData(INTERVAL_IN_SEC, {
@@ -324,7 +324,7 @@ exports.AllMeterData = async (req, res) => {
             return res.send({
                 success: true,
                 message: "Data fetched successfully",
-                response: NewResponseData,
+                response: NewResponseData.response,
                 pagination: {
                     // page: validatedPage,
                     // pageSize: validatedPageSize,

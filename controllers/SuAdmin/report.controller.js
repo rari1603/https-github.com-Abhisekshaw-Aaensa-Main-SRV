@@ -165,19 +165,20 @@ exports.AllDeviceData = async (req, res) => {
                 message: "Data fetched successfully",
                 response: responseData
             });
-            // console.log(responseData);
+            // return console.log({NewResponseData});
+            
             return res.send({
                 success: true,
                 message: "Data fetched successfully",
-                response: NewResponseData,
+                data: NewResponseData.data,
                 pagination: {
-                    // page: validatedPage,
-                    // pageSize: validatedPageSize,
-                    // totalResults: totalResults,
+                    page: validatedPage,
+                    pageSize: validatedPageSize,
+                    totalResults: totalResults,
                 },
             });
         }
-
+console.log({responseData});
         return res.send({
             success: true,
             message: "Data fetched successfully",

@@ -93,90 +93,97 @@ const MeterData = async (intervalSeconds, responseData) => {
     }
 }
 const DeviceData = async (intervalSeconds, responseData) => {
-    const MAIN_LOOP = responseData.data[0].State;
+    try {
+        const MAIN_LOOP = responseData.response[0].State;
+        // return console.table(MAIN_LOOP);
 
-    const displayObjects = [];
-    let NEW_OBJ = {
-        "success": true,
-        "message": "Data fetched successfully",
-        "data": [
-            {
-                "EnterpriseName": "Testing",
-                "State": []
-            }
-        ]
-    };
-    MAIN_LOOP.forEach(mainItem => {
-        const stateObj = {
-            "stateName": mainItem.stateName,
-            "state_ID": mainItem.state_ID,
-            "location": [],
+        const displayObjects = [];
+        let NEW_OBJ = {
+            "success": true,
+            "message": "Data fetched successfully",
+            "data": [
+                {
+                    "EnterpriseName": "Testing",
+                    "State": []
+                }
+            ]
         };
-        NEW_OBJ.data[0].State.push(stateObj);
-
-        mainItem.location.forEach(stateItem => {
-            const locationObj = {
-                "locationName": stateItem.locationName,
-                "location_ID": stateItem.location_ID,
-                "gateway": [],
+        MAIN_LOOP.forEach(mainItem => {
+            const stateObj = {
+                "stateName": mainItem.stateName,
+                "state_ID": mainItem.state_ID,
+                "location": [],
             };
-            stateObj.location.push(locationObj);
-            stateItem.gateway.forEach(locationItem => {
-                const gatewayObj = {
-                    "GatewayName": locationItem.GatewayName,
-                    "Gateway_ID": locationItem.Gateway_ID,
-                    "optimizer": [],
+            NEW_OBJ.data[0].State.push(stateObj);
+
+            mainItem.location.forEach(stateItem => {
+                const locationObj = {
+                    "locationName": stateItem.locationName,
+                    "location_ID": stateItem.location_ID,
+                    "gateway": [],
                 };
-                locationObj.gateway.push(gatewayObj);
-                const optimizerLogs = locationItem.optimizer;
-                const timestamps = optimizerLogs.map(entry => ({ timestamp: Number(entry.timestamp), data: entry }));
-                const result = generateTimestamps(timestamps, intervalSeconds);
-                // console.log(result);
+                stateObj.location.push(locationObj);
+                stateItem.gateway.forEach(locationItem => {
+                    const gatewayObj = {
+                        "GatewayName": locationItem.GatewayName,
+                        "Gateway_ID": locationItem.Gateway_ID,
+                        "optimizer": [],
+                    };
+                    locationObj.gateway.push(gatewayObj);
+                    const optimizerLogs = locationItem.optimizer;
+                    const timestamps = optimizerLogs.map(entry => ({ timestamp: Number(entry.timestamp), data: entry }));
+                    const result = generateTimestamps(timestamps, intervalSeconds);
+                    // console.log(result);
 
-                result.forEach(entry => {
-                    gatewayObj.optimizer.push(entry.data)
-                    displayObjects.push(entry.data);
+                    result.forEach(entry => {
+                        gatewayObj.optimizer.push(entry.data)
+                        displayObjects.push(entry.data);
+                    });
+
                 });
-
             });
+            console.log('<---------------------------------------------------->');
         });
-        console.log('<---------------------------------------------------->');
-    });
 
 
-    function findNextAvailableTimestamp(timestamps, currentTimestamp) {
-        for (let i = 0; i < timestamps.length; i++) {
-            if (timestamps[i].timestamp > currentTimestamp) {
+        function findNextAvailableTimestamp(timestamps, currentTimestamp) {
+            for (let i = 0; i < timestamps.length; i++) {
+                if (timestamps[i].timestamp > currentTimestamp) {
 
-                return timestamps[i];
-            }
-        }
-        return null; // If no next available timestamp found
-    }
-
-    function generateTimestamps(timestamps, intervalSeconds) {
-        const generatedTimestamps = [];
-        let currentTimestamp = timestamps[0].timestamp;
-
-        for (let i = 0; i < timestamps.length - 1; i++) {
-            const nextTimestamp = currentTimestamp + intervalSeconds;
-
-            if (timestamps.some(entry => entry.timestamp === nextTimestamp)) {
-                const nextObject = timestamps.find(entry => entry.timestamp === nextTimestamp);
-                generatedTimestamps.push(nextObject);
-                currentTimestamp = nextTimestamp;
-            } else {
-                const nextAvailableTimestamp = findNextAvailableTimestamp(timestamps, nextTimestamp);
-                if (nextAvailableTimestamp !== null) {
-                    generatedTimestamps.push(nextAvailableTimestamp);
-                    currentTimestamp = nextAvailableTimestamp.timestamp;
-                } else {
-                    break; // No further timestamps available
+                    return timestamps[i];
                 }
             }
+            return null; // If no next available timestamp found
         }
 
-        return generatedTimestamps;
+        function generateTimestamps(timestamps, intervalSeconds) {
+            const generatedTimestamps = [];
+            let currentTimestamp = timestamps[0].timestamp;
+
+            for (let i = 0; i < timestamps.length - 1; i++) {
+                const nextTimestamp = currentTimestamp + intervalSeconds;
+
+                if (timestamps.some(entry => entry.timestamp === nextTimestamp)) {
+                    const nextObject = timestamps.find(entry => entry.timestamp === nextTimestamp);
+                    generatedTimestamps.push(nextObject);
+                    currentTimestamp = nextTimestamp;
+                } else {
+                    const nextAvailableTimestamp = findNextAvailableTimestamp(timestamps, nextTimestamp);
+                    if (nextAvailableTimestamp !== null) {
+                        generatedTimestamps.push(nextAvailableTimestamp);
+                        currentTimestamp = nextAvailableTimestamp.timestamp;
+                    } else {
+                        break; // No further timestamps available
+                    }
+                }
+            }
+
+            return generatedTimestamps;
+        }
+
+        return NEW_OBJ;
+    } catch (error) {
+        return { success: false, message: error.message };
     }
 }
 

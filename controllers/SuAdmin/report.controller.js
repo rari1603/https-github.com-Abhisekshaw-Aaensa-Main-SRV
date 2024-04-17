@@ -9,6 +9,7 @@ const StateModel = require('../../models/state.model');
 const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 
+const UtilInter = require('../../utility/Interval');
 const INTERVAL_ARRAY = {
     "Actual": '--',
     "15s": 15,
@@ -158,6 +159,25 @@ exports.AllDeviceData = async (req, res) => {
             }
         }
 
+        if (INTERVAL_IN_SEC != '--') {
+            const NewResponseData = await UtilInter.DeviceData(INTERVAL_IN_SEC, {
+                success: true,
+                message: "Data fetched successfully",
+                response: responseData
+            });
+            // console.log(responseData);
+            return res.send({
+                success: true,
+                message: "Data fetched successfully",
+                response: NewResponseData,
+                pagination: {
+                    // page: validatedPage,
+                    // pageSize: validatedPageSize,
+                    // totalResults: totalResults,
+                },
+            });
+        }
+
         return res.send({
             success: true,
             message: "Data fetched successfully",
@@ -291,7 +311,7 @@ exports.AllMeterData = async (req, res) => {
                 responseData.push(stateData);
             }
         }
-        const UtilInter = require('../../utility/Interval');
+        
 
         if (INTERVAL_IN_SEC != '--') {
             const NewResponseData = await UtilInter.MeterData(INTERVAL_IN_SEC, {

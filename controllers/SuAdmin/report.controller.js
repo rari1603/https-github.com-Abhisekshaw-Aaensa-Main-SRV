@@ -326,9 +326,9 @@ exports.AllMeterData = async (req, res) => {
                 message: "Data fetched successfully",
                 response: NewResponseData.response,
                 pagination: {
-                    // page: validatedPage,
-                    // pageSize: validatedPageSize,
-                    // totalResults: totalResults,
+                    page: validatedPage,
+                    pageSize: validatedPageSize,
+                    totalResults: totalResults,
                 },
             });
         }

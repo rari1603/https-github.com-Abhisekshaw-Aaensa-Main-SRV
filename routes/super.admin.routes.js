@@ -120,5 +120,6 @@ router.post('/delete/user/:user_id', [verifyToken, routeAccessMiddleware()], Aut
 router.get('/delete/gateway/:gateway_id', DeviceController.DeleteOptimizer);
 // router.get('/hi', routeAccessMiddleware(), UserController.index);
 
+router.get('/pagination', ReportController.PaginationData);
 
 module.exports = router;

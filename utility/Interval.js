@@ -1,3 +1,4 @@
+const fs = require('fs').promises;
 const MeterData = async (intervalSeconds, responseData) => {
     try {
         // return (responseData);
@@ -68,6 +69,13 @@ const MeterData = async (intervalSeconds, responseData) => {
 
             for (let i = 0; i < timestamps.length - 1; i++) {
                 const nextTimestamp = currentTimestamp + intervalSeconds;
+                // Starting timestamp reference point
+                if (i === 0 && timestamps.some(entry => entry.timestamp === currentTimestamp)) {
+                    // timestamps.some(entry => entry.timestamp === currentTimestamp)
+                    const nextObject = timestamps.find(entry => entry.timestamp === currentTimestamp);
+                    generatedTimestamps.push(nextObject);
+                    currentTimestamp = nextTimestamp;
+                }
 
                 if (timestamps.some(entry => entry.timestamp === nextTimestamp)) {
                     const nextObject = timestamps.find(entry => entry.timestamp === nextTimestamp);
@@ -92,6 +100,7 @@ const MeterData = async (intervalSeconds, responseData) => {
         return { success: false, message: error.message };
     }
 }
+
 const DeviceData = async (intervalSeconds, responseData) => {
     try {
         const MAIN_LOOP = responseData.response[0].State;
@@ -162,6 +171,14 @@ const DeviceData = async (intervalSeconds, responseData) => {
 
             for (let i = 0; i < timestamps.length - 1; i++) {
                 const nextTimestamp = currentTimestamp + intervalSeconds;
+
+                // Starting timestamp reference point
+                if (i === 0 && timestamps.some(entry => entry.timestamp === currentTimestamp)) {
+                    // timestamps.some(entry => entry.timestamp === currentTimestamp)
+                    const nextObject = timestamps.find(entry => entry.timestamp === currentTimestamp);
+                    generatedTimestamps.push(nextObject);
+                    currentTimestamp = nextTimestamp;
+                }
 
                 if (timestamps.some(entry => entry.timestamp === nextTimestamp)) {
                     const nextObject = timestamps.find(entry => entry.timestamp === nextTimestamp);

@@ -10,8 +10,6 @@ const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 
 const UtilInter = require('../../utility/Interval');
-const UtilDown = require('../../utility/Download');
-const fs = require('fs');
 const INTERVAL_ARRAY = {
     "Actual": '--',
     "15s": 15,
@@ -36,7 +34,7 @@ exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval } = req.body;
     const { page, pageSize } = req.query;
     const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
-    // console.log({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate, page, pageSize, Interval, param: req.params, INTERVAL_IN_SEC });
+    console.log({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate, page, pageSize, Interval, param: req.params, INTERVAL_IN_SEC });
 
     try {
         // Validate the mandatory filters
@@ -180,7 +178,7 @@ exports.AllDeviceData = async (req, res) => {
                 },
             });
         }
-        // console.log({ responseData });
+        console.log({ responseData });
         return res.send({
             success: true,
             message: "Data fetched successfully",
@@ -206,7 +204,7 @@ exports.AllMeterData = async (req, res) => {
         const { page, pageSize } = req.query;
 
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
-        // console.log({ Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval, page, pageSize, param: req.params, INTERVAL_IN_SEC });
+        console.log({ Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval, page, pageSize, param: req.params, INTERVAL_IN_SEC });
         // Validate the mandatory filters
         // if (!Customer) {
         //     return res.status(400).json({ success: false, message: "Missing required field: Customer", key: "customer" });
@@ -328,9 +326,9 @@ exports.AllMeterData = async (req, res) => {
                 message: "Data fetched successfully",
                 response: NewResponseData.response,
                 pagination: {
-                    // page: validatedPage,
-                    // pageSize: validatedPageSize,
-                    // totalResults: totalResults,
+                    page: validatedPage,
+                    pageSize: validatedPageSize,
+                    totalResults: totalResults,
                 },
             });
         }
@@ -357,13 +355,8 @@ exports.AllMeterData = async (req, res) => {
 /******************************* R E P O R T  D O W N L O A D *********************************/
 // DownloadDeviceDataReport
 exports.DownloadDeviceDataReport = async (req, res) => {
-    // return console.log("hiiii");
     try {
-        const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, } = req.body;
-        const Interval = 'Actual';
-        const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
-        // console.log({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate,  Interval, INTERVAL_IN_SEC });
-
+        const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate } = req.body;
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
@@ -373,143 +366,102 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
-
-
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
-        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        if (!Enterprise) {
+            return res.status(404).json({
+                success: false,
+                message: "Enterprise not found",
+            });
+        }
 
+        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
 
-        const responseData = [{
-            EnterpriseName: Enterprise.EnterpriseName,
-            State: [],
-        }];
-
-        let totalResults; // Initialize total count
-
-
+        const allData = [];
 
         for (const State of EntStates) {
             const Location = await EnterpriseStateLocationModel.find(location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
-            const state = await StateModel.findOne({ _id: State.State_ID });
 
-            if (Location.length > 0) {
-                const stateData = {
-                    stateName: state.name,
-                    state_ID: state._id,
-                    location: []
-                };
+            for (const loc of Location) {
+                const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
+                const Gateways = await GatewayModel.find(gatewayQuery);
 
-                for (const loc of Location) {
-                    const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
-                    const Gateways = await GatewayModel.find(gatewayQuery);
-                    const locationData = {
-                        locationName: loc.LocationName,
-                        location_ID: loc._id,
-                        gateway: []
-                    };
+                for (const gateway of Gateways) {
+                    const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
 
-                    for (const gateway of Gateways) {
-                        const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
-
-                        const gatewayData = {
-                            GatewayName: gateway.GatewayID,
-                            Gateway_ID: gateway._id,
-                            optimizer: []
+                    for (const optimizer of Optimizers) {
+                        const query = {
+                            OptimizerID: optimizer._id,
+                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                         };
 
-                        // Object to store optimizer logs grouped by timestamp
-                        const groupedOptimizerLogs = {};
+                        const OptimizerLogs = await OptimizerLogModel.find(query).sort({ TimeStamp: 1 }).lean();
 
-                        for (const optimizer of Optimizers) {
-                            const query = {
-                                OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            };
+                        const mappedData = OptimizerLogs.map(log => ({
+                            OptimizerID: optimizer.OptimizerID, // Assuming OptimizerID is the field you want from the Optimizer model
+                            GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
+                            Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+                            Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+                            RoomTemperature: log.RoomTemperature,
+                            Humidity: log.Humidity,
+                            CoilTemperature: log.CoilTemperature,
+                            OptimizerMode: log.OptimizerMode
+                        }));
 
-                            const OptimizerLogs = await OptimizerLogModel.find(query)
-                                .populate({
-                                    path: "OptimizerID",
-                                    OptimizerModel: "Optimizer",
-                                    options: { lean: true }
-                                });
-
-                            // Group optimizer logs based on their timestamps
-                            for (const optimizerLog of OptimizerLogs) {
-                                const timestamp = optimizerLog.TimeStamp;
-                                if (!groupedOptimizerLogs[timestamp]) {
-                                    groupedOptimizerLogs[timestamp] = [];
-                                }
-                                groupedOptimizerLogs[timestamp].push(optimizerLog);
-                            }
-
-                            // Increment totalCount for each optimizer log
-                            totalResults = await OptimizerLogModel.countDocuments({
-                                OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            });
-                        }
-
-                        // Create optimizer data for each unique timestamp and push grouped logs into it
-                        for (const timestamp in groupedOptimizerLogs) {
-                            const optimizerLogsForTimestamp = groupedOptimizerLogs[timestamp];
-                            const optimizerData = {
-                                timestamp: timestamp,
-                                optimizerLogs: optimizerLogsForTimestamp
-                            };
-                            gatewayData.optimizer.push(optimizerData);
-                        }
-
-                        locationData.gateway.push(gatewayData);
+                        allData.push(...mappedData);
                     }
-
-                    stateData.location.push(locationData);
                 }
-
-                responseData[0].State.push(stateData);
             }
         }
 
-        if (INTERVAL_IN_SEC != '--') {
-            const NewResponseData = await UtilInter.DeviceData(INTERVAL_IN_SEC, {
-                success: true,
-                message: "Data fetched successfully",
-                response: responseData
-            });
-            // return console.log({NewResponseData});
-            const download = await UtilDown.DeviceDownloadCSV(NewResponseData.data, Interval);
-            // Set the headers for the response
-            const filename = `file_${Interval}.csv`;
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        // Group data by timestamp
+        const groupedData = {};
+        allData.forEach(item => {
+            const timestamp = item.Time;
+            if (!groupedData[timestamp]) {
+                groupedData[timestamp] = [];
+            }
+            groupedData[timestamp].push(item);
+        });
 
+        // Fields that are included in the CSV output
+        const fields = ['OptimizerID', 'GatewayID', 'Date', 'Time', 'RoomTemperature', 'Humidity', 'CoilTemperature', 'OptimizerMode'];
 
-            // Write the CSV content to the response stream
-            return res.send(download);
+        // Generate CSV sections
+        const csvSections = Object.keys(groupedData).map(timestamp => {
+            return groupedData[timestamp];
+        });
 
-        }
-        const download = await UtilDown.DeviceDownloadCSV(responseData, Interval);
-        // Set the headers for the response
-        const filename = `file_${Interval}.csv`;
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        // Generate filename dynamically
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+        const formattedTime = `${currentDate.getHours().toString().padStart(2, '0')}-${currentDate.getMinutes().toString().padStart(2, '0')}`;
+        const filename = `Report_${formattedDate}_${formattedTime}.csv`;
 
-        // Write the CSV content to the response stream
-        return res.send(download);
+        // Set headers for file download with dynamic filename
+        res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+        res.set('Content-Type', 'text/csv');
 
+        // Convert data to CSV
+        const csvData = parse(csvSections.flat(), { header: false });
+
+        // Add header row at H1
+        const headerRow = fields.map(field => `"${field}"`).join(',') + '\r\n';
+        const finalCsvData = headerRow + csvData;
+
+        // Send CSV data as response
+        return res.status(200).send(finalCsvData);
 
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
+        console.error("Error:", error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 };
 
 // DownloadMeterDataReport
 exports.DownloadMeterDataReport = async (req, res) => {
     try {
-        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, } = req.body;
-        const Interval = "Actual";
-        const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
+        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
@@ -519,7 +471,6 @@ exports.DownloadMeterDataReport = async (req, res) => {
         const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
-        // Fetch Enterprise data
         const enterprise = await EnterpriseModel.findOne({ _id: Customer });
         if (!enterprise) {
             return res.status(404).json({
@@ -533,105 +484,92 @@ exports.DownloadMeterDataReport = async (req, res) => {
             });
         }
 
-
         // Aggregation Pipeline
         let aggregationPipeline = [];
         const enterpriseStateQuery = Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id };
 
         const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
 
-        const responseData = [];
-
+        const allData = [];
 
         for (const States of EntStates) {
             const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
             const Location = await EnterpriseStateLocationModel.find(locationQuery);
 
-            const state = await StateModel.findOne({ _id: States.State_ID });
+            for (const loc of Location) {
+                const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
+                const GatewayData = await GatewayModel.find(gatewayQuery);
 
-            if (Location.length > 0) {
+                for (const gateway of GatewayData) {
+                    let GatewayLogData = await GatewayLogModel.find({
+                        GatewayID: gateway._id,
+                        TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                    }).sort({ TimeStamp: 1 });
 
-                const stateData = {
-                    EnterpriseName: enterprise.EnterpriseName,
-                    State: [
-                        {
-                            stateName: state.name,
-                            state_ID: state._id,
-                            location: []
-                        }
-                    ]
-                };
+                    // Map GatewayLogData to include only desired fields
+                    const mappedData = GatewayLogData.map(log => ({
+                        GatewayID: `'${gateway.GatewayID}'`, // Prepend apostrophe to GatewayID
+                        Date: new Date(log.TimeStamp * 1000).toLocaleDateString(),
+                        Time: new Date(log.TimeStamp * 1000).toLocaleTimeString(),
+                        'Ph1:Voltage': log.Phases.Ph1.Voltage,
+                        'Ph1:Current': log.Phases.Ph1.Current,
+                        'Ph1:ActivePower': log.Phases.Ph1.ActivePower,
+                        'Ph1:PowerFactor': log.Phases.Ph1.PowerFactor,
+                        'Ph1:ApparentPower': log.Phases.Ph1.ApparentPower,
 
-                for (const loc of Location) {
-                    const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
-                    const GatewayData = await GatewayModel.find(gatewayQuery);
-                    const locationData = {
-                        locationName: loc.LocationName,
-                        location_ID: loc._id,
-                        gateway: []
-                    };
+                        'Ph2:Voltage': log.Phases.Ph2.Voltage,
+                        'Ph2:Current': log.Phases.Ph2.Current,
+                        'Ph2:ActivePower': log.Phases.Ph2.ActivePower,
+                        'Ph2:PowerFactor': log.Phases.Ph2.PowerFactor,
+                        'Ph2:ApparentPower': log.Phases.Ph2.ApparentPower,
 
-                    for (const gateway of GatewayData) {
-                        let GatewayLogData = await GatewayLogModel
-                            .find({
-                                GatewayID: gateway._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            });
+                        'Ph3:Voltage': log.Phases.Ph3.Voltage,
+                        'Ph3:Current': log.Phases.Ph3.Current,
+                        'Ph3:ActivePower': log.Phases.Ph3.ActivePower,
+                        'Ph3:PowerFactor': log.Phases.Ph3.PowerFactor,
+                        'Ph3:ApparentPower': log.Phases.Ph3.ApparentPower,
 
-                        totalResults = await GatewayLogModel.countDocuments({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                        });
+                        'KVAH': log.KVAH,
+                        'KWH': log.KWH,
+                        'PF': log.PF,
+                    }));
 
-                        if (GatewayLogData.length > 0) {
-                            locationData.gateway.push({
-                                GatewayName: gateway.GatewayID,
-                                Gateway_ID: gateway._id,
-                                GatewayLogs: GatewayLogData
-                            });
-                        }
-                    }
-
-                    stateData.State[0].location.push(locationData);
+                    // Push mappedData into allData array
+                    allData.push(...mappedData);
                 }
-
-                responseData.push(stateData);
             }
         }
+        // Fields that are included in the CSV output
+        const fields = [
+            'GatewayID',
+            'Date',
+            'Time',
+            'Ph1:Voltage', 'Ph1:Current', 'Ph1:ActivePower', 'Ph1:PowerFactor', 'Ph1:ApparentPower',
+            'Ph2:Voltage', 'Ph2:Current', 'Ph2:ActivePower', 'Ph2:PowerFactor', 'Ph2:ApparentPower',
+            'Ph3:Voltage', 'Ph3:Current', 'Ph3:ActivePower', 'Ph3:PowerFactor', 'Ph3:ApparentPower',
+            'KVAH', 'KWH', 'PF'
+        ];
 
 
-        if (INTERVAL_IN_SEC != '--') {
-            const NewResponseData = await UtilInter.MeterData(INTERVAL_IN_SEC, {
-                success: true,
-                message: "Data fetched successfully",
-                response: responseData
-            });
-            const download = await UtilDown.MeterDownloadCSV(NewResponseData.response, Interval);
-            // console.log("INTERVAL", download);
-            // return res.send(download);
-            // Set the headers for the response
-            const filename = `file_${Interval}.csv`;
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        // Add a heading to the CSV data
+        const heading = [`Device Meter Report from ${startDate} to ${endDate}`];
+        const csvData = parse([heading, ...allData], { fields, header: true });
 
+        // Generate filename dynamically
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+        const formattedTime = `${currentDate.getHours().toString().padStart(2, '0')}-${currentDate.getMinutes().toString().padStart(2, '0')}`;
+        const filename = `MeterData_${formattedDate}_${formattedTime}.csv`;
 
-            // Write the CSV content to the response stream
-            return res.send(download);
+        // Set headers for file download with dynamic filename
+        res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+        res.set('Content-Type', 'text/csv');
 
-        }
+        // Send CSV data as response
+        return res.status(200).send(csvData);
 
-        const download = await UtilDown.MeterDownloadCSV(responseData, Interval);
-        // console.log("Actual", download);
-        // return res.send(download);
-        // Set the headers for the response
-        const filename = `file_${Interval}.csv`;
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-        // Write the CSV content to the response stream
-        return res.send(download);
     } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data:", error.message);
         return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };
@@ -730,44 +668,5 @@ exports.AllDataLogDemo = async (req, res) => {
         return res.status(200).json({ success: true, message: 'Data fetched successfully', data: allData });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
-    }
-};
-
-
-exports.PaginationData = async (req, res) => {
-    try {
-        const { page, pageSize } = req.query;
-        console.log({ page, pageSize });
-        
-        // Validate page and pageSize parameters
-        const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
-        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;
-        console.log({ validatedPage, validatedPageSize });
-
-        // Pagination
-        const skip = (validatedPage - 1) * validatedPageSize;
-
-
-
-        let GatewayLogData = await GatewayLogModel
-            .find({})
-            .sort({ TimeStamp: 1 })
-            .skip(skip)
-            .limit(validatedPageSize);
-        const totalResults = await GatewayLogModel.countDocuments({});
-
-        return res.send({
-            success: true,
-            message: "Data fetched successfully",
-            response: GatewayLogData,
-            pagination: {
-                page: validatedPage,
-                pageSize: validatedPageSize,
-                totalResults: totalResults,
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };

@@ -1,0 +1,186 @@
+{
+    "timestamp": 1711006025,
+    "data": {
+        "Phases": {
+            "Ph1": {
+                "Voltage": 232,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph2": {
+                "Voltage": 232.58,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph3": {
+                "Voltage": 232.69,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            }
+        },
+        "_id": "65fbe14bc939e0589f097e92",
+        "GatewayID": "65fbe148c939e0589f097e82",
+        "TimeStamp": "1711006025",
+        "KVAH": 137,
+        "KWH": 130,
+        "PF": 0,
+        "isDelete": false,
+        "createdAt": "2024-03-21T07:27:07.837Z",
+        "updatedAt": "2024-03-21T07:27:07.837Z",
+        "__v": 0
+    }
+}{
+    "timestamp": 1711006025,
+    "data": {
+        "Phases": {
+            "Ph1": {
+                "Voltage": 232,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph2": {
+                "Voltage": 232.58,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph3": {
+                "Voltage": 232.69,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            }
+        },
+        "_id": "65fbe14bc939e0589f097e92",
+        "GatewayID": "65fbe148c939e0589f097e82",
+        "TimeStamp": "1711006025",
+        "KVAH": 137,
+        "KWH": 130,
+        "PF": 0,
+        "isDelete": false,
+        "createdAt": "2024-03-21T07:27:07.837Z",
+        "updatedAt": "2024-03-21T07:27:07.837Z",
+        "__v": 0
+    }
+}{
+    "timestamp": 1711006025,
+    "data": {
+        "Phases": {
+            "Ph1": {
+                "Voltage": 232,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph2": {
+                "Voltage": 232.58,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph3": {
+                "Voltage": 232.69,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            }
+        },
+        "_id": "65fbe14bc939e0589f097e92",
+        "GatewayID": "65fbe148c939e0589f097e82",
+        "TimeStamp": "1711006025",
+        "KVAH": 137,
+        "KWH": 130,
+        "PF": 0,
+        "isDelete": false,
+        "createdAt": "2024-03-21T07:27:07.837Z",
+        "updatedAt": "2024-03-21T07:27:07.837Z",
+        "__v": 0
+    }
+}{
+    "timestamp": 1711006025,
+    "data": {
+        "Phases": {
+            "Ph1": {
+                "Voltage": 232,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph2": {
+                "Voltage": 232.58,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph3": {
+                "Voltage": 232.69,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            }
+        },
+        "_id": "65fbe14bc939e0589f097e92",
+        "GatewayID": "65fbe148c939e0589f097e82",
+        "TimeStamp": "1711006025",
+        "KVAH": 137,
+        "KWH": 130,
+        "PF": 0,
+        "isDelete": false,
+        "createdAt": "2024-03-21T07:27:07.837Z",
+        "updatedAt": "2024-03-21T07:27:07.837Z",
+        "__v": 0
+    }
+}{
+    "timestamp": 1711006025,
+    "data": {
+        "Phases": {
+            "Ph1": {
+                "Voltage": 232,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph2": {
+                "Voltage": 232.58,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            },
+            "Ph3": {
+                "Voltage": 232.69,
+                "Current": 0,
+                "ActivePower": 0,
+                "PowerFactor": 0,
+                "ApparentPower": 0
+            }
+        },
+        "_id": "65fbe14bc939e0589f097e92",
+        "GatewayID": "65fbe148c939e0589f097e82",
+        "TimeStamp": "1711006025",
+        "KVAH": 137,
+        "KWH": 130,
+        "PF": 0,
+        "isDelete": false,
+        "createdAt": "2024-03-21T07:27:07.837Z",
+        "updatedAt": "2024-03-21T07:27:07.837Z",
+        "__v": 0
+    }
+}

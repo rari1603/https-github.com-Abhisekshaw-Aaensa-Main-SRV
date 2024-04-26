@@ -62,7 +62,8 @@ exports.AddGateway = async (req, res) => {
 
 // Add Optimizer
 exports.AddOptimizer = async (req, res) => {
-    const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    // console.log(req.body);
+    const { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy } = req.body;
     try {
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
         if (GATEWAY) {
@@ -70,9 +71,12 @@ exports.AddOptimizer = async (req, res) => {
                 GatewayId: GATEWAY._id, // primary _id of that Gateway
                 OptimizerID,
                 OptimizerName,
+                ACTonnage,
+                Fan_consumption,
+                AC_Energy
             });
 
-            await NewOptimizer.save();
+           await NewOptimizer.save();
             return res.status(201).json({ success: true, message: "Optimizer added successfully." });
         } else {
             return res.status(404).json({ success: false, message: "Gateway not found." });

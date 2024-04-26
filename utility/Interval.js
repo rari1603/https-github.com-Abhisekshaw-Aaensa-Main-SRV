@@ -91,7 +91,6 @@ const MeterData = async (intervalSeconds, responseData) => {
                     }
                 }
             }
-
             return generatedTimestamps;
         }
 

@@ -29,8 +29,6 @@ const INTERVAL_ARRAY = {
 };
 
 
-
-
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval } = req.body;
@@ -201,34 +199,95 @@ exports.AllDeviceData = async (req, res) => {
 
 // AllMeterData report
 exports.AllMeterData = async (req, res) => {
+    // return console.log(JSON.stringify(req.query.flag));
     try {
-        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
-        const { page, pageSize } = req.query;
+        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
+        const { page, flag, PrevTimeStamp } = req.query;
+        let pageSize = 100;
+        if (Interval == '12h') {
+            pageSize = 5000000;
+        }else if(Interval == '8h'){
+            pageSize = 100000;
 
+        }else if(Interval == '4h'){
+            pageSize = 50000;
+
+        }else if(Interval == '2h'){
+            pageSize = 10000;
+
+        }else if(Interval == '1h'){
+            pageSize = 5000;
+
+        }else if(Interval == '30m'){
+            pageSize = 1000;
+
+        }
+        // console.log(req.query);
+        // console.log(req.body);
+        // const pageSize = 200;
+        // console.log({ FirstRef, LastRef });
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
-        // console.log({ Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval, page, pageSize, param: req.params, INTERVAL_IN_SEC });
-        // Validate the mandatory filters
-        // if (!Customer) {
-        //     return res.status(400).json({ success: false, message: "Missing required field: Customer", key: "customer" });
-        // }
-        // if (!(startDate & endDate)) {
-        //     return res.status(400).json({ success: false, message: "Missing required field: Date Range", key: "date" });
-        // }
 
-        // const startUtcTimestamp = new Date(startDate).getTime() / 1000;
-        // const endUtcTimestamp = new Date(endDate).getTime() / 1000;
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
-        const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
-        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        let startIstTimestampUTC;
 
+        startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        const countPoint = startIstTimestamp - istOffsetSeconds;
         // Validate page and pageSize parameters
-        const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
-        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;
+        let validatedPage = Math.max(1, parseInt(page, 10)) || 1;
+        let validatedPageSize;
+        validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;
+        // Pagination
+        let skip = (validatedPage - 1) * validatedPageSize;
+
+        console.log({
+            startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
+            endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() },
+            FirstRef: { unix: FirstRef, humanReadable: new Date(FirstRef * 1000).toLocaleString() },
+            LastRef: { unix: LastRef, humanReadable: new Date(LastRef * 1000).toLocaleString() },
+            query: req.query,
+            // body: req.body,
+            current_interval: req.body.current_interval,
+            interval: Interval,
+            skip
+        });
+
+        let pageWiseTimestamp = {};
+        let pageReset = false;
+        if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
+            // pageWiseTimestamp[page - 1] = FirstRef;
+            // pageWiseTimestamp['interval'] = Interval;
+            pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
+            pageWiseTimestamp.page = {};
+
+            pageWiseTimestamp.page[page - 1] = FirstRef;
+
+            // console.log("LastRef condi......");
+            if (flag == "Prev") {
+                startIstTimestampUTC = PrevTimeStamp
+            } else {
+                startIstTimestampUTC = LastRef;
+            }
+            skip = 0;
+        } else if (req.body.current_interval != Interval && INTERVAL_IN_SEC != '--') {
+            // req.body.current_interval != Interval
+            startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+            pageReset = true;
+            skip = 0;
+        }
+        // console.log({
+        //     AFTER_startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
+        //     pageWiseTimestamp,
+        //     query: req.query
+        // });
+
+
         // Fetch Enterprise data
         const enterprise = await EnterpriseModel.findOne({ _id: Customer });
         if (!enterprise) {
@@ -242,8 +301,7 @@ exports.AllMeterData = async (req, res) => {
                 message: "Please provide Start and End Date and time ",
             });
         }
-        // Pagination
-        const skip = (validatedPage - 1) * validatedPageSize;
+
 
 
         // Aggregation Pipeline
@@ -274,7 +332,6 @@ exports.AllMeterData = async (req, res) => {
                         }
                     ]
                 };
-
                 for (const loc of Location) {
                     const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
                     const GatewayData = await GatewayModel.find(gatewayQuery);
@@ -296,7 +353,7 @@ exports.AllMeterData = async (req, res) => {
 
                         totalResults = await GatewayLogModel.countDocuments({
                             GatewayID: gateway._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                            TimeStamp: { $gte: countPoint, $lte: endIstTimestampUTC },
                         });
 
                         if (GatewayLogData.length > 0) {
@@ -307,7 +364,6 @@ exports.AllMeterData = async (req, res) => {
                             });
                         }
                     }
-
                     stateData.State[0].location.push(locationData);
                 }
 
@@ -328,10 +384,14 @@ exports.AllMeterData = async (req, res) => {
                 message: "Data fetched successfully",
                 response: NewResponseData.response,
                 pagination: {
-                    // page: validatedPage,
-                    // pageSize: validatedPageSize,
-                    // totalResults: totalResults,
+                    page: validatedPage,
+                    pageSize: validatedPageSize,
+                    totalResults: totalResults,
                 },
+                pageWiseTimestamp,
+                flag,
+                current_interval: Interval,
+                pageReset
             });
         }
 
@@ -350,8 +410,6 @@ exports.AllMeterData = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error", err: error });
     }
 };
-
-
 
 
 /******************************* R E P O R T  D O W N L O A D *********************************/
@@ -506,9 +564,11 @@ exports.DownloadDeviceDataReport = async (req, res) => {
 
 // DownloadMeterDataReport
 exports.DownloadMeterDataReport = async (req, res) => {
+    //console.log("_____________");
+    console.log(req.body);
     try {
-        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, } = req.body;
-        const Interval = "Actual";
+        const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval } = req.body;
+        // const Interval = "Actual";
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
@@ -533,6 +593,10 @@ exports.DownloadMeterDataReport = async (req, res) => {
             });
         }
 
+        console.log({
+            startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
+            endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() }
+        });
 
         // Aggregation Pipeline
         let aggregationPipeline = [];
@@ -577,11 +641,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
                                 GatewayID: gateway._id,
                                 TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
                             });
-
-                        totalResults = await GatewayLogModel.countDocuments({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                        });
+                        // console.log(GatewayLogData);
 
                         if (GatewayLogData.length > 0) {
                             locationData.gateway.push({
@@ -738,7 +798,7 @@ exports.PaginationData = async (req, res) => {
     try {
         const { page, pageSize } = req.query;
         console.log({ page, pageSize });
-        
+
         // Validate page and pageSize parameters
         const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
         const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;

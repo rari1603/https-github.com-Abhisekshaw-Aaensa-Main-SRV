@@ -31,34 +31,90 @@ const INTERVAL_ARRAY = {
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
-    const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval } = req.body;
-    const { page, pageSize } = req.query;
+    const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
+    const { page, flag, PrevTimeStamp } = req.query;
+    let pageSize = 10;
+    if (Interval == '12h') {
+        pageSize = 5000000;
+    } else if (Interval == '8h') {
+        pageSize = 100000;
+
+    } else if (Interval == '4h') {
+        pageSize = 50000;
+
+    } else if (Interval == '2h') {
+        pageSize = 10000;
+
+    } else if (Interval == '1h') {
+        pageSize = 5000;
+
+    } else if (Interval == '30m') {
+        pageSize = 1000;
+
+    }
     const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
     // console.log({ enterprise_id, state_id, location_id, gateway_id, startDate, endDate, page, pageSize, Interval, param: req.params, INTERVAL_IN_SEC });
 
     try {
-        // Validate the mandatory filters
-        // if (!enterprise_id) {
-        //     return res.status(400).json({ success: false, message: "Missing required field: Customer", key: "customer" });
-        // }
-        // if (!(startDate & endDate)) {
-        //     return res.status(400).json({ success: false, message: "Missing required field: Date Range", key: "date" });
-        // }
-
-        // const startUtcTimestamp = new Date(startDate).getTime() / 1000;
-        // const endUtcTimestamp = new Date(endDate).getTime() / 1000;
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
-        const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
-        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        let startIstTimestampUTC;
 
-        const validatedPage = Math.max(1, parseInt(page, 10)) || 1;
-        const validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 10;
-        const skip = (validatedPage - 1) * validatedPageSize;
+        startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        const countPoint = startIstTimestamp - istOffsetSeconds;
+
+        // Validate page and pageSize parameters
+        let validatedPage = Math.max(1, parseInt(page, 10)) || 1;
+        let validatedPageSize;
+        validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;
+
+        let skip = (validatedPage - 1) * validatedPageSize;
+        console.log({
+            startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
+            endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() },
+            FirstRef: { unix: FirstRef, humanReadable: new Date(FirstRef * 1000).toLocaleString() },
+            LastRef: { unix: LastRef, humanReadable: new Date(LastRef * 1000).toLocaleString() },
+            query: req.query,
+            body: req.body,
+            current_interval: req.body.current_interval,
+            interval: Interval,
+            skip
+        });
+
+        let pageWiseTimestamp = {};
+        let pageReset = false;
+        if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
+            // pageWiseTimestamp[page - 1] = FirstRef;
+            console.log("Line 93");
+
+            // pageWiseTimestamp['interval'] = Interval;
+            pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
+            pageWiseTimestamp.page = {};
+
+            pageWiseTimestamp.page[page - 1] = FirstRef;
+
+            // console.log("LastRef condi......");
+            if (flag == "Prev") {
+                console.log("Line 103");
+                startIstTimestampUTC = PrevTimeStamp
+            } else {
+                console.log("Line 106");
+                startIstTimestampUTC = LastRef;
+            }
+            skip = 0;
+        } else if (req.body.current_interval != Interval && INTERVAL_IN_SEC != '--') {
+            // req.body.current_interval != Interval
+            console.log("Line 112");
+            startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+            pageReset = true;
+            skip = 0;
+        }
+
 
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
@@ -120,8 +176,8 @@ exports.AllDeviceData = async (req, res) => {
                                 })
                                 .sort({ TimeStamp: 1 })
                                 .skip(skip)
-                                .limit(pageSize)
-                                .lean();
+                                .limit(validatedPageSize);
+                                // .lean();
 
                             // Group optimizer logs based on their timestamps
                             for (const optimizerLog of OptimizerLogs) {
@@ -135,7 +191,7 @@ exports.AllDeviceData = async (req, res) => {
                             // Increment totalCount for each optimizer log
                             totalResults = await OptimizerLogModel.countDocuments({
                                 OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                                TimeStamp: { $gte: countPoint, $lte: endIstTimestampUTC },
                             });
                         }
 
@@ -176,6 +232,10 @@ exports.AllDeviceData = async (req, res) => {
                     pageSize: validatedPageSize,
                     totalResults: totalResults,
                 },
+                pageWiseTimestamp,
+                flag,
+                current_interval: Interval,
+                pageReset
             });
         }
         // console.log({ responseData });
@@ -206,19 +266,19 @@ exports.AllMeterData = async (req, res) => {
         let pageSize = 100;
         if (Interval == '12h') {
             pageSize = 5000000;
-        }else if(Interval == '8h'){
+        } else if (Interval == '8h') {
             pageSize = 100000;
 
-        }else if(Interval == '4h'){
+        } else if (Interval == '4h') {
             pageSize = 50000;
 
-        }else if(Interval == '2h'){
+        } else if (Interval == '2h') {
             pageSize = 10000;
 
-        }else if(Interval == '1h'){
+        } else if (Interval == '1h') {
             pageSize = 5000;
 
-        }else if(Interval == '30m'){
+        } else if (Interval == '30m') {
             pageSize = 1000;
 
         }
@@ -261,6 +321,7 @@ exports.AllMeterData = async (req, res) => {
         let pageWiseTimestamp = {};
         let pageReset = false;
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
+            console.log("Line 319");
             // pageWiseTimestamp[page - 1] = FirstRef;
             // pageWiseTimestamp['interval'] = Interval;
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
@@ -270,13 +331,19 @@ exports.AllMeterData = async (req, res) => {
 
             // console.log("LastRef condi......");
             if (flag == "Prev") {
+            console.log("Line 329");
+
                 startIstTimestampUTC = PrevTimeStamp
             } else {
+            console.log("Line 333");
+
                 startIstTimestampUTC = LastRef;
             }
             skip = 0;
         } else if (req.body.current_interval != Interval && INTERVAL_IN_SEC != '--') {
             // req.body.current_interval != Interval
+            console.log("Line 340");
+
             startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
             pageReset = true;
             skip = 0;

@@ -436,14 +436,14 @@ exports.OptimizerDetails = async (req, res) => {
         const Optimizer = await OptimizerModel.findOne({ OptimizerID: optimizer_id });
 
         if (Optimizer) {
+            // console.log(Optimizer);
             const Gateway = await GatewayModel.findOne({ _id: Optimizer.GatewayId });
             const GatewayLogData = await GatewayLogModel.findOne({ GatewayID: Gateway._id }).sort({ createdAt: -1 });
-            const Location = await EnterpriseStateLocationModel.findOne({_id: Gateway.EnterpriseInfo});
-            
+            const Location = await EnterpriseStateLocationModel.findOne({ _id: Gateway.EnterpriseInfo });
             const OptimizerLogData = await OptimizerLogModel
-                .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
-                .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
-                .limit(1);
+            .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
+            .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
+            .limit(1);
 
             const currentTime = new Date();
             const timestamp = parseInt(OptimizerLogData?.TimeStamp, 10) * 1000; // Convert seconds to milliseconds
@@ -464,6 +464,9 @@ exports.OptimizerDetails = async (req, res) => {
                     isSetting: Optimizer?.isSetting,
                     createdAt: Optimizer?.createdAt,
                     updatedAt: Optimizer?.updatedAt,
+                    ACTonnage: Optimizer?.ACTonnage,
+                    AC_Energy: Optimizer?.AC_Energy,
+                    Fan_consumption: Optimizer?.Fan_consumption,
                 },
                 Gateway: {
                     _id: Gateway?._id,

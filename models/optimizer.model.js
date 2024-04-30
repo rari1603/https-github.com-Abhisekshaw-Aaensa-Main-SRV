@@ -19,6 +19,9 @@ const OptimizerSchema = new mongoose.Schema({
     BypassMode: { type: String, default: "" }, // will chnage based on byPass feedback
     isSetting: { type: Boolean, default: false }, // For set
     isReset: { type: Boolean, default: false }, // For reset
+    ACTonnage: { type: String, default: "--" }, 
+    AC_Energy: { type: String, default: "--" },
+    Fan_consumption: { type: String, default: "--" },
     isDelete: { type: Boolean, default: false }
 }, { timestamps: true });
 

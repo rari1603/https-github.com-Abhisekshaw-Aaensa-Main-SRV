@@ -138,11 +138,14 @@ exports.CheckGateway = async (req, res, next) => {
 
 // Add optimizer empty field check
 exports.CheckOptimizer = async (req, res, next) => {
-    let { GatewayId, OptimizerID, OptimizerName } = req.body;
+    let { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy } = req.body;
     const { optimizer_id } = req.params;
 
     // Remove blank spaces from OptimizerID
+
     OptimizerID = OptimizerID.trim().replace(/\s+/g, '');
+    ACTonnage = /[a-zA-Z@#$%^&*!'"{}|`~;:,<.>?/+=-]/.test(ACTonnage) ? "Format" : ACTonnage.trim();
+    AC_Energy = AC_Energy.trim().replace(/\s+/g, '');
     GatewayId = GatewayId.trim().replace(/\s+/g, '');
 
     try {
@@ -159,6 +162,21 @@ exports.CheckOptimizer = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Optimizer name is required!", key: "OptimizerName" });
 
         }
+        if (ACTonnage === "Format") {
+            return res.status(401).json({ success: false, message: "Enter a valid Input!", key: "ACTonnage" });
+
+        } else if (!ACTonnage) {
+            return res.status(401).json({ success: false, message: "AC Tonnage is required!", key: "ACTonnage" });
+
+        }
+        if (!AC_Energy) {
+            return res.status(401).json({ success: false, message: "AC Energy is required!", key: "AC_Energy" });
+
+        }
+        if (!Fan_consumption) {
+            return res.status(401).json({ success: false, message: "Fan Consumption is required!", key: "Fan_consumption" });
+
+        }
         if (!optimizer_id) {
             const ExistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
             if (ExistingOptimizer) {
@@ -167,7 +185,7 @@ exports.CheckOptimizer = async (req, res, next) => {
         }
 
         // Passing processed data to the controller
-        req.body = { GatewayId, OptimizerID, OptimizerName };
+        req.body = { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy };
         next();
 
     } catch (error) {

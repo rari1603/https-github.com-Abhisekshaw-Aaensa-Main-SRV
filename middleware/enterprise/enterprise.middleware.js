@@ -52,3 +52,52 @@ exports.userEmptyCheck = async (req, res, next) => {
         return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.', err: error.message });
     }
 }
+
+exports.SetNewPasswordValidation = (req, res, next) => {
+
+    const { password, confirmPassword } = req.body;
+    const errors = [];
+
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  
+    // Check if password is provided
+    if (!password || password.trim().length === 0) {
+        errors.push("Password is required");
+    }
+
+    // Check if confirmPassword is provided
+    if (!confirmPassword || confirmPassword.trim().length === 0) {
+        errors.push("Confirm Password is required");
+    }
+
+    // Check if password and confirmPassword match
+    if (password && confirmPassword && password !== confirmPassword) {
+        errors.push("Passwords do not match");
+    }
+
+    // Check if password meets complexity requirements
+    if (password && !regex.test(password)) {
+        errors.push("Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character");
+    }
+
+    if (errors.length > 0) {
+      return res.render("auth/set_password", {
+        title: "Set New Password",
+        DATA: {
+          message: "Validation error",
+          valid: false,
+          errors: errors,
+          token: req.params.hashValue,
+          backend_url:
+            process.env.HOST +
+            "/api/enterprise/set/new/password/" +
+            req.params.hashValue,
+          perpose: "Set New Password",
+        },
+      });
+    }
+  
+    req.validationErrors = errors; // Attach validation errors to request object
+    next();
+};

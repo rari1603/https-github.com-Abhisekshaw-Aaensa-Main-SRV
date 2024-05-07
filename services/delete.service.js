@@ -95,7 +95,8 @@ exports.deleteOptimizer = async (id) => {
         if (!optimizer) {
             return ({ success: false, message: "Optimizer not found for deletion." });
         }
-        await this.deleteGatewayLog(id);
+        // await this.deleteGatewayLog(id);
+        await this.deleteOptimizerLog(id);
         return ({ success: true, message: "Optimizer deleted successfully." });
     } catch (err) {
         console.error(err.message);
@@ -136,7 +137,7 @@ exports.deleteGatewayLog = async (id) => {
 // OptimizerLog data delete
 exports.deleteOptimizerLog = async (id) => {
     try {
-        const OptimizerLog = await OptimizerLogModel.deleteMany({ GatewayID: id });
+        const OptimizerLog = await OptimizerLogModel.deleteMany({ OptimizerID: id });
         if (!OptimizerLog) {
             return ({ success: false, message: "OptimizerLog not found for deletion." });
         }

@@ -89,6 +89,7 @@ exports.CheckGateway = async (req, res, next) => {
     NetworkPassword = NetworkPassword.trim().replace(/\s+/g, '');
     GatewayID = GatewayID.trim().replace(/\s+/g, '');
 
+
     try {
         if (!EnterpriseInfo) {
             return res.status(401).json({ success: false, message: "Enterprise Information is required!", key: "EnterpriseInfo" });
@@ -140,42 +141,53 @@ exports.CheckGateway = async (req, res, next) => {
 exports.CheckOptimizer = async (req, res, next) => {
     let { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy } = req.body;
     const { optimizer_id } = req.params;
-
+    
     // Remove blank spaces from OptimizerID
-
+  
     OptimizerID = OptimizerID.trim().replace(/\s+/g, '');
-    ACTonnage = /[a-zA-Z@#$%^&*!'"{}|`~;:,<.>?/+=-]/.test(ACTonnage) ? "Format" : ACTonnage.trim();
-    AC_Energy = AC_Energy.trim().replace(/\s+/g, '');
+    ACTonnage = /[a-zA-Z@#$%^&*!'"{}|`~;:,<>?/+=-]/.test(ACTonnage) ? "Format" : ACTonnage.trim();
+    AC_Energy = /[a-zA-Z@#$%^&*!'"{}|`~;:,<>?/+=-]/.test(AC_Energy) ? "Format" : AC_Energy.trim();
+    Fan_consumption = /[a-zA-Z@#$%^&*!'"{}|`~;:,<>?/+=-]/.test(String(Fan_consumption)) ? "Format" : (typeof Fan_consumption === 'string' ? Fan_consumption.trim() : Fan_consumption);
     GatewayId = GatewayId.trim().replace(/\s+/g, '');
-
+  
     try {
-
+  
         if (!GatewayId) {
             return res.status(401).json({ success: false, message: "GatewayId is required!", key: "GatewayId" });
-
+  
         }
         if (!OptimizerID) {
             return res.status(401).json({ success: false, message: "OptimizerID is required!", key: "OptimizerID" });
-
+  
         }
         if (!OptimizerName) {
             return res.status(401).json({ success: false, message: "Optimizer name is required!", key: "OptimizerName" });
-
+  
         }
         if (ACTonnage === "Format") {
             return res.status(401).json({ success: false, message: "Enter a valid Input!", key: "ACTonnage" });
-
-        } else if (!ACTonnage) {
+  
+        } 
+        
+        if (!ACTonnage) {
             return res.status(401).json({ success: false, message: "AC Tonnage is required!", key: "ACTonnage" });
-
+  
         }
+        if (AC_Energy === "Format") {
+          return res.status(401).json({ success: false, message: "Enter a valid Input!", key: "AC_Energy" });
+  
+      }
         if (!AC_Energy) {
             return res.status(401).json({ success: false, message: "AC Energy is required!", key: "AC_Energy" });
-
+  
         }
+        if (Fan_consumption === "Format") {
+          return res.status(401).json({ success: false, message: "Enter a valid Input!", key: "Fan_consumption" });
+  
+      }
         if (!Fan_consumption) {
             return res.status(401).json({ success: false, message: "Fan Consumption is required!", key: "Fan_consumption" });
-
+  
         }
         if (!optimizer_id) {
             const ExistingOptimizer = await OptimizerModel.findOne({ OptimizerID });
@@ -183,13 +195,13 @@ exports.CheckOptimizer = async (req, res, next) => {
                 return res.status(409).json({ success: false, message: 'An optimizer with the provided ID already exists. Please choose a different ID.', key: 'OptimizerID' });
             }
         }
-
+  
         // Passing processed data to the controller
         req.body = { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy };
         next();
-
+  
     } catch (error) {
         console.error(error.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
-};
+  };

@@ -568,6 +568,7 @@ exports.SetNewPasswordView = async (req, res) => {
         const decodedHashValue = decode("Bearer " + req.params.hashValue);
         let valid = true;
         let message = "";
+        let validationErrors = req.validationErrors || []; // Get validation errors from request object
         // Check if the token has expired
         const currentTimestamp = Math.floor(Date.now() / 1000); // Get current timestamp in seconds
         if (decodedHashValue.exp && currentTimestamp > decodedHashValue.exp) {
@@ -582,7 +583,9 @@ exports.SetNewPasswordView = async (req, res) => {
             valid,
             token: req.params.hashValue,
             backend_url: url + "/api/enterprise/set/new/password/" + req.params.hashValue,
-            perpose: "Set New Password"
+            perpose: "Set New Password",
+            errors: validationErrors // Pass validation errors to view
+
         }
         // return res.status(200).json(DATA);
         // return res.send(decodedHashValue);

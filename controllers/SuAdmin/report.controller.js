@@ -32,6 +32,7 @@ const INTERVAL_ARRAY = {
 exports.AllDeviceData = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
     const { page, flag, PrevTimeStamp } = req.query;
+
     let pageSize = 100;
     if (Interval == '12h') {
         pageSize = 5000000;
@@ -72,24 +73,21 @@ exports.AllDeviceData = async (req, res) => {
         validatedPageSize = Math.max(1, parseInt(pageSize, 10)) || 100;
 
         let skip = (validatedPage - 1) * validatedPageSize;
-        // console.log({
-        //     startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
-        //     endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() },
-        //     FirstRef: { unix: FirstRef, humanReadable: new Date(FirstRef * 1000).toLocaleString() },
-        //     LastRef: { unix: LastRef, humanReadable: new Date(LastRef * 1000).toLocaleString() },
-        //     query: req.query,
-        //     body: req.body,
-        //     current_interval: req.body?.current_interval,
-        //     interval: Interval,
-        //     skip
-        // });
 
+        console.log(validatedPage, "77");
         let pageWiseTimestamp = {};
         let pageReset = false;
+
+        console.log({
+            query: req.query,
+            body: req.body,
+            current_interval: req.body?.current_interval,
+            interval: Interval,
+            // interval_in_second: INTERVAL_IN_SEC,
+            // validatedPageSize: validatedPageSize
+        });
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
-
-
-            // pageWiseTimestamp['interval'] = Interval;
+            console.log(validatedPage, "86");
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
             pageWiseTimestamp.page = {};
 
@@ -102,7 +100,17 @@ exports.AllDeviceData = async (req, res) => {
             }
             skip = 0;
         } else if (req.body?.current_interval != Interval && INTERVAL_IN_SEC != '--') {
+            console.log(validatedPage, "99");
 
+            validatedPage = 1
+            startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+            pageReset = true;
+            skip = 0;
+        }
+        else if (req.body?.current_interval != Interval && INTERVAL_IN_SEC === '--' ) {
+            console.log(validatedPage, "111");
+
+            validatedPage = 1
             startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
             pageReset = true;
             skip = 0;
@@ -160,7 +168,6 @@ exports.AllDeviceData = async (req, res) => {
                             .sort({ TimeStamp: 1 })
                             .skip(skip)
                             .limit(validatedPageSize);
-
                         // Adding additional properties to each OptimizerLog
                         const modifiedOptimizerLogs = OptimizerLogs.map(obj => {
                             return {
@@ -168,6 +175,7 @@ exports.AllDeviceData = async (req, res) => {
                                 EnterpriseName: Enterprise.EnterpriseName,
                                 stateName: state.name,
                                 state_ID: state._id,
+                                Gateway: gateway,
                                 locationName: loc.LocationName,
                                 location_ID: loc._id
                             };
@@ -178,6 +186,7 @@ exports.AllDeviceData = async (req, res) => {
                             timestamp: 0, // You might want to set the actual timestamp here
                             optimizerLogs: modifiedOptimizerLogs
                         };
+                        // console.log(optimizerData);
                         DEVICE_LOG.push({ optimizerLogs: modifiedOptimizerLogs })
                         locationData.gateway.push(optimizerData);
                     }
@@ -225,6 +234,10 @@ exports.AllDeviceData = async (req, res) => {
                 pageSize: validatedPageSize,
                 totalResults: totalResults
             },
+            pageWiseTimestamp,
+            flag,
+            current_interval: Interval,
+            pageReset
         });
 
     } catch (error) {
@@ -232,7 +245,17 @@ exports.AllDeviceData = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
-
+// console.log({
+//     startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
+//     endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() },
+//     FirstRef: { unix: FirstRef, humanReadable: new Date(FirstRef * 1000).toLocaleString() },
+//     LastRef: { unix: LastRef, humanReadable: new Date(LastRef * 1000).toLocaleString() },
+//     query: req.query,
+//     body: req.body,
+//     current_interval: req.body?.current_interval,
+//     interval: Interval,
+//     skip
+// });
 
 // AllMeterData report
 exports.AllMeterData = async (req, res) => {

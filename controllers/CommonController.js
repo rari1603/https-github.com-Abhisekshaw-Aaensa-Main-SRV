@@ -35,13 +35,13 @@ exports.DashboardDetails = async (req, res) => {
         var EnterpriseStateQuery = {};
         var GatewayQuery = {};
         var OptimizerQuery = {};
-        if (user.role == "Enterprise") {
-            const enterpriseUserId = decodedData.user.enterpriseUserId
-            const ENT = await this.findEnterprise({ _id: enterpriseUserId });
-            console.log({ ENT });
-            EnterpriseQuery = { _id: ENT.EnterpriseID };
-            EnterpriseStateQuery = { Enterprise_ID: ENT.EnterpriseID };
-        }
+        // if (user.role == "Enterprise") {
+        //     const enterpriseUserId = decodedData.user.enterpriseUserId
+        //     const ENT = await this.findEnterprise({ _id: enterpriseUserId });
+        //     console.log({ ENT });
+        //     EnterpriseQuery = { _id: ENT.EnterpriseID };
+        //     EnterpriseStateQuery = { Enterprise_ID: ENT.EnterpriseID };
+        // }
         // if (user.role == "SystemInt") {
         //     const enterpriseUserId = decodedData.user.enterpriseUserId
         //     const ENT = await this.findEnterprise({ systemIntegratorId: enterpriseUserId });

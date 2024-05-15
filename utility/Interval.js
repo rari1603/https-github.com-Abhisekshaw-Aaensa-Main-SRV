@@ -113,7 +113,7 @@ const DeviceData = async (interval, data) => {
             // console.log({ nextExpectedTimestamp });
             if (i === 0 && responseData.some(obj => Number(obj.TimeStamp) === currentTimestamp)) {
                 console.log("Current");
-                console.log({ nextExpectedTimestamp, currentTimestamp, Stamp: Number(responseData[i].TimeStamp) });
+                // console.log({ nextExpectedTimestamp, currentTimestamp, Stamp: Number(responseData[i].TimeStamp) });
                 const nextObject = responseData.find(entry => Number(entry.TimeStamp) === currentTimestamp);
                 let objectsWithTimestamp = responseData.filter(obj => obj.TimeStamp === nextObject.TimeStamp);
                 intervalArray.push(objectsWithTimestamp);
@@ -146,7 +146,7 @@ const DeviceData = async (interval, data) => {
 
         function findNextAvailableTimestamp(responseData, currentTimestamp) {
             for (let i = 0; i < responseData.length; i++) {
-                console.log("responseData", responseData[i].TimeStamp, currentTimestamp);
+                // console.log("responseData", responseData[i].TimeStamp, currentTimestamp);
                 if (responseData[i].TimeStamp > currentTimestamp) {
                     return responseData[i];
                 }

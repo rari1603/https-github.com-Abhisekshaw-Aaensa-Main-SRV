@@ -6,6 +6,7 @@ const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const StateModel = require('../../models/state.model');
+const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
 const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 
@@ -107,7 +108,7 @@ exports.AllDeviceData = async (req, res) => {
             pageReset = true;
             skip = 0;
         }
-        else if (req.body?.current_interval != Interval && INTERVAL_IN_SEC === '--' ) {
+        else if (req.body?.current_interval != Interval && INTERVAL_IN_SEC === '--') {
             console.log(validatedPage, "111");
 
             validatedPage = 1
@@ -750,7 +751,30 @@ exports.DownloadMeterDataReport = async (req, res) => {
     }
 };
 
+exports.UsageTrends = async (req, res) => {
+    try {
+        const { Optimizerid, startDate, endDate, Interval } = req.body;
+        const startIstTimestamp = istToTimestamp(startDate) / 1000;
+        const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
+        const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
+
+
+        const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+        const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+
+        console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
+        
+        const Data = await NewApplianceLogModel.find({
+            OptimizerID: Optimizerid,
+            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+
+        });
+        console.log(Data);
+    } catch (error) {
+        console.log(error, "ERROR LOG");
+    }
+}
 
 
 

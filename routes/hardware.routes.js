@@ -9,6 +9,8 @@ const router = express.Router();
 
 // Store gateway and optimizer data.
 router.post('/gateway/save/data', HardwareController.Store);
+
+
 // Optimizer switch bypass
 router.post('/bypass/optimizers', [verifyToken, routeAccessMiddleware()], HardwareController.BypassOptimizers);
 // Fetch Configureable Data

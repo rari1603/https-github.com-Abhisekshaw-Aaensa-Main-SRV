@@ -19,6 +19,9 @@ const router = express.Router();
 router.post('/get/all/device/data', ReportController.AllDeviceData);
 // Meter Data report api
 router.post('/get/all/meter/data', ReportController.AllMeterData);
+// USAGE TRENDS api
+router.post('/get/all/usage/trends',ReportController.UsageTrends)
+
 
 // Download device report
 router.post('/download/all/devicedata/report', ReportController.DownloadDeviceDataReport);

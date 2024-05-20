@@ -9,7 +9,8 @@ const StateModel = require('../../models/enterprise_state.model');
 const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
-
+const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
+const fs = require('fs');
 
 
 // Device ready to config
@@ -151,6 +152,8 @@ exports.Store = async (req, res) => {
         BODY: req.body
     });
 
+
+
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
         return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
@@ -231,6 +234,9 @@ exports.Store = async (req, res) => {
 
 
             if (optimizer) {
+
+                compressor(element);
+
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
@@ -256,6 +262,15 @@ exports.Store = async (req, res) => {
             }
 
             if (optimizer) {
+                const data = {
+                    OptimizerID: optimizer.OptimizerID,
+                    CompStatus: "--",
+                    OptimizerMode: "--",
+                    TimeStamp: Math.floor(new Date().getTime() / 1000), // Unix timestamp
+                    Flag: "OFFLINE"
+                }
+                compressor(data);
+
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
@@ -721,7 +736,7 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 
 // Optimizer switch bypass
 exports.BypassOptimizers = async (req, res) => {
-    console.log({BypassOptimizersCommand: req.body});
+    console.log({ BypassOptimizersCommand: req.body });
     const { is_schedule, schedule_time, state, group, id } = req.body;
     try {
         if (!(state === true || state === false) || !group || !id) {
@@ -1045,3 +1060,47 @@ exports.GetOptimizerCurrentSettingValue = async (req, res) => {
         return res.status(500).send({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
+
+
+const compressor = async (data) => {
+    const newData = {
+        OptimizerID: data.OptimizerID,
+        CompStatus: data?.CompStatus,
+        OptimizationMode: data?.OptimizerMode,
+        TimeStamp: data?.TimeStamp,
+        Flag: data?.Flag,
+        humanReadable: new Date(data?.TimeStamp * 1000).toLocaleString()
+    }
+    fs.appendFileSync("compressorData.json", JSON.stringify(newData));
+    // Query to find the last document of the same OptimizerId
+    const lastLog = await NewApplianceLogModel.findOne({ OptimizerID: data.OptimizerID }).sort({ createdAt: -1 });
+
+    let NewAllApplianceLog;
+    if (lastLog) {
+
+        if (lastLog?.Flag != "OFFLINE" && data.Flag === "OFFLINE") {
+            NewAllApplianceLog = new NewApplianceLogModel(newData);
+            await NewAllApplianceLog.save();
+            return;
+        }
+        if (data?.OptimizerMode != lastLog?.OptimizationMode && data?.CompStatus != lastLog?.CompStatus && data.flag != "OFFLINE") {
+            NewAllApplianceLog = new NewApplianceLogModel(newData);
+            await NewAllApplianceLog.save();
+
+        } else if (data?.OptimizerMode === lastLog?.OptimizationMode && data?.CompStatus != lastLog?.CompStatus) {
+            NewAllApplianceLog = new NewApplianceLogModel(newData);
+            await NewAllApplianceLog.save();
+
+        } else if (data?.OptimizerMode != lastLog?.OptimizationMode && data?.CompStatus === lastLog?.CompStatus) {
+            console.log({ success: false, message: "Unable to Save Data ", data: data });
+        }
+    } else {
+        NewAllApplianceLog = new NewApplianceLogModel(newData);
+        await NewAllApplianceLog.save();
+
+    }
+
+    console.log({ success: true, message: "Data Saved Successfully", data: NewAllApplianceLog });
+}
+
+

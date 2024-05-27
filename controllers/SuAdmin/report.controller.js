@@ -84,8 +84,7 @@ exports.AllDeviceData = async (req, res) => {
             body: req.body,
             current_interval: req.body?.current_interval,
             interval: Interval,
-            // interval_in_second: INTERVAL_IN_SEC,
-            // validatedPageSize: validatedPageSize
+
         });
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
             console.log(validatedPage, "86");
@@ -401,17 +400,17 @@ exports.AllMeterData = async (req, res) => {
                         location_ID: loc._id,
                         gateway: []
                     };
-
+                    console.log(GatewayData);
                     for (const gateway of GatewayData) {
-                        let GatewayLogData = await GatewayLogModel
-                            .find({
-                                GatewayID: gateway._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            })
+                        let GatewayLogData = await GatewayLogModel.find({
+                            GatewayID: gateway._id,
+                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+                        })
                             .sort({ TimeStamp: 1 })
                             .skip(skip)
                             .limit(validatedPageSize);
-
+                        console.log({ validatedPageSize });
+                        // console.log(GatewayLogData);
                         totalResults = await GatewayLogModel.countDocuments({
                             GatewayID: gateway._id,
                             TimeStamp: { $gte: countPoint, $lte: endIstTimestampUTC },
@@ -764,18 +763,249 @@ exports.UsageTrends = async (req, res) => {
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
         console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
-        
-        const Data = await NewApplianceLogModel.find({
-            OptimizerID: Optimizerid,
-            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+        const pipeline = [
+            {
+                $match: {
+                    OptimizerID: Optimizerid,
+                    TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: endIstTimestampUTC.toString() }
+                }
+            },
+            { $sort: { TimeStamp: 1 } },
+            {
+                $set: {
+                    TimeStamp: { $toLong: '$TimeStamp' }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    entries: { $push: '$$ROOT' }
+                }
+            },
+            {
+                $project: {
+                    thermostatCutoffTimes: {
+                        $reduce: {
+                            input: '$entries',
+                            initialValue: { previous: null, result: [] },
+                            in: {
+                                previous: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }] }
+                                            ]
+                                        },
+                                        '$$this',
+                                        {
+                                            $cond: [
+                                                {
+                                                    $and: [
+                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
+                                                        { $ne: ['$$value.previous', null] }
+                                                    ]
+                                                },
+                                                null,
+                                                '$$value.previous'
+                                            ]
+                                        }
+                                    ]
+                                },
+                                result: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
+                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
+                                                { $ne: ['$$value.previous', null] }
+                                            ]
+                                        },
+                                        {
+                                            $concatArrays: [
+                                                '$$value.result',
+                                                [{
+                                                    cutoffTimeThrm: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
+                                                    timestamp: '$$this.TimeStamp'
+                                                }]
+                                            ]
+                                        },
+                                        '$$value.result'
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    deviceCutoffTimes: {
+                        $reduce: {
+                            input: '$entries',
+                            initialValue: { previous: null, result: [] },
+                            in: {
+                                previous: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] },
+                                                { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }
+                                            ]
+                                        },
+                                        '$$this',
+                                        {
+                                            $cond: [
+                                                {
+                                                    $and: [
+                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                        { $ne: ['$$value.previous', null] }
+                                                    ]
+                                                },
+                                                null,
+                                                '$$value.previous'
+                                            ]
+                                        }
+                                    ]
+                                },
+                                result: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
+                                                { $ne: ['$$value.previous', null] }
+                                            ]
+                                        },
+                                        {
+                                            $concatArrays: [
+                                                '$$value.result',
+                                                [{
+                                                    cutoffTimeOpt: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
+                                                    timestamp: '$$this.TimeStamp'
+                                                }]
+                                            ]
+                                        },
+                                        '$$value.result'
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    RemainingRunTimes: {
+                        $reduce: {
+                            input: '$entries',
+                            initialValue: { previous: null, result: [] },
+                            in: {
+                                previous: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $eq: ['$$this.CompStatus', 'COMPON'] },
+                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] }
+                                            ]
+                                        },
+                                        '$$this',
+                                        {
+                                            $cond: [
+                                                {
+                                                    $and: [
+                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                        { $ne: ['$$value.previous', null] }
+                                                    ]
+                                                },
+                                                null,
+                                                '$$value.previous'
+                                            ]
+                                        }
+                                    ]
+                                },
+                                result: {
+                                    $cond: [
+                                        {
+                                            $and: [
+                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
+                                                { $ne: ['$$value.previous', null] }
+                                            ]
+                                        },
+                                        {
+                                            $concatArrays: [
+                                                '$$value.result',
+                                                [{
+                                                    RemainingTime: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
+                                                    timestamp: '$$this.TimeStamp'
+                                                }]
+                                            ]
+                                        },
+                                        '$$value.result'
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                }
+            }
+        ];
 
-        });
-        console.log(Data);
+        const result = await NewApplianceLogModel.aggregate(pipeline);
+
+        if (result.length > 0) {
+            const { thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes } = result[0];
+
+            console.log('Thermostat Cutoff Times:', thermostatCutoffTimes);
+            console.log('Device Cutoff Times:', deviceCutoffTimes);
+            console.log('Remaining Run Times:', RemainingRunTimes);
+
+
+            res.status(200).json({
+                message: 'Successfully calculated cutoff times',
+                thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes
+            });
+        } else {
+            res.status(404).json({ message: 'No data found' });
+        }
+
     } catch (error) {
         console.log(error, "ERROR LOG");
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+// Function to calculate time differences
+async function calculateTimeDifferences(data) {
+    try {
+
+
+        let previousCompoffTherm = null;
+        let previousCompoffOpt = null;
+        let previousComponThermoTimestampOpt = null;
+        let thermostatCutoffTimes = [];
+        let deviceCutoffTimes = [];
+
+        // Iterate through the data to find relevant entries and calculate differences
+        for (let entry of data) {
+            const timestamp = Number(entry.TimeStamp);
+
+            //HANDLE THERMOSTAT COMPOFF TIME
+            if ((entry.CompStatus === 'COMPOFF' && entry.OptimizationMode === 'NON-OPTIMIZATION') || (entry.OptimizationMode === 'OPTIMIZATION' && entry.CompStatus === 'COMPOFF+THRMO')) {
+                previousCompoffTherm = timestamp;
+            }
+
+            //HANDLE THERMOSTAT COMPON TIME
+            if ((entry.CompStatus === 'COMPON' && entry.OptimizationMode === 'NON-OPTIMIZATION' && previousCompoffTherm !== null) || (entry.CompStatus === 'COMPON' && entry.OptimizationMode === 'OPTIMIZATION' && previousCompoffTherm !== null) || (entry.CompStatus === '--' && entry.OptimizationMode === '--' && previousCompoffTherm !== null)) {
+                const currentCompoffTimestamp = timestamp;
+                const diffInSeconds = currentCompoffTimestamp - previousCompoffTherm;
+                thermostatCutoffTimes.push({ [timestamp]: diffInSeconds });
+                previousCompoffTherm = null;
+            }
+
+        }
+        console.log(thermostatCutoffTimes, "==================");
+
+
+
+    } catch (error) {
+        console.error('Error fetching data or calculating differences:', error);
     }
 }
-
 
 
 /********************** NOT IN USE************************/

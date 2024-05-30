@@ -148,9 +148,12 @@ exports.Store = async (req, res) => {
     // 864292049541566 -> office
     // 864292049542374 -> field
 
-    console.log({
-        BODY: req.body
-    });
+    console.log({ Body: JSON.stringify(req.body) });
+    
+    // if (gateway_id == "864292049541889") {
+    //     console.log({ Inside: data });
+    //     fs.appendFileSync('log_864292049541889.txt', JSON.stringify(data));
+    // }
 
 
 
@@ -206,11 +209,11 @@ exports.Store = async (req, res) => {
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
             acc[phase] = {
-                Voltage: handleNaN(Phases[phase].Voltage).toFixed(5),
-                Current: handleNaN(Phases[phase].Current).toFixed(5),
-                ActivePower: handleNaN(Phases[phase].ActivePower).toFixed(5),
-                PowerFactor: handleNaN(Phases[phase].PowerFactor).toFixed(5),
-                ApparentPower: handleNaN(Phases[phase].ApparentPower).toFixed(5),
+                Voltage: handleNaN(Phases[phase].Voltage).toFixed(2),
+                Current: handleNaN(Phases[phase].Current).toFixed(2),
+                ActivePower: handleNaN(Phases[phase].ActivePower).toFixed(2),
+                PowerFactor: handleNaN(Phases[phase].PowerFactor).toFixed(2),
+                ApparentPower: handleNaN(Phases[phase].ApparentPower).toFixed(2),
             };
             return acc;
         }, {});
@@ -219,9 +222,9 @@ exports.Store = async (req, res) => {
             GatewayID: gatewayId,
             TimeStamp: TimeStamp,
             Phases: sanitizedPhases,
-            KVAH: handleNaN(KVAH).toFixed(5),
-            KWH: handleNaN(KWH).toFixed(5),
-            PF: handleNaN(PF).toFixed(5),
+            KVAH: handleNaN(KVAH).toFixed(2),
+            KWH: handleNaN(KWH).toFixed(2),
+            PF: handleNaN(PF).toFixed(2),
         }).save();
 
         // Store online optimizer's data

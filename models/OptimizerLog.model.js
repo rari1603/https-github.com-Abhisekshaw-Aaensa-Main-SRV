@@ -7,7 +7,8 @@ const OptimizerLogSchema = new mongoose.Schema({
     OptimizerID: {
         type: Schema.Types.ObjectId,
         ref: "Optimizer",
-        required: true
+        required: true,
+        index: true // Create index on OptimizerID
     },
     GatewayID: {
         type: Schema.Types.ObjectId,
@@ -32,6 +33,9 @@ const OptimizerLogSchema = new mongoose.Schema({
     }
 
 }, { timestamps: true });
+
+// Create index on createdAt field
+OptimizerLogSchema.index({ createdAt: -1 });
 
 // Middleware to convert timestamps to IST before saving
 OptimizerLogSchema.pre('save', function (next) {

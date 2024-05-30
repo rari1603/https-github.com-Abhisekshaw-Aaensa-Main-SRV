@@ -1,7 +1,8 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-
+const OptimizerModel = require('../models/optimizer.model');
+const OptimizerLogModel = require('../models/OptimizerLog.model');
 
 const connectToDatabase = async () => {
     console.log("Trying to connect DB...");
@@ -16,6 +17,9 @@ const connectToDatabase = async () => {
             Time: currentDate
         };
 
+        // Create indexes after connection
+        // await createIndexes();
+
         console.table(dbInfo);
         console.log("MongoDB Connection Successful");
     } catch (error) {
@@ -24,5 +28,16 @@ const connectToDatabase = async () => {
     }
 
 };
+
+const createIndexes = async () => {
+    try {
+        await OptimizerLogModel.createIndexes([{ OptimizerID: 1, createdAt: -1 }]);
+        await OptimizerModel.createIndexes([{ _id: 1 }]);
+        console.log("Indexes created successfully.");
+    } catch (error) {
+        console.error("Error creating indexes:", error);
+    }
+};
+
 
 module.exports = { connectToDatabase };

@@ -79,13 +79,7 @@ exports.AllDeviceData = async (req, res) => {
         let pageWiseTimestamp = {};
         let pageReset = false;
 
-        console.log({
-            query: req.query,
-            body: req.body,
-            current_interval: req.body?.current_interval,
-            interval: Interval,
 
-        });
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
             console.log(validatedPage, "86");
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
@@ -118,87 +112,114 @@ exports.AllDeviceData = async (req, res) => {
 
 
 
-        const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
-        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        const Enterprise = await EnterpriseModel.findById(enterprise_id).lean();
 
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).lean();
+
+        const stateIds = EntStates.map(state => state.State_ID);
+        const states = await StateModel.find({ _id: { $in: stateIds } }).lean();
+
+        const stateIdToState = states.reduce((acc, state) => {
+            acc[state._id] = state;
+            return acc;
+        }, {});
+
+        const locationQueries = EntStates.map(State => {
+            return location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
+        });
+
+        const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
+
+        const locationIds = Locations.map(loc => loc._id);
+        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
+        const Gateways = await GatewayModel.find(gatewayQuery).lean();
+
+        const locationIdToGateways = Gateways.reduce((acc, gateway) => {
+            const locId = gateway.EnterpriseInfo.toString();
+            if (!acc[locId]) acc[locId] = [];
+            acc[locId].push(gateway);
+            return acc;
+        }, {});
+
+        const optimizerLogQueries = Gateways.map(gateway => {
+            return {
+                GatewayID: gateway._id,
+                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+            };
+        });
+
+        const OptimizerLogs = await OptimizerLogModel.find({ $or: optimizerLogQueries })
+            .populate({
+                path: "OptimizerID",
+                OptimizerModel: "Optimizer",
+                // options: { lean: true }
+            })
+            .sort({ TimeStamp: 1 })
+            .skip(skip)
+            .limit(validatedPageSize)
+            .lean();
+
+        const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
+            if (!acc[log.GatewayID]) acc[log.GatewayID] = [];
+            acc[log.GatewayID].push(log);
+            return acc;
+        }, {});
+
+        const DEVICE_LOG = [];
+        let totalResults;
+        const stateIdToLocations = Locations.reduce((acc, loc) => {
+            if (!acc[loc.State_ID]) acc[loc.State_ID] = [];
+            acc[loc.State_ID].push(loc);
+            return acc;
+        }, {});
 
         const responseData = [{
             EnterpriseName: Enterprise.EnterpriseName,
-            State: [],
-        }];
-
-        let totalResults; // Initialize total count
-
-
-        const DEVICE_LOG = [];
-        for (const State of EntStates) {
-            const Location = await EnterpriseStateLocationModel.find(location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
-            const state = await StateModel.findOne({ _id: State.State_ID });
-
-            if (Location.length > 0) {
+            State: stateIds.map(stateId => {
+                const state = stateIdToState[stateId];
+                const locations = stateIdToLocations[stateId] || [];
                 const stateData = {
                     stateName: state.name,
                     state_ID: state._id,
-                    location: []
-                };
+                    location: locations.map(loc => {
+                        const gateways = locationIdToGateways[loc._id.toString()] || [];
+                        const locationData = {
+                            locationName: loc.LocationName,
+                            location_ID: loc._id,
+                            gateway: gateways.map(gateway => {
+                                const logs = gatewayIdToLogs[gateway._id] || [];
+                                const modifiedOptimizerLogs = logs.map(log => ({
+                                    ...log,
+                                    EnterpriseName: Enterprise.EnterpriseName,
+                                    stateName: state.name,
+                                    state_ID: state._id,
+                                    Gateway: gateway,
+                                    locationName: loc.LocationName,
+                                    location_ID: loc._id
+                                }));
 
-                for (const loc of Location) {
-                    const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
-                    const Gateways = await GatewayModel.find(gatewayQuery);
-                    const locationData = {
-                        locationName: loc.LocationName,
-                        location_ID: loc._id,
-                        gateway: []
-                    };
+                                const optimizerData = {
+                                    timestamp: 0, // Set actual timestamp if required
+                                    optimizerLogs: modifiedOptimizerLogs
+                                };
 
-                    for (const gateway of Gateways) {
-                        // console.log({ gateway });
-                        const query = {
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                        };
-
-                        const OptimizerLogs = await OptimizerLogModel.find(query)
-                            .populate({
-                                path: "OptimizerID",
-                                OptimizerModel: "Optimizer",
-                                options: { lean: true }
+                                DEVICE_LOG.push({ optimizerLogs: modifiedOptimizerLogs });
+                                return optimizerData;
                             })
-                            .sort({ TimeStamp: 1 })
-                            .skip(skip)
-                            .limit(validatedPageSize);
-                        // Adding additional properties to each OptimizerLog
-                        const modifiedOptimizerLogs = OptimizerLogs.map(obj => {
-                            return {
-                                ...obj._doc,
-                                EnterpriseName: Enterprise.EnterpriseName,
-                                stateName: state.name,
-                                state_ID: state._id,
-                                Gateway: gateway,
-                                locationName: loc.LocationName,
-                                location_ID: loc._id
-                            };
-                        });
-
-                        // Push optimizerData inside the loop to avoid overwriting
-                        const optimizerData = {
-                            timestamp: 0, // You might want to set the actual timestamp here
-                            optimizerLogs: modifiedOptimizerLogs
                         };
-                        // console.log(optimizerData);
-                        DEVICE_LOG.push({ optimizerLogs: modifiedOptimizerLogs })
-                        locationData.gateway.push(optimizerData);
-                    }
+                        return locationData;
+                    })
+                };
+                return stateData;
+            })
+        }];
 
-                    stateData.location.push(locationData);
-                }
+        // At this point, responseData and DEVICE_LOG are built and can be used further.
 
-                if (stateData.location.length > 0) {
-                    responseData[0].State.push(stateData);
-                }
-            }
-        }
+
+        // At this point, responseData and DEVICE_LOG are built and can be used further.
+
 
         // fs.writeFileSync("response.json", JSON.stringify(responseData));
 
@@ -258,6 +279,7 @@ exports.AllDeviceData = async (req, res) => {
 // });
 
 // AllMeterData report
+
 exports.AllMeterData = async (req, res) => {
     try {
         const { Customer, Stateid, Locationid, Gatewayid, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
@@ -301,17 +323,7 @@ exports.AllMeterData = async (req, res) => {
         // Pagination
         let skip = (validatedPage - 1) * validatedPageSize;
 
-        // console.log({
-        //     startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
-        //     endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() },
-        //     FirstRef: { unix: FirstRef, humanReadable: new Date(FirstRef * 1000).toLocaleString() },
-        //     LastRef: { unix: LastRef, humanReadable: new Date(LastRef * 1000).toLocaleString() },
-        //     query: req.query,
-        //     // body: req.body,
-        //     current_interval: req.body.current_interval,
-        //     interval: Interval,
-        //     skip
-        // });
+
 
         let pageWiseTimestamp = {};
         let pageReset = false;
@@ -363,73 +375,90 @@ exports.AllMeterData = async (req, res) => {
         }
 
 
-
-        // Aggregation Pipeline
-        let aggregationPipeline = [];
+        // let totalResults;
         const enterpriseStateQuery = Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id };
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).lean();
 
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+        const stateIds = EntStates.map(state => state.State_ID);
+        const states = await StateModel.find({ _id: { $in: stateIds } }).lean();
+        const stateIdToState = states.reduce((acc, state) => {
+            acc[state._id] = state;
+            return acc;
+        }, {});
 
-        const responseData = [];
+        const locationQueries = EntStates.map(States => {
+            return Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
+        });
+        const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
 
-        let totalResults;
+        const locationIds = Locations.map(loc => loc._id);
+        const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: { $in: locationIds } };
+        const Gateways = await GatewayModel.find(gatewayQuery).lean();
 
-        for (const States of EntStates) {
-            const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
-            const Location = await EnterpriseStateLocationModel.find(locationQuery);
+        const locationIdToGateways = Gateways.reduce((acc, gateway) => {
+            const locId = gateway.EnterpriseInfo.toString();
+            if (!acc[locId]) acc[locId] = [];
+            acc[locId].push(gateway);
+            return acc;
+        }, {});
 
-            const state = await StateModel.findOne({ _id: States.State_ID });
+        const gatewayLogQueries = Gateways.map(gateway => {
+            return {
+                GatewayID: gateway._id,
+                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+            };
+        });
+        const GatewayLogs = await GatewayLogModel.find({ $or: gatewayLogQueries })
+            .sort({ TimeStamp: 1 })
+            .skip(skip)
+            .limit(validatedPageSize)
+            .lean();
 
-            if (Location.length > 0) {
+        const gatewayIdToLogs = GatewayLogs.reduce((acc, log) => {
+            if (!acc[log.GatewayID]) acc[log.GatewayID] = [];
+            acc[log.GatewayID].push(log);
+            return acc;
+        }, {});
 
-                const stateData = {
-                    EnterpriseName: enterprise.EnterpriseName,
-                    State: [
-                        {
-                            stateName: state.name,
-                            state_ID: state._id,
-                            location: []
-                        }
-                    ]
-                };
-                for (const loc of Location) {
-                    const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
-                    const GatewayData = await GatewayModel.find(gatewayQuery);
-                    const locationData = {
-                        locationName: loc.LocationName,
-                        location_ID: loc._id,
-                        gateway: []
-                    };
-                    console.log(GatewayData);
-                    for (const gateway of GatewayData) {
-                        let GatewayLogData = await GatewayLogModel.find({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                        })
-                            .sort({ TimeStamp: 1 })
-                            .skip(skip)
-                            .limit(validatedPageSize);
-                        console.log({ validatedPageSize });
-                        // console.log(GatewayLogData);
-                        totalResults = await GatewayLogModel.countDocuments({
-                            GatewayID: gateway._id,
-                            TimeStamp: { $gte: countPoint, $lte: endIstTimestampUTC },
-                        });
+        const totalResults = await GatewayLogModel.countDocuments({
+            GatewayID: { $in: Gateways.map(gateway => gateway._id) },
+            TimeStamp: { $gte: countPoint, $lte: endIstTimestampUTC },
+        });
 
-                        if (GatewayLogData.length > 0) {
-                            locationData.gateway.push({
-                                GatewayName: gateway.GatewayID,
-                                Gateway_ID: gateway._id,
-                                GatewayLogs: GatewayLogData
-                            });
-                        }
-                    }
-                    stateData.State[0].location.push(locationData);
-                }
+        const responseData = EntStates.map(States => {
+            const state = stateIdToState[States.State_ID];
+            const locations = Locations.filter(loc => loc.State_ID.toString() === States.State_ID.toString());
 
-                responseData.push(stateData);
-            }
-        }
+            const stateData = {
+                EnterpriseName: enterprise.EnterpriseName,
+                State: [{
+                    stateName: state.name,
+                    state_ID: state._id,
+                    location: locations.map(loc => {
+                        const gateways = locationIdToGateways[loc._id.toString()] || [];
+                        const locationData = {
+                            locationName: loc.LocationName,
+                            location_ID: loc._id,
+                            gateway: gateways.map(gateway => {
+                                const logs = gatewayIdToLogs[gateway._id] || [];
+                                return {
+                                    GatewayName: gateway.GatewayID,
+                                    Gateway_ID: gateway._id,
+                                    GatewayLogs: logs
+                                };
+                            })
+                        };
+                        return locationData;
+                    })
+                }]
+            };
+            return stateData;
+        });
+
+        // At this point, responseData and totalResults are built and can be used further.
+        console.log(responseData);
+        console.log(totalResults);
+
 
 
         if (INTERVAL_IN_SEC != '--') {
@@ -751,8 +780,90 @@ exports.DownloadMeterDataReport = async (req, res) => {
 };
 
 exports.UsageTrends = async (req, res) => {
+    const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
+
+    if (!enterprise_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'enterprise_id is required'
+        });
+    }
+
     try {
-        const { Optimizerid, startDate, endDate, Interval } = req.body;
+        // Fetch the Enterprise based on enterprise_id
+        const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
+        if (!Enterprise) {
+            return res.status(404).json({
+                success: false,
+                message: 'Enterprise not found'
+            });
+        }
+
+        // Prepare the query for EnterpriseStateModel based on state_id and enterprise_id
+        const enterpriseStateQuery = {
+            Enterprise_ID: Enterprise._id,
+            ...(state_id && { State_ID: state_id })
+        };
+
+        // Fetch the states
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+        if (EntStates.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'States not found'
+            });
+        }
+        const stateIds = EntStates.map(state => state.State_ID);
+
+        // Prepare the query for EnterpriseStateLocationModel based on stateIds and optional location_id
+        const locationQuery = {
+            State_ID: { $in: stateIds },
+            ...(location_id && { _id: location_id })
+        };
+
+        // Fetch the locations
+        const locations = await EnterpriseStateLocationModel.find(locationQuery);
+        if (locations.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Locations not found'
+            });
+        }
+        const locationIds = locations.map(location => location._id);
+
+        // Prepare the query for GatewayModel based on locationIds and optional gateway_id
+        const gatewayQuery = {
+            EnterpriseInfo: { $in: locationIds },
+            ...(gateway_id && { _id: gateway_id })
+        };
+
+        // Fetch the gateways
+        const Gateways = await GatewayModel.find(gatewayQuery);
+        if (Gateways.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Gateways not found'
+            });
+        }
+        const GatewayIds = Gateways.map(gateway => gateway._id);
+
+        // Prepare the query for OptimizerModel based on GatewayIds and optional Optimizerid
+        const optimizerQuery = {
+            GatewayId: { $in: GatewayIds },
+            ...(Optimizerid && { OptimizerID: Optimizerid })
+        };
+
+        // Fetch the optimizers
+        const optimizers = await OptimizerModel.find(optimizerQuery);
+        if (optimizers.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Optimizers not found'
+            });
+        }
+        const optimizerIds = optimizers.map(optimizer => optimizer.OptimizerID);
+
+
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
@@ -762,211 +873,236 @@ exports.UsageTrends = async (req, res) => {
         const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
-        console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
-        const pipeline = [
-            {
-                $match: {
-                    OptimizerID: Optimizerid,
-                    TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: endIstTimestampUTC.toString() }
-                }
-            },
-            { $sort: { TimeStamp: 1 } },
-            {
-                $set: {
-                    TimeStamp: { $toLong: '$TimeStamp' }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    entries: { $push: '$$ROOT' }
-                }
-            },
-            {
-                $project: {
-                    thermostatCutoffTimes: {
-                        $reduce: {
-                            input: '$entries',
-                            initialValue: { previous: null, result: [] },
-                            in: {
-                                previous: {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }] }
-                                            ]
-                                        },
-                                        '$$this',
-                                        {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
-                                                        { $ne: ['$$value.previous', null] }
-                                                    ]
-                                                },
-                                                null,
-                                                '$$value.previous'
-                                            ]
-                                        }
-                                    ]
-                                },
-                                result: {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
-                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
-                                                { $ne: ['$$value.previous', null] }
-                                            ]
-                                        },
-                                        {
-                                            $concatArrays: [
-                                                '$$value.result',
-                                                [{
-                                                    cutoffTimeThrm: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
-                                                    timestamp: '$$this.TimeStamp'
-                                                }]
-                                            ]
-                                        },
-                                        '$$value.result'
-                                    ]
+        // console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
+        let data = [];
+
+
+        for (let i = 0; i < optimizerIds.length; i++) {
+            const Optimizerid = optimizerIds[i];
+            const pipeline = [
+                {
+                    $match: {
+                        OptimizerID: Optimizerid,
+                        TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: endIstTimestampUTC.toString() }
+                    }
+                },
+                { $sort: { TimeStamp: 1 } },
+                {
+                    $set: {
+                        TimeStamp: { $toLong: '$TimeStamp' }
+                    }
+                },
+                {
+                    $group: {
+                        _id: Optimizerid,
+                        entries: { $push: '$$ROOT' }
+                    }
+                },
+                {
+                    $project: {
+                        thermostatCutoffTimes: {
+                            $reduce: {
+                                input: '$entries',
+                                initialValue: { previous: null, result: [] },
+                                in: {
+                                    previous: {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                    { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }] }
+                                                ]
+                                            },
+                                            '$$this',
+                                            {
+                                                $cond: [
+                                                    {
+                                                        $and: [
+                                                            { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
+                                                            { $ne: ['$$value.previous', null] }
+                                                        ]
+                                                    },
+                                                    null,
+                                                    '$$value.previous'
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    result: {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
+                                                    { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
+                                                    { $ne: ['$$value.previous', null] }
+                                                ]
+                                            },
+                                            {
+                                                $concatArrays: [
+                                                    '$$value.result',
+                                                    [{
+                                                        cutoffTimeThrm: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
+                                                        timestamp: '$$this.TimeStamp'
+                                                    }]
+                                                ]
+                                            },
+                                            '$$value.result'
+                                        ]
+                                    }
                                 }
                             }
-                        }
-                    },
-                    deviceCutoffTimes: {
-                        $reduce: {
-                            input: '$entries',
-                            initialValue: { previous: null, result: [] },
-                            in: {
-                                previous: {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] },
-                                                { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }
-                                            ]
-                                        },
-                                        '$$this',
-                                        {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $ne: ['$$value.previous', null] }
-                                                    ]
-                                                },
-                                                null,
-                                                '$$value.previous'
-                                            ]
-                                        }
-                                    ]
-                                },
-                                result: {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
-                                                { $ne: ['$$value.previous', null] }
-                                            ]
-                                        },
-                                        {
-                                            $concatArrays: [
-                                                '$$value.result',
-                                                [{
-                                                    cutoffTimeOpt: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
-                                                    timestamp: '$$this.TimeStamp'
-                                                }]
-                                            ]
-                                        },
-                                        '$$value.result'
-                                    ]
+                        },
+                        deviceCutoffTimes: {
+                            $reduce: {
+                                input: '$entries',
+                                initialValue: { previous: null, result: [] },
+                                in: {
+                                    previous: {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] },
+                                                    { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }
+                                                ]
+                                            },
+                                            '$$this',
+                                            {
+                                                $cond: [
+                                                    {
+                                                        $and: [
+                                                            { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                            { $ne: ['$$value.previous', null] }
+                                                        ]
+                                                    },
+                                                    null,
+                                                    '$$value.previous'
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    result: {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                    { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
+                                                    { $ne: ['$$value.previous', null] }
+                                                ]
+                                            },
+                                            {
+                                                $concatArrays: [
+                                                    '$$value.result',
+                                                    [{
+                                                        cutoffTimeOpt: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
+                                                        timestamp: '$$this.TimeStamp'
+                                                    }]
+                                                ]
+                                            },
+                                            '$$value.result'
+                                        ]
+                                    }
                                 }
                             }
-                        }
-                    },
-                    RemainingRunTimes: {
-                        $reduce: {
-                            input: '$entries',
-                            initialValue: { previous: null, result: [] },
-                            in: {
-                                previous: {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $eq: ['$$this.CompStatus', 'COMPON'] },
-                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] }
-                                            ]
-                                        },
-                                        '$$this',
-                                        {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $ne: ['$$value.previous', null] }
-                                                    ]
-                                                },
-                                                null,
-                                                '$$value.previous'
-                                            ]
-                                        }
-                                    ]
-                                },
-                                result: {
-                                    $cond: [
-                                        {
-                                            $and: [
-                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
-                                                { $ne: ['$$value.previous', null] }
-                                            ]
-                                        },
-                                        {
-                                            $concatArrays: [
-                                                '$$value.result',
-                                                [{
-                                                    RemainingTime: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
-                                                    timestamp: '$$this.TimeStamp'
-                                                }]
-                                            ]
-                                        },
-                                        '$$value.result'
-                                    ]
+                        },
+                        RemainingRunTimes: {
+                            $reduce: {
+                                input: '$entries',
+                                initialValue: { previous: null, result: [] },
+                                in: {
+                                    previous: {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $eq: ['$$this.CompStatus', 'COMPON'] },
+                                                    { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] }
+                                                ]
+                                            },
+                                            '$$this',
+                                            {
+                                                $cond: [
+                                                    {
+                                                        $and: [
+                                                            { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                            { $ne: ['$$value.previous', null] }
+                                                        ]
+                                                    },
+                                                    null,
+                                                    '$$value.previous'
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    result: {
+                                        $cond: [
+                                            {
+                                                $and: [
+                                                    { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
+                                                    { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
+                                                    { $ne: ['$$value.previous', null] }
+                                                ]
+                                            },
+                                            {
+                                                $concatArrays: [
+                                                    '$$value.result',
+                                                    [{
+                                                        RemainingTime: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
+                                                        timestamp: '$$this.TimeStamp'
+                                                    }]
+                                                ]
+                                            },
+                                            '$$value.result'
+                                        ]
+                                    }
                                 }
                             }
-                        }
-                    },
+                        },
+                    }
                 }
+            ];
+            const PD = await PipelineData(pipeline);
+            if (PD.length !== 0) {
+                // console.log(PD.length);
+                data.push(...PD); // Spread operator to push elements individually
             }
-        ];
 
-        const result = await NewApplianceLogModel.aggregate(pipeline);
-
-        if (result.length > 0) {
-            const { thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes } = result[0];
-
-            console.log('Thermostat Cutoff Times:', thermostatCutoffTimes);
-            console.log('Device Cutoff Times:', deviceCutoffTimes);
-            console.log('Remaining Run Times:', RemainingRunTimes);
-
-
-            res.status(200).json({
-                message: 'Successfully calculated cutoff times',
-                thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes
-            });
-        } else {
-            res.status(404).json({ message: 'No data found' });
         }
 
+        return res.status(200).json({
+            success: true,
+            data: data
+        });
     } catch (error) {
-        console.log(error, "ERROR LOG");
-        res.status(500).send('Internal Server Error');
+        // Handle errors appropriately
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while fetching data',
+            error: error.message
+        });
     }
+
 };
+
+
+
+async function PipelineData(pipeline) {
+    return await NewApplianceLogModel.aggregate(pipeline);
+
+    if (result.length > 0) {
+        const { thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes } = result[0];
+
+        console.log('Thermostat Cutoff Times:', thermostatCutoffTimes);
+        console.log('Device Cutoff Times:', deviceCutoffTimes);
+        console.log('Remaining Run Times:', RemainingRunTimes);
+
+
+        res.status(200).json({
+            message: 'Successfully calculated cutoff times',
+            thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes
+        });
+    } else {
+        res.status(404).json({ message: 'No data found' });
+    }
+}
 
 
 // Function to calculate time differences

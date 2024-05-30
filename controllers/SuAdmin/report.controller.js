@@ -894,13 +894,13 @@ exports.UsageTrends = async (req, res) => {
                 },
                 {
                     $group: {
-                        _id: Optimizerid,
+                        _id: null,
                         entries: { $push: '$$ROOT' }
                     }
                 },
                 {
                     $project: {
-                        thermostatCutoffTimes: {
+                        ThermostatCutoffTimes: {
                             $reduce: {
                                 input: '$entries',
                                 initialValue: { previous: null, result: [] },
@@ -952,7 +952,7 @@ exports.UsageTrends = async (req, res) => {
                                 }
                             }
                         },
-                        deviceCutoffTimes: {
+                        DeviceCutoffTimes: {
                             $reduce: {
                                 input: '$entries',
                                 initialValue: { previous: null, result: [] },
@@ -1057,7 +1057,18 @@ exports.UsageTrends = async (req, res) => {
                             }
                         },
                     }
+                },
+                {
+                    $project: {
+                        ThermostatCutoffTimes: '$ThermostatCutoffTimes.result',
+                        DeviceCutoffTimes: '$DeviceCutoffTimes.result',
+                        RemainingRunTimes: '$RemainingRunTimes.result',
+                        totalCutoffTimeThrm: { $sum: '$ThermostatCutoffTimes.result.cutoffTimeThrm' },
+                        totalCutoffTimeOpt: { $sum: '$DeviceCutoffTimes.result.cutoffTimeOpt' },
+                        totalRemainingTime: { $sum: '$RemainingRunTimes.result.RemainingTime' }
+                    }
                 }
+    
             ];
             const PD = await PipelineData(pipeline);
             if (PD.length !== 0) {
@@ -1088,16 +1099,19 @@ async function PipelineData(pipeline) {
     return await NewApplianceLogModel.aggregate(pipeline);
 
     if (result.length > 0) {
-        const { thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes } = result[0];
+        const { ThermostatCutoffTimes, DeviceCutoffTimes, RemainingRunTimes, totalCutoffTimeThrm, totalCutoffTimeOpt, totalRemainingTime } = result[0];
 
-        console.log('Thermostat Cutoff Times:', thermostatCutoffTimes);
-        console.log('Device Cutoff Times:', deviceCutoffTimes);
+        console.log('Thermostat Cutoff Times:', ThermostatCutoffTimes);
+        console.log('Device Cutoff Times:', DeviceCutoffTimes);
         console.log('Remaining Run Times:', RemainingRunTimes);
-
+        console.log('Total Thermostat Cutoff Time:', totalCutoffTimeThrm);
+        console.log('Total Device Cutoff Time:', totalCutoffTimeOpt);
+        console.log('Total Remaining Time:', totalRemainingTime);
 
         res.status(200).json({
             message: 'Successfully calculated cutoff times',
-            thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes
+            ThermostatCutoffTimes, DeviceCutoffTimes, RemainingRunTimes,
+            totalCutoffTimeThrm, totalCutoffTimeOpt, totalRemainingTime
         });
     } else {
         res.status(404).json({ message: 'No data found' });

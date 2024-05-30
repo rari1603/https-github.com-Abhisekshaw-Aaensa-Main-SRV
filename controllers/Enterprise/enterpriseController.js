@@ -332,102 +332,74 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 
         // Check if the gateway exists
         if (!Gateway) {
-            return res.status(401).json({ success: false, message: "Gateway ID not found" });
+            return res.status(404).json({ success: false, message: "Gateway ID not found" });
         }
 
-        // Step 2: Find all optimizers associated with the gateway
-        const AllEnterpriseStateLocationGatewayOptimizer = await OptimizerModel.find({ GatewayId: Gateway._id }).populate({
-            path: 'GatewayId',
-            populate: {
-                path: 'EnterpriseInfo',
-                populate: [
-                    {
-                        path: 'Enterprise_ID',
-                    },
-                    {
-                        path: 'State_ID',
-                    },
-                ]
-            }
-        });
+        // Step 2: Find all optimizers associated with the gateway and populate necessary fields
+        const AllEnterpriseStateLocationGatewayOptimizer = await OptimizerModel.find({ GatewayId: Gateway._id })
+            .populate({
+                path: 'GatewayId',
+                populate: {
+                    path: 'EnterpriseInfo',
+                    populate: [
+                        { path: 'Enterprise_ID' },
+                        { path: 'State_ID' },
+                    ]
+                }
+            });
 
         // If no optimizers found, return 404
         if (AllEnterpriseStateLocationGatewayOptimizer.length === 0) {
-            return res.status(404).send({ success: false, message: 'No data found for the given ID.' });
+            return res.status(404).json({ success: false, message: 'No optimizers found for the given gateway ID.' });
         }
 
         // Step 3: Determine offline optimizers
         const offlineThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
 
-        // Inside your try block
+        // Retrieve the latest logs for all optimizers
+        const optimizerIds = AllEnterpriseStateLocationGatewayOptimizer.map(optimizer => optimizer._id);
+        const latestLogs = await OptimizerLogModel.aggregate([
+            { $match: { OptimizerID: { $in: optimizerIds } } },
+            { $sort: { OptimizerID: 1, createdAt: -1 } },
+            {
+                $group: {
+                    _id: "$OptimizerID",
+                    latestLog: { $first: "$$ROOT" }
+                }
+            }
+        ]);
+
+        // Create a map of optimizerId to its latest log
+        const latestLogMap = new Map();
+        latestLogs.forEach(log => latestLogMap.set(log._id, log.latestLog));
+
+        // Update the isOnline field for each optimizer based on the latest log
         await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
-            const latestLog = await OptimizerLogModel.findOne({ OptimizerID: optimizer._id }).sort({ createdAt: -1 });
-            // Set isOnline to false if no log entry found, otherwise check the timestamp
+            const latestLog = latestLogMap.get(optimizer._id);
             const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
-
-            // Update the optimizer status directly in the database
-            await OptimizerModel.updateOne({ _id: optimizer._id }, { isOnline: isOnline });
+            await optimizer.updateOne({ isOnline: isOnline });
         }));
 
-        // Step 5: Extract common data fields
-        // Extract the common Enterprise_ID data from the first object
-        const { Enterprise_ID, ...commonEnterpriseData } = AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId.EnterpriseInfo.Enterprise_ID;
-        const commonEnterpriseDataWithDoc = { ...commonEnterpriseData._doc };
-
-        // Extract the common State_ID data from the first object
-        const { State_ID, ...commonStateData } = AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId.EnterpriseInfo.State_ID;
-        const commonStateDataWithDoc = { ...commonStateData._doc };
-
-        // Dynamic extraction of fields for commonLocationDataDoc
-        const LocationData = { ...AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId.EnterpriseInfo };
-        const commonLocationDataDoc = { ...LocationData._doc };
-        if (commonLocationDataDoc.Enterprise_ID && commonLocationDataDoc.State_ID) {
-            delete commonLocationDataDoc.Enterprise_ID;
-            delete commonLocationDataDoc.State_ID;
-        } else {
-            return commonLocationDataDoc;
-        };
-
-        // Dynamic extraction of fields for commonGatewayDataDoc
-        const commonGatewayDataDoc = { ...AllEnterpriseStateLocationGatewayOptimizer[0].GatewayId._doc };
-        if (commonGatewayDataDoc) {
-            delete commonGatewayDataDoc.EnterpriseInfo;
-        } else {
-            return commonGatewayDataDoc;
-        };
-
-        // Map through the array and add the fields to each object
-        const AllEntStateLocationGatewayOptimizer = AllEnterpriseStateLocationGatewayOptimizer.map(ent => ({
-            ...ent._doc,
-        }));
-
-        // Remove "GatewayId" field from AllEntStateLocationGatewayOptimizer
-        AllEntStateLocationGatewayOptimizer.forEach(ent => {
-            delete ent.GatewayId;
-        });
-
-        // return res.send(AllEntStateLocationGatewayOptimizer);
-
-        // Step 6: Prepare response
+        // Step 4: Prepare response
         const response = {
             success: true,
             message: "Data fetched successfully",
-            commonEnterpriseData: commonEnterpriseDataWithDoc,
-            commonStateData: commonStateDataWithDoc,
-            commonLocationData: commonLocationDataDoc,
-            commonGatewayData: commonGatewayDataDoc,
-            AllEntStateLocationGatewayOptimizer
+            commonEnterpriseData: true,
+            AllEntStateLocationGatewayOptimizer: AllEnterpriseStateLocationGatewayOptimizer.map(ent => ({
+                ...ent._doc,
+                GatewayId: undefined // Remove "GatewayId" field
+            }))
         };
-        // console.log({ OptimizerList: response });
-        // Step 7: Return the response
 
+        // Step 5: Return the response
         return res.status(200).json(response);
 
     } catch (err) {
-        console.log(err.message);
+        console.error(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 }
+
 
 // OptimizerDetails
 exports.OptimizerDetails = async (req, res) => {
@@ -441,9 +413,9 @@ exports.OptimizerDetails = async (req, res) => {
             const GatewayLogData = await GatewayLogModel.findOne({ GatewayID: Gateway._id }).sort({ createdAt: -1 });
             const Location = await EnterpriseStateLocationModel.findOne({ _id: Gateway.EnterpriseInfo });
             const OptimizerLogData = await OptimizerLogModel
-            .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
-            .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
-            .limit(1);
+                .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
+                .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
+                .limit(1);
 
             const currentTime = new Date();
             const timestamp = parseInt(OptimizerLogData?.TimeStamp, 10) * 1000; // Convert seconds to milliseconds

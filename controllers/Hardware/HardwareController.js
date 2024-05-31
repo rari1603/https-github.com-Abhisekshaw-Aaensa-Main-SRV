@@ -247,7 +247,7 @@ exports.Store = async (req, res) => {
                     DeviceStatus: true, // optimizer.isOnline,
                     TimeStamp: TimeStamp,
                     RoomTemperature: element.RoomTemperature,
-                    Humidity: element.Humidity,
+                    Humidity: (element.Humidity).toFixed(2),
                     CoilTemperature: element.CoilTemperature,
                     OptimizerMode: element.OptimizerMode,
                 }).save();

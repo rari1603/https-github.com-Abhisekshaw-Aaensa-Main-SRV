@@ -148,7 +148,6 @@ exports.AllDeviceData = async (req, res) => {
                 TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
             };
         });
-
         const OptimizerLogs = await OptimizerLogModel.find({ $or: optimizerLogQueries })
             .populate({
                 path: "OptimizerID",
@@ -519,100 +518,106 @@ exports.DownloadDeviceDataReport = async (req, res) => {
 
 
 
-        const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
-        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        const Enterprise = await EnterpriseModel.findById(enterprise_id).lean();
 
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+        const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).lean();
+
+        const stateIds = EntStates.map(state => state.State_ID);
+        const states = await StateModel.find({ _id: { $in: stateIds } }).lean();
+
+        const stateIdToState = states.reduce((acc, state) => {
+            acc[state._id] = state;
+            return acc;
+        }, {});
+
+        const locationQueries = EntStates.map(State => {
+            return location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };
+        });
+
+        const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
+
+        const locationIds = Locations.map(loc => loc._id);
+        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
+        const Gateways = await GatewayModel.find(gatewayQuery).lean();
+
+        const locationIdToGateways = Gateways.reduce((acc, gateway) => {
+            const locId = gateway.EnterpriseInfo.toString();
+            if (!acc[locId]) acc[locId] = [];
+            acc[locId].push(gateway);
+            return acc;
+        }, {});
+
+        const optimizerLogQueries = Gateways.map(gateway => {
+            return {
+                GatewayID: gateway._id,
+                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
+            };
+        });
+
+        const OptimizerLogs = await OptimizerLogModel.find({ $or: optimizerLogQueries })
+            .populate({
+                path: "OptimizerID",
+                OptimizerModel: "Optimizer",
+                options: { lean: true }
+            })
+            .sort({ TimeStamp: 1 })
+            .lean();
+
+        const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
+            if (!acc[log.GatewayID]) acc[log.GatewayID] = [];
+            acc[log.GatewayID].push(log);
+            return acc;
+        }, {});
+
+        const DEVICE_LOG = [];
+
+        const stateIdToLocations = Locations.reduce((acc, loc) => {
+            if (!acc[loc.State_ID]) acc[loc.State_ID] = [];
+            acc[loc.State_ID].push(loc);
+            return acc;
+        }, {});
 
         const responseData = [{
             EnterpriseName: Enterprise.EnterpriseName,
-            State: [],
-        }];
-
-        let totalResults; // Initialize total count
-
-
-
-        for (const State of EntStates) {
-            const Location = await EnterpriseStateLocationModel.find(location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID });
-            const state = await StateModel.findOne({ _id: State.State_ID });
-
-            if (Location.length > 0) {
+            State: stateIds.map(stateId => {
+                const state = stateIdToState[stateId];
+                const locations = stateIdToLocations[stateId] || [];
                 const stateData = {
                     stateName: state.name,
                     state_ID: state._id,
-                    location: []
-                };
+                    location: locations.map(loc => {
+                        const gateways = locationIdToGateways[loc._id.toString()] || [];
+                        const locationData = {
+                            locationName: loc.LocationName,
+                            location_ID: loc._id,
+                            gateway: gateways.map(gateway => {
+                                const logs = gatewayIdToLogs[gateway._id] || [];
+                                const modifiedOptimizerLogs = logs.map(log => ({
+                                    ...log,
+                                    EnterpriseName: Enterprise.EnterpriseName,
+                                    stateName: state.name,
+                                    state_ID: state._id,
+                                    Gateway: gateway,
+                                    locationName: loc.LocationName,
+                                    location_ID: loc._id
+                                }));
 
-                for (const loc of Location) {
-                    const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: loc._id };
-                    const Gateways = await GatewayModel.find(gatewayQuery);
-                    const locationData = {
-                        locationName: loc.LocationName,
-                        location_ID: loc._id,
-                        gateway: []
-                    };
+                                const optimizerData = {
+                                    timestamp: 0, // Set actual timestamp if required
+                                    optimizerLogs: modifiedOptimizerLogs
+                                };
 
-                    for (const gateway of Gateways) {
-                        const Optimizers = await OptimizerModel.find({ GatewayId: gateway._id });
-
-                        const gatewayData = {
-                            GatewayName: gateway.GatewayID,
-                            Gateway_ID: gateway._id,
-                            optimizer: []
+                                DEVICE_LOG.push({ optimizerLogs: modifiedOptimizerLogs });
+                                return optimizerData;
+                            })
                         };
-
-                        // Object to store optimizer logs grouped by timestamp
-                        const groupedOptimizerLogs = {};
-
-                        for (const optimizer of Optimizers) {
-                            const query = {
-                                OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            };
-
-                            const OptimizerLogs = await OptimizerLogModel.find(query)
-                                .populate({
-                                    path: "OptimizerID",
-                                    OptimizerModel: "Optimizer",
-                                    options: { lean: true }
-                                });
-
-                            // Group optimizer logs based on their timestamps
-                            for (const optimizerLog of OptimizerLogs) {
-                                const timestamp = optimizerLog.TimeStamp;
-                                if (!groupedOptimizerLogs[timestamp]) {
-                                    groupedOptimizerLogs[timestamp] = [];
-                                }
-                                groupedOptimizerLogs[timestamp].push(optimizerLog);
-                            }
-
-                            // Increment totalCount for each optimizer log
-                            totalResults = await OptimizerLogModel.countDocuments({
-                                OptimizerID: optimizer._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            });
-                        }
-
-                        // Create optimizer data for each unique timestamp and push grouped logs into it
-                        for (const timestamp in groupedOptimizerLogs) {
-                            const optimizerLogsForTimestamp = groupedOptimizerLogs[timestamp];
-                            const optimizerData = {
-                                timestamp: timestamp,
-                                optimizerLogs: optimizerLogsForTimestamp
-                            };
-                            gatewayData.optimizer.push(optimizerData);
-                        }
-
-                        locationData.gateway.push(gatewayData);
-                    }
-
-                    stateData.location.push(locationData);
-                }
-
-                responseData[0].State.push(stateData);
-            }
-        }
+                        return locationData;
+                    })
+                };
+                return stateData;
+            })
+        }];
 
         if (INTERVAL_IN_SEC != '--') {
             const NewResponseData = await UtilInter.DeviceData(INTERVAL_IN_SEC, {
@@ -685,62 +690,87 @@ exports.DownloadMeterDataReport = async (req, res) => {
         let aggregationPipeline = [];
         const enterpriseStateQuery = Stateid ? { Enterprise_ID: enterprise._id, State_ID: Stateid } : { Enterprise_ID: enterprise._id };
 
-        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery);
+        const EntStates = await EnterpriseStateModel.find(enterpriseStateQuery).lean();
 
-        const responseData = [];
+        const stateIds = EntStates.map(state => state.State_ID);
+        const states = await StateModel.find({ _id: { $in: stateIds } }).lean();
+        const stateIdToState = states.reduce((acc, state) => {
+            acc[state._id] = state;
+            return acc;
+        }, {});
 
+        const locationQueries = EntStates.map(States => {
+            return Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
+        });
+        const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
 
-        for (const States of EntStates) {
-            const locationQuery = Locationid ? { _id: Locationid } : { Enterprise_ID: States.Enterprise_ID, State_ID: States.State_ID };
-            const Location = await EnterpriseStateLocationModel.find(locationQuery);
+        const locationIds = Locations.map(loc => loc._id);
+        const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: { $in: locationIds } };
+        const Gateways = await GatewayModel.find(gatewayQuery).lean();
 
-            const state = await StateModel.findOne({ _id: States.State_ID });
+        const locationIdToGateways = Gateways.reduce((acc, gateway) => {
+            const locId = gateway.EnterpriseInfo.toString();
+            if (!acc[locId]) acc[locId] = [];
+            acc[locId].push(gateway);
+            return acc;
+        }, {});
 
-            if (Location.length > 0) {
-
-                const stateData = {
-                    EnterpriseName: enterprise.EnterpriseName,
-                    State: [
-                        {
-                            stateName: state.name,
-                            state_ID: state._id,
-                            location: []
-                        }
-                    ]
-                };
-
-                for (const loc of Location) {
-                    const gatewayQuery = Gatewayid ? { _id: Gatewayid } : { EnterpriseInfo: loc._id };
-                    const GatewayData = await GatewayModel.find(gatewayQuery);
-                    const locationData = {
-                        locationName: loc.LocationName,
-                        location_ID: loc._id,
-                        gateway: []
-                    };
-
-                    for (const gateway of GatewayData) {
-                        let GatewayLogData = await GatewayLogModel
-                            .find({
-                                GatewayID: gateway._id,
-                                TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
-                            });
-                        // console.log(GatewayLogData);
-
-                        if (GatewayLogData.length > 0) {
-                            locationData.gateway.push({
-                                GatewayName: gateway.GatewayID,
-                                Gateway_ID: gateway._id,
-                                GatewayLogs: GatewayLogData
-                            });
-                        }
-                    }
-
-                    stateData.State[0].location.push(locationData);
+        const gatewayLogQueries = Gateways.map(gateway => ({
+            GatewayID: gateway._id,
+            TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: endIstTimestampUTC.toString() }
+        }));
+        const GatewayLogs = await GatewayLogModel.aggregate([
+            {
+                $match: {
+                    $or: gatewayLogQueries
                 }
-
-                responseData.push(stateData);
+            },
+            {
+                $sort: { TimeStamp: 1 }
             }
-        }
+        ]);
+
+
+        const gatewayIdToLogs = GatewayLogs.reduce((acc, log) => {
+            if (!acc[log.GatewayID]) acc[log.GatewayID] = [];
+            acc[log.GatewayID].push(log);
+            return acc;
+        }, {});
+
+
+
+        const responseData = EntStates.map(States => {
+            const state = stateIdToState[States.State_ID];
+            const locations = Locations.filter(loc => loc.State_ID.toString() === States.State_ID.toString());
+
+            const stateData = {
+                EnterpriseName: enterprise.EnterpriseName,
+                State: [{
+                    stateName: state.name,
+                    state_ID: state._id,
+                    location: locations.map(loc => {
+                        const gateways = locationIdToGateways[loc._id.toString()] || [];
+                        const locationData = {
+                            locationName: loc.LocationName,
+                            location_ID: loc._id,
+                            gateway: gateways.map(gateway => {
+                                const logs = gatewayIdToLogs[gateway._id] || [];
+                                return {
+                                    GatewayName: gateway.GatewayID,
+                                    Gateway_ID: gateway._id,
+                                    GatewayLogs: logs
+                                };
+                            })
+                        };
+                        return locationData;
+                    })
+                }]
+            };
+            return stateData;
+        });
+
+        // At this point, responseData and totalResults are built and can be used further.
+        console.log(responseData);
 
 
         if (INTERVAL_IN_SEC != '--') {
@@ -894,13 +924,13 @@ exports.UsageTrends = async (req, res) => {
                 },
                 {
                     $group: {
-                        _id: Optimizerid,
+                        _id: null,
                         entries: { $push: '$$ROOT' }
                     }
                 },
                 {
                     $project: {
-                        thermostatCutoffTimes: {
+                        ThermostatCutoffTimes: {
                             $reduce: {
                                 input: '$entries',
                                 initialValue: { previous: null, result: [] },
@@ -952,7 +982,7 @@ exports.UsageTrends = async (req, res) => {
                                 }
                             }
                         },
-                        deviceCutoffTimes: {
+                        DeviceCutoffTimes: {
                             $reduce: {
                                 input: '$entries',
                                 initialValue: { previous: null, result: [] },
@@ -1057,7 +1087,18 @@ exports.UsageTrends = async (req, res) => {
                             }
                         },
                     }
+                },
+                {
+                    $project: {
+                        ThermostatCutoffTimes: '$ThermostatCutoffTimes.result',
+                        DeviceCutoffTimes: '$DeviceCutoffTimes.result',
+                        RemainingRunTimes: '$RemainingRunTimes.result',
+                        totalCutoffTimeThrm: { $sum: '$ThermostatCutoffTimes.result.cutoffTimeThrm' },
+                        totalCutoffTimeOpt: { $sum: '$DeviceCutoffTimes.result.cutoffTimeOpt' },
+                        totalRemainingTime: { $sum: '$RemainingRunTimes.result.RemainingTime' }
+                    }
                 }
+
             ];
             const PD = await PipelineData(pipeline);
             if (PD.length !== 0) {
@@ -1088,16 +1129,19 @@ async function PipelineData(pipeline) {
     return await NewApplianceLogModel.aggregate(pipeline);
 
     if (result.length > 0) {
-        const { thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes } = result[0];
+        const { ThermostatCutoffTimes, DeviceCutoffTimes, RemainingRunTimes, totalCutoffTimeThrm, totalCutoffTimeOpt, totalRemainingTime } = result[0];
 
-        console.log('Thermostat Cutoff Times:', thermostatCutoffTimes);
-        console.log('Device Cutoff Times:', deviceCutoffTimes);
+        console.log('Thermostat Cutoff Times:', ThermostatCutoffTimes);
+        console.log('Device Cutoff Times:', DeviceCutoffTimes);
         console.log('Remaining Run Times:', RemainingRunTimes);
-
+        console.log('Total Thermostat Cutoff Time:', totalCutoffTimeThrm);
+        console.log('Total Device Cutoff Time:', totalCutoffTimeOpt);
+        console.log('Total Remaining Time:', totalRemainingTime);
 
         res.status(200).json({
             message: 'Successfully calculated cutoff times',
-            thermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes
+            ThermostatCutoffTimes, deviceCutoffTimes, RemainingRunTimes,
+            totalCutoffTimeThrm, totalCutoffTimeOpt, totalRemainingTime
         });
     } else {
         res.status(404).json({ message: 'No data found' });

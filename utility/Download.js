@@ -1,3 +1,5 @@
+const { stringify } = require("nodemon/lib/utils");
+
 const DeviceDownloadCSV = async (data, Interval) => {
     // Define headers
     const headers = ['GatewayID', 'OptimizerID', 'Date', 'Time', 'RoomTemperature', 'Humidity', 'CoilTemperature', 'OptimizerMode'];
@@ -5,19 +7,17 @@ const DeviceDownloadCSV = async (data, Interval) => {
 
     // Initialize CSV content with headers
     let csvContent = headers.join(',') + '\n';
-    console.log(data);
     // Loop through data and extract required fields
     data.forEach(function (entry) {
         entry.State.forEach(function (state) {
             state.location.forEach(function (location) {
                 location.gateway.forEach(function (gateway) {
-                    gateway.optimizer.forEach(function (optimizer) {
-                        optimizer.optimizerLogs.forEach(function (log) {
-                            // Add data to CSV content
-                            const dateString = new Date(parseInt(optimizer.timestamp) * 1000).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split(", ");
-                            const TimeString = new Date(parseInt(optimizer.timestamp) * 1000).toLocaleString().split(", ");
-                            csvContent += `"'${gateway.GatewayName}'","'${log.OptimizerID.OptimizerID}'","${dateString}","${TimeString[1]}","${log.RoomTemperature}","${log.Humidity}","${log.CoilTemperature}","${log.OptimizerMode}"\n`;
-                        });
+                    gateway.optimizerLogs.forEach(function (log) {
+                        // Add data to CSV content
+                        const dateString = new Date(parseInt(log.TimeStamp) * 1000).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split(", ");
+                        const TimeString = new Date(parseInt(log.TimeStamp) * 1000).toLocaleString().split(", ");
+                        csvContent += `"'${log.Gateway.GatewayID}'","'${log.OptimizerID.OptimizerID}'","${dateString}","${TimeString[1]}","${log.RoomTemperature}","${log.Humidity}","${log.CoilTemperature}","${log.OptimizerMode}"\n`;
+
                     });
                 });
             });

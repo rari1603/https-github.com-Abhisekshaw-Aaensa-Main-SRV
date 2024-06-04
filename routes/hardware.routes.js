@@ -42,6 +42,4 @@ router.post('/setting/acknowledge/after/set/reset', HardwareController.BypassSet
 
 
 
-
-
 module.exports = router;

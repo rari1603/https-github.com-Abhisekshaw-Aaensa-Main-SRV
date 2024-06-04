@@ -149,7 +149,7 @@ exports.Store = async (req, res) => {
     // 864292049542374 -> field
 
     console.log({ Body: JSON.stringify(req.body) });
-    
+
     // if (gateway_id == "864292049541889") {
     //     console.log({ Inside: data });
     //     fs.appendFileSync('log_864292049541889.txt', JSON.stringify(data));
@@ -1065,6 +1065,7 @@ exports.GetOptimizerCurrentSettingValue = async (req, res) => {
 };
 
 
+
 const compressor = async (data) => {
     const newData = {
         OptimizerID: data.OptimizerID,
@@ -1072,9 +1073,10 @@ const compressor = async (data) => {
         OptimizationMode: data?.OptimizerMode,
         TimeStamp: data?.TimeStamp,
         Flag: data?.Flag,
-        humanReadable: new Date(data?.TimeStamp * 1000).toLocaleString()
+        // humanReadable: new Date(data?.TimeStamp * 1000).toLocaleString()
     }
-    fs.appendFileSync("compressorData.json", JSON.stringify(newData));
+    // console.log(newData);
+    
     // Query to find the last document of the same OptimizerId
     const lastLog = await NewApplianceLogModel.findOne({ OptimizerID: data.OptimizerID }).sort({ createdAt: -1 });
 

@@ -155,6 +155,9 @@ exports.Store = async (req, res) => {
     //     fs.appendFileSync('log_864292049541889.txt', JSON.stringify(data));
     // }
 
+    // Call the function to append the object
+    const filePath = 'log_864292049541889.json';
+    await appendToJsonFile(filePath, data);
 
 
     // Helper function to handle "nan" values
@@ -295,6 +298,43 @@ exports.Store = async (req, res) => {
         res.status(404).send({ success: false, message: error.message });
     }
 };
+
+// Function to append object to JSON file
+async function appendToJsonFile(filePath, newObject) {
+    // Read existing file content
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            // If file doesn't exist or error reading, initialize with an empty array
+            var jsonArray = [];
+        } else {
+            try {
+                // Parse the existing JSON content
+                jsonArray = JSON.parse(data);
+                if (!Array.isArray(jsonArray)) {
+                    throw new Error('JSON content is not an array');
+                }
+            } catch (parseErr) {
+                console.error('Error parsing JSON file:', parseErr);
+                return;
+            }
+        }
+
+        // Append the new object
+        jsonArray.push(newObject);
+
+        // Convert the updated array back to JSON
+        const updatedJson = JSON.stringify(jsonArray, null, 2);
+
+        // Write the updated JSON back to the file
+        fs.writeFile(filePath, updatedJson, 'utf8', (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing to JSON file:', writeErr);
+            } else {
+                console.log('Successfully appended to JSON file');
+            }
+        });
+    });
+}
 
 // Installation property
 exports.InstallationProperty = async (req, res) => {
@@ -1076,7 +1116,7 @@ const compressor = async (data) => {
         // humanReadable: new Date(data?.TimeStamp * 1000).toLocaleString()
     }
     // console.log(newData);
-    
+
     // Query to find the last document of the same OptimizerId
     const lastLog = await NewApplianceLogModel.findOne({ OptimizerID: data.OptimizerID }).sort({ createdAt: -1 });
 

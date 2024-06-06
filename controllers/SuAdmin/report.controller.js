@@ -906,30 +906,54 @@ exports.UsageTrends = async (req, res) => {
         let startIstTimestamp = istToTimestamp(startDate) / 1000;
         let endIstTimestamp = istToTimestamp(endDate) / 1000;
 
-        const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
+        let istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
 
+        let currentStart = new Date(startIstTimestamp * 1000);
+        let currentEnd;
 
-
-        let endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        // let endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        // let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         // console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
         let data = [];
 
-        for (let i = 0; i < optimizerIds.length; i++) {
-            let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
-            const Optimizerid = optimizerIds[i];
-            while (startIstTimestampUTC < endIstTimestampUTC) {
+        while (currentStart.getTime() / 1000 <= endIstTimestamp) {
+            switch (Interval) {
+                case "Day":
+                    currentEnd = new Date(currentStart);
+                    currentEnd.setUTCHours(23, 59, 59, 999);
+                    break;
+                case "Week":
+                    currentEnd = new Date(currentStart);
+                    currentEnd.setUTCDate(currentStart.getUTCDate() + 6);
+                    currentEnd.setUTCHours(23, 59, 59, 999);
+                    break;
+                case "Month":
+                    currentEnd = new Date(currentStart);
+                    currentEnd.setUTCMonth(currentStart.getUTCMonth() + 1);
+                    currentEnd.setUTCDate(0); // Set to the last day of the previous month
+                    currentEnd.setUTCHours(23, 59, 59, 999);
+                    break;
+                case "Year":
+                    currentEnd = new Date(currentStart);
+                    currentEnd.setUTCFullYear(currentStart.getUTCFullYear() + 1);
+                    currentEnd.setUTCDate(0); // Set to the last day of the previous year
+                    currentEnd.setUTCHours(23, 59, 59, 999);
+                    break;
+            }
 
-                let CurrentEndTimeStamp = startIstTimestampUTC + INTERVAL_IN_SEC;
+            let startIstTimestampInterval = Math.floor(currentStart.getTime() / 1000);
+            let endIstTimestampInterval = Math.min(Math.floor(currentEnd.getTime() / 1000), endIstTimestamp);
 
-                if (CurrentEndTimeStamp > endIstTimestampUTC) {
-                    CurrentEndTimeStamp = endIstTimestampUTC;
-                }
+            let startIstTimestampUTC = startIstTimestampInterval - istOffsetSeconds;
+            let endIstTimestampUTC = endIstTimestampInterval - istOffsetSeconds;
 
+            for (let i = 0; i < optimizerIds.length; i++) {
+                const Optimizerid = optimizerIds[i];
                 const pipeline = [
                     {
                         $match: {
                             OptimizerID: Optimizerid,
-                            TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: CurrentEndTimeStamp.toString() }
+                            TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: endIstTimestampUTC.toString() }
                         }
                     },
                     { $sort: { TimeStamp: 1 } },
@@ -1106,6 +1130,8 @@ exports.UsageTrends = async (req, res) => {
                     },
                     {
                         $project: {
+                            StartTime:  startIstTimestampUTC.toString(),
+                            EndTime:    endIstTimestampUTC.toString(),
                             ThermostatCutoffTimes: '$ThermostatCutoffTimes.result',
                             DeviceCutoffTimes: '$DeviceCutoffTimes.result',
                             RemainingRunTimes: '$RemainingRunTimes.result',
@@ -1114,17 +1140,35 @@ exports.UsageTrends = async (req, res) => {
                             totalRemainingTime: { $sum: '$RemainingRunTimes.result.RemainingTime' }
                         }
                     }
-
                 ];
                 const PD = await PipelineData(pipeline);
 
                 if (PD.length !== 0) {
-                    // console.log(PD.length);
-                    data.push(...PD); // Spread operator to push elements individually
+                    data.push(...PD);
                 }
-                startIstTimestampUTC = CurrentEndTimeStamp;
             }
 
+            switch (Interval) {
+                case "Day":
+                    currentStart.setUTCDate(currentStart.getUTCDate() + 1);
+                    currentStart.setUTCHours(0, 0, 0, 0);
+                    break;
+                case "Week":
+                    currentStart.setUTCDate(currentStart.getUTCDate() + 7);
+                    currentStart.setUTCHours(0, 0, 0, 0);
+                    break;
+                case "Month":
+                    currentStart.setUTCMonth(currentStart.getUTCMonth() + 1);
+                    currentStart.setUTCDate(1);
+                    currentStart.setUTCHours(0, 0, 0, 0);
+                    break;
+                case "Year":
+                    currentStart.setUTCFullYear(currentStart.getUTCFullYear() + 1);
+                    currentStart.setUTCDate(1);
+                    currentStart.setUTCMonth(0);
+                    currentStart.setUTCHours(0, 0, 0, 0);
+                    break;
+            }
         }
 
         return res.status(200).json({

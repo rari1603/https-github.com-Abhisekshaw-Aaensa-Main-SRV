@@ -958,7 +958,7 @@ exports.UsageTrends = async (req, res) => {
                     },
                     { $sort: { TimeStamp: 1 } },
                     {
-                        $set: {
+                        $addFields: {
                             TimeStamp: { $toLong: '$TimeStamp' }
                         }
                     },

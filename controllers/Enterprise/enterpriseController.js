@@ -354,7 +354,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         }
 
         // Step 3: Determine offline optimizers
-        const offlineThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
+        const offlineThreshold = new Date(Date.now() - 1 * 60 * 1000); // 5 minutes ago
 
         // Retrieve the latest logs for all optimizers
         const optimizerIds = AllEnterpriseStateLocationGatewayOptimizer.map(optimizer => optimizer._id);

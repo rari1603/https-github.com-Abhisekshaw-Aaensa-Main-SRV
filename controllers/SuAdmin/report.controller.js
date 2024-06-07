@@ -820,7 +820,7 @@ const TREND_INTERVAL_ARRAY = {
 
 exports.UsageTrends = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
-
+    console.log(req.body);
     const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
 
     if (!enterprise_id) {
@@ -1130,8 +1130,8 @@ exports.UsageTrends = async (req, res) => {
                     },
                     {
                         $project: {
-                            StartTime:  startIstTimestampUTC.toString(),
-                            EndTime:    endIstTimestampUTC.toString(),
+                            StartTime: startIstTimestampUTC.toString(),
+                            EndTime: endIstTimestampUTC.toString(),
                             ThermostatCutoffTimes: '$ThermostatCutoffTimes.result',
                             DeviceCutoffTimes: '$DeviceCutoffTimes.result',
                             RemainingRunTimes: '$RemainingRunTimes.result',

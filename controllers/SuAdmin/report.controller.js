@@ -224,7 +224,7 @@ exports.AllDeviceData = async (req, res) => {
 
         if (INTERVAL_IN_SEC != '--') {
             const NewResponseData = await UtilInter.DeviceData(INTERVAL_IN_SEC, DEVICE_LOG);
-            fs.writeFileSync("response.json", JSON.stringify(NewResponseData));
+            // fs.writeFileSync("response.json", JSON.stringify(NewResponseData));
 
             return res.send({
                 success: true,

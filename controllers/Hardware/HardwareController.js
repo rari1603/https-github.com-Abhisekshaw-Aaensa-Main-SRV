@@ -157,7 +157,7 @@ exports.Store = async (req, res) => {
 
     // Call the function to append the object
     const filePath = 'log_864292049541889.json';
-    await appendToJsonFile(filePath, data);
+    // await appendToJsonFile(filePath, data);
 
 
     // Helper function to handle "nan" values

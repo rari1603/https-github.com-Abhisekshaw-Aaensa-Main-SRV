@@ -182,7 +182,8 @@ exports.UpdateGateway = async (req, res) => {
 
 // Update Optimizer
 exports.UpdateOptimizer = async (req, res) => {
-    const { GatewayId, OptimizerID, OptimizerName } = req.body;
+    const { GatewayId, OptimizerID, OptimizerName, Fan_consumption, ACTonnage, AC_Energy } = req.body;
+
     const { optimizer_id } = req.params;
     try {
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
@@ -195,6 +196,9 @@ exports.UpdateOptimizer = async (req, res) => {
                     GatewayId: GATEWAY._id, // primary _id of that Gateway
                     OptimizerID,
                     OptimizerName,
+                    Fan_consumption,
+                    AC_Energy,
+                    ACTonnage,
                     Switch: false,
                     isDelete: false,
                 },
@@ -212,7 +216,7 @@ exports.UpdateOptimizer = async (req, res) => {
 
 /********** DELETE ***********/
 // Delete All
-exports.DeleteAll = async (req, res) => {
+exports.DeleteAll = async (req, res) => {cont
     const { group, id } = req.body;
 
     try {

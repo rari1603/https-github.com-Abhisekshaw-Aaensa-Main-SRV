@@ -327,9 +327,7 @@ exports.AllMeterData = async (req, res) => {
         let pageWiseTimestamp = {};
         let pageReset = false;
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
-            console.log("Line 319");
-            // pageWiseTimestamp[page - 1] = FirstRef;
-            // pageWiseTimestamp['interval'] = Interval;
+            
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
             pageWiseTimestamp.page = {};
 
@@ -337,11 +335,11 @@ exports.AllMeterData = async (req, res) => {
 
             // console.log("LastRef condi......");
             if (flag == "Prev") {
-                console.log("Line 329");
+               
 
                 startIstTimestampUTC = PrevTimeStamp
             } else {
-                console.log("Line 333");
+               
 
                 startIstTimestampUTC = LastRef;
             }
@@ -353,10 +351,7 @@ exports.AllMeterData = async (req, res) => {
             pageReset = true;
             skip = 0;
         }
-        //     AFTER_startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
-        //     pageWiseTimestamp,
-        //     query: req.query
-        // });
+      
 
 
         // Fetch Enterprise data

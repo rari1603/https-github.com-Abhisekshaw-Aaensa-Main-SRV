@@ -106,7 +106,7 @@ exports.deleteOptimizer = async (id) => {
 
 // EnterpriseUser data delete
 exports.deleteEnterpriseUser = async (id) => {
-    try {
+    try { 
         const EnterpriseUser = await EnterpriseUserModel.findByIdAndDelete({ EnterpriseID: id });
         if (!EnterpriseUser) {
             return ({ success: false, message: "EnterpriseUser not found for deletion." });

@@ -410,32 +410,17 @@ exports.OptimizerDetails = async (req, res) => {
         if (Optimizer) {
             // console.log(Optimizer);
             const Gateway = await GatewayModel.findOne({ _id: Optimizer.GatewayId });
-            const GatewayLogData = await GatewayLogModel.findOne({ GatewayID: Gateway._id }).sort({ createdAt: -1 });
             const Location = await EnterpriseStateLocationModel.findOne({ _id: Gateway.EnterpriseInfo });
             const OptimizerLogData = await OptimizerLogModel
-                .findOne({ OptimizerID: Optimizer._id, GatewayID: Gateway._id })
+                .findOne({ OptimizerID: Optimizer._id })
                 .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
                 .limit(1);
-
-            const currentTime = new Date();
-            const timestamp = parseInt(OptimizerLogData?.TimeStamp, 10) * 1000; // Convert seconds to milliseconds
-            const logTime = new Date(timestamp);
-
-            const fiveMinutesAgo = new Date(currentTime - 5 * 60 * 1000); // 5 minutes ago
-
-            const is_Online = (logTime > fiveMinutesAgo) && (OptimizerLogData.OptimizerMode !== "N/A") ? Optimizer.isOnline : false;
 
             const DATA = {
                 Optimizer: {
                     _id: Optimizer?._id,
                     OptimizerID: Optimizer?.OptimizerID,
                     OptimizerName: Optimizer?.OptimizerName,
-                    isOnline: is_Online,
-                    isBypass: Optimizer?.isBypass,
-                    isReset: Optimizer?.isReset,
-                    isSetting: Optimizer?.isSetting,
-                    createdAt: Optimizer?.createdAt,
-                    updatedAt: Optimizer?.updatedAt,
                     ACTonnage: Optimizer?.ACTonnage,
                     AC_Energy: Optimizer?.AC_Energy,
                     Fan_consumption: Optimizer?.Fan_consumption,
@@ -443,49 +428,13 @@ exports.OptimizerDetails = async (req, res) => {
                 Gateway: {
                     _id: Gateway?._id,
                     GatewayID: Gateway?.GatewayID,
-                    OnboardingDate: Gateway?.OnboardingDate,
-                    Switch: Gateway?.Switch,
-                    isDelete: Gateway?.isDelete,
-                    isConfigure: Gateway?.isConfigure,
-                    createdAt: Gateway?.createdAt,
-                    updatedAt: Gateway?.updatedAt,
                 },
                 optimizer_mode: OptimizerLogData?.OptimizerMode,
-                outside_temp: "N/A",
-                outside_humidity: "N/A",
                 room_temp: OptimizerLogData?.RoomTemperature,
                 coil_temp: OptimizerLogData?.CoilTemperature,
                 humidity: OptimizerLogData?.Humidity,
                 TimeStamp: OptimizerLogData?.TimeStamp,
                 Location,
-                unit: {
-                    temperature: "C",
-                    voltage: "V",
-                    current: "A",
-                    active_power: "kW",
-                    apartment_power: "kVA",
-                },
-                PH1: {
-                    voltage: GatewayLogData?.Phases?.Ph1.Voltage,
-                    current: GatewayLogData?.Phases?.Ph1.Current,
-                    active_power: GatewayLogData?.Phases?.Ph1.ActivePower,
-                    power_factor: GatewayLogData?.Phases?.Ph1.PowerFactor,
-                    apartment_power: GatewayLogData?.Phases?.Ph1.ApparentPower,
-                },
-                PH2: {
-                    voltage: GatewayLogData?.Phases?.Ph2?.Voltage,
-                    current: GatewayLogData?.Phases?.Ph2?.Current,
-                    active_power: GatewayLogData?.Phases?.Ph2?.ActivePower,
-                    power_factor: GatewayLogData?.Phases?.Ph2?.PowerFactor,
-                    apartment_power: GatewayLogData?.Phases?.Ph2?.ApparentPower,
-                },
-                PH3: {
-                    voltage: GatewayLogData?.Phases?.Ph3?.Voltage,
-                    current: GatewayLogData?.Phases?.Ph3?.Current,
-                    active_power: GatewayLogData?.Phases?.Ph3?.ActivePower,
-                    power_factor: GatewayLogData?.Phases?.Ph3?.PowerFactor,
-                    apartment_power: GatewayLogData?.Phases?.Ph3?.ApparentPower,
-                },
             };
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: DATA });
 
@@ -497,6 +446,11 @@ exports.OptimizerDetails = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 };
+
+const { ObjectId } = require('mongoose').Types;
+
+
+
 
 // GatewayDetails
 exports.GatewayDetails = async (req, res) => {

@@ -26,7 +26,7 @@ exports.AddEnterpriseState = async (req, res) => {
 exports.AddEnterpriseStateLocation = async (req, res) => {
     const { Enterprise_ID, State_ID, LocationName, Address, Lat, Long } = req.body;
     try {
-        const NewEntStateLocation = new EnterpriseStateLocationModel({ Enterprise_ID, State_ID, LocationName, Address ,Lat, Long  });
+        const NewEntStateLocation = new EnterpriseStateLocationModel({ Enterprise_ID, State_ID, LocationName, Address, Lat, Long });
 
         const test = await NewEntStateLocation.save();
         console.log(test);
@@ -76,7 +76,7 @@ exports.AddOptimizer = async (req, res) => {
                 AC_Energy
             });
 
-           await NewOptimizer.save();
+            await NewOptimizer.save();
             return res.status(201).json({ success: true, message: "Optimizer added successfully." });
         } else {
             return res.status(404).json({ success: false, message: "Gateway not found." });
@@ -216,7 +216,8 @@ exports.UpdateOptimizer = async (req, res) => {
 
 /********** DELETE ***********/
 // Delete All
-exports.DeleteAll = async (req, res) => {cont
+exports.DeleteAll = async (req, res) => {
+    
     const { group, id } = req.body;
 
     try {
@@ -264,7 +265,7 @@ exports.DeleteOptimizer = async (req, res) => {
     try {
         // Find and delete all Optimizers associated with the Gateway
         const deletedOptimizer = await OptimizerModel.deleteMany({ GatewayId: gateway_id });
-
+        console.log(deletedOptimizer);
         if (deletedOptimizer) {
             return res.status(200).json({ success: true, message: "Associated Optimizers deleted successfully." });
         } else {

@@ -1030,7 +1030,6 @@ exports.UsageTrends = async (req, res) => {
                 // console.log(PD.length);
                 data.push(...PD); // Spread operator to push elements individually
             }
-
         }
 
         return res.status(200).json({

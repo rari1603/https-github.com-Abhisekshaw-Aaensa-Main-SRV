@@ -1108,7 +1108,7 @@ exports.GetOptimizerCurrentSettingValue = async (req, res) => {
 
 const compressor = async (data) => {
     const newData = {
-        OptimizerID: data.OptimizerID,
+        OptimizerID: data?.OptimizerID,
         CompStatus: data?.CompStatus,
         OptimizationMode: data?.OptimizerMode,
         TimeStamp: data?.TimeStamp,

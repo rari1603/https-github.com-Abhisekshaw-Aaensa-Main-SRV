@@ -145,19 +145,11 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
-    // 864292049541566 -> office
-    // 864292049542374 -> field
-
     console.log({ Body: JSON.stringify(req.body) });
 
-    // if (gateway_id == "864292049541889") {
-    //     console.log({ Inside: data });
-    //     fs.appendFileSync('log_864292049541889.txt', JSON.stringify(data));
-    // }
-
-    // Call the function to append the object
-    const filePath = 'log_864292049541889.json';
-    // await appendToJsonFile(filePath, data);
+    if (gateway_id == "NGCSE2023011008") {
+        console.log({ Body: JSON.stringify(req.body) });
+    }
 
 
     // Helper function to handle "nan" values
@@ -240,8 +232,18 @@ exports.Store = async (req, res) => {
 
 
             if (optimizer) {
+                const data = {
+                    Opt_id: optimizer._id,
+                    OptimizerID: element.OptimizerID,
+                    DeviceStatus: true,
+                    CompStatus: element.CompStatus,
+                    OptimizerMode: element.OptimizerMode,
+                    TimeStamp: TimeStamp, // Unix timestamp
+                    Flag: "ONLINE",
+                    Ac_Status: element.Ac_Status,
+                }
 
-                compressor(element);
+                await CounterFlag(data);
 
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
@@ -269,13 +271,17 @@ exports.Store = async (req, res) => {
 
             if (optimizer) {
                 const data = {
+                    Opt_id: optimizer._id,
                     OptimizerID: optimizer.OptimizerID,
+                    DeviceStatus: false,
                     CompStatus: "--",
                     OptimizerMode: "--",
                     TimeStamp: Math.floor(new Date().getTime() / 1000), // Unix timestamp
-                    Flag: "OFFLINE"
+                    Flag: "OFFLINE",
+                    Ac_Status: "OFF",
                 }
-                compressor(data);
+
+                await CounterFlag(data);
 
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
@@ -299,42 +305,76 @@ exports.Store = async (req, res) => {
     }
 };
 
-// Function to append object to JSON file
-async function appendToJsonFile(filePath, newObject) {
-    // Read existing file content
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            // If file doesn't exist or error reading, initialize with an empty array
-            var jsonArray = [];
-        } else {
-            try {
-                // Parse the existing JSON content
-                jsonArray = JSON.parse(data);
-                if (!Array.isArray(jsonArray)) {
-                    throw new Error('JSON content is not an array');
-                }
-            } catch (parseErr) {
-                console.error('Error parsing JSON file:', parseErr);
-                return;
-            }
+
+// Counter function
+
+async function CounterFlag(params) {
+    // console.log(params, "------------------");
+
+    const {
+        Opt_id,
+        OptimizerID,
+        DeviceStatus,
+        CompStatus,
+        OptimizerMode,
+        TimeStamp,
+        Flag,
+        Ac_Status
+    } = params;
+
+
+    const COUNTERS_FILE = '../counters.json';
+
+    // Function to read the counters from the JSON file
+    function readCounters() {
+        if (!fs.existsSync(COUNTERS_FILE)) {
+            fs.writeFileSync(COUNTERS_FILE, JSON.stringify([]));
         }
+        return JSON.parse(fs.readFileSync(COUNTERS_FILE, 'utf8'));
+    }
 
-        // Append the new object
-        jsonArray.push(newObject);
+    // Function to write the counters to the JSON file
+    function writeCounters(counters) {
+        fs.writeFileSync(COUNTERS_FILE, JSON.stringify(counters, null, 2));
+    }
 
-        // Convert the updated array back to JSON
-        const updatedJson = JSON.stringify(jsonArray, null, 2);
+    if (!OptimizerID) {
+        return { error: 'Missing required fields' };
+    }
 
-        // Write the updated JSON back to the file
-        fs.writeFile(filePath, updatedJson, 'utf8', (writeErr) => {
-            if (writeErr) {
-                console.error('Error writing to JSON file:', writeErr);
-            } else {
-                console.log('Successfully appended to JSON file');
-            }
-        });
-    });
+    let counters = readCounters();
+
+    let counterIndex = counters.findIndex(c => c[OptimizerID] !== undefined);
+    if (counterIndex === -1) {
+        // Counter not found, add new counter
+        let newCounter = { [OptimizerID]: 0 };
+        counters.push(newCounter);
+        counterIndex = counters.length - 1;
+    }
+    if (DeviceStatus === false) {
+        // console.log("FALSE");
+        counters[counterIndex][OptimizerID]++;
+        if (counters[counterIndex][OptimizerID] >= 5) {
+            counters.splice(counterIndex, 1);
+            // ACFUN('OFF'); // set AC offline
+            compressor({ Opt_id, OptimizerID, DeviceStatus, CompStatus, OptimizerMode, TimeStamp, Flag, Ac_Status });
+        }
+    }
+    if (DeviceStatus === true) {
+        // console.log("TRUE");
+        counters.splice(counterIndex, 1);
+        // ACFUN('OFF'); // set AC online
+
+        compressor({ Opt_id, OptimizerID, DeviceStatus, CompStatus, OptimizerMode, TimeStamp, Flag, Ac_Status });
+    }
+
+    writeCounters(counters);
+    return { success: 'Status updated successfully' };
 }
+
+
+
+
 
 // Installation property
 exports.InstallationProperty = async (req, res) => {
@@ -1107,45 +1147,138 @@ exports.GetOptimizerCurrentSettingValue = async (req, res) => {
 
 
 const compressor = async (data) => {
-    const newData = {
-        OptimizerID: data?.OptimizerID,
-        CompStatus: data?.CompStatus,
-        OptimizationMode: data?.OptimizerMode,
-        TimeStamp: data?.TimeStamp,
-        Flag: data?.Flag,
-        // humanReadable: new Date(data?.TimeStamp * 1000).toLocaleString()
-    }
-    // console.log(newData);
+    const { Opt_id, OptimizerID, CompStatus, OptimizerMode, TimeStamp, Flag, Ac_Status } = data;
 
-    // Query to find the last document of the same OptimizerId
-    const lastLog = await NewApplianceLogModel.findOne({ OptimizerID: data.OptimizerID }).sort({ createdAt: -1 });
+    let newData = {
+        Opt_id,
+        OptimizerID,
+        CompStatus: Ac_Status === "OFF" ? "--" : CompStatus,
+        OptimizationMode: Ac_Status === "OFF" ? "--" : OptimizerMode,
+        TimeStamp,
+        Flag,
+        ACStatus: Ac_Status
+    };
 
-    let NewAllApplianceLog;
+    const lastLog = await NewApplianceLogModel.findOne({ OptimizerID }).sort({ createdAt: -1 });
+    const OptlastLog = await OptimizerLogModel.find({ OptimizerID: Opt_id }).sort({ createdAt: -1 }).limit(2);
+    const secondLastLog = OptlastLog.length > 1 ? OptlastLog[1] : null;
+
     if (lastLog) {
+        const timeDiffSeconds = newData.TimeStamp - secondLastLog?.TimeStamp || 0;
+        const offlineData = {
+            Opt_id,
+            OptimizerID,
+            CompStatus: "--",
+            OptimizationMode: "--",
+            TimeStamp: secondLastLog?.TimeStamp + 1, // Increment last log timestamp by 1 second
+            Flag: "OFFLINE",
+            ACStatus: "OFF"
+        };
 
-        if (lastLog?.Flag != "OFFLINE" && data.Flag === "OFFLINE") {
-            NewAllApplianceLog = new NewApplianceLogModel(newData);
-            await NewAllApplianceLog.save();
+        if (timeDiffSeconds > 300 && lastLog.ACStatus !== "OFF") {
+            // Add offline data entry
+            const offlineLog = new NewApplianceLogModel(offlineData);
+            await offlineLog.save();
+            // Save new data entry
+            const newAllApplianceLog = new NewApplianceLogModel(newData);
+            await newAllApplianceLog.save();
             return;
         }
-        if (data?.OptimizerMode != lastLog?.OptimizationMode && data?.CompStatus != lastLog?.CompStatus && data.flag != "OFFLINE") {
-            NewAllApplianceLog = new NewApplianceLogModel(newData);
-            await NewAllApplianceLog.save();
 
-        } else if (data?.OptimizerMode === lastLog?.OptimizationMode && data?.CompStatus != lastLog?.CompStatus) {
-            NewAllApplianceLog = new NewApplianceLogModel(newData);
-            await NewAllApplianceLog.save();
-
-        } else if (data?.OptimizerMode != lastLog?.OptimizationMode && data?.CompStatus === lastLog?.CompStatus) {
-            console.log({ success: false, message: "Unable to Save Data ", data: data });
+        // Handle different cases for saving the new data
+        if (lastLog.Flag !== "OFFLINE" && Flag === "OFFLINE" && lastLog.ACStatus !== Ac_Status) {
+            const newAllApplianceLog = new NewApplianceLogModel(newData);
+            await newAllApplianceLog.save();
+            return;
+        }
+        if ((newData.OptimizationMode !== lastLog.OptimizationMode || newData.CompStatus !== lastLog.CompStatus) && Flag !== "OFFLINE") {
+            const newAllApplianceLog = new NewApplianceLogModel(newData);
+            await newAllApplianceLog.save();
+        } else if (newData.OptimizationMode === lastLog.OptimizationMode && newData.CompStatus !== lastLog.CompStatus) {
+            const newAllApplianceLog = new NewApplianceLogModel(newData);
+            await newAllApplianceLog.save();
+        } else if (newData.OptimizationMode !== lastLog.OptimizationMode && newData.CompStatus === lastLog.CompStatus) {
+            console.log({ success: false, message: "Unable to Save Data", data });
         }
     } else {
-        NewAllApplianceLog = new NewApplianceLogModel(newData);
-        await NewAllApplianceLog.save();
-
+        // Save new data entry if there's no previous log
+        const newAllApplianceLog = new NewApplianceLogModel(newData);
+        await newAllApplianceLog.save();
     }
 
-    console.log({ success: true, message: "Data Saved Successfully", data: NewAllApplianceLog });
-}
+    console.log({ success: true, message: "Data Saved Successfully", data: newData });
+};
+// const compressor = async (data) => {
+//     let newData = {
+//         Opt_id: data?.Opt_id,
+//         OptimizerID: data?.OptimizerID,
+//         CompStatus: data?.CompStatus,
+//         OptimizationMode: data?.OptimizerMode,
+//         TimeStamp: data?.TimeStamp,
+//         Flag: data?.Flag,
+//         ACStatus: data?.Ac_Status,
+//     }
+//     if (newData.ACStatus === "OFF") {
+//         newData = {
+//             Opt_id: data?.Opt_id,
+//             OptimizerID: data?.OptimizerID,
+//             CompStatus: "--",
+//             OptimizationMode: "--",
+//             TimeStamp: data?.TimeStamp,
+//             Flag: data?.Flag,
+//             ACStatus: data?.Ac_Status,
+//         }
+//     }
+//     // Query to find the last document of the same OptimizerId
+//     const lastLog = await NewApplianceLogModel.findOne({ OptimizerID: data.OptimizerID }).sort({ createdAt: -1 });
+//     const OptlastLog = await OptimizerLogModel.find({ OptimizerID: newData.Opt_id })
+//         .sort({ createdAt: -1 })
+//         .limit(2); // Get the last two logs
+
+//     const secondLastLog = OptlastLog.length > 1 ? OptlastLog[1] : null; // Get the second last log if it exists
 
 
+//     let NewAllApplianceLog;
+//     if (lastLog) {
+//         const timeDiffMinutes = (newData.TimeStamp - secondLastLog.TimeStamp);
+//         const offlineData = {
+//             Opt_id: data?.Opt_id,
+//             OptimizerID: data?.OptimizerID,
+//             CompStatus: "--",
+//             OptimizationMode: "--",
+//             TimeStamp: secondLastLog.TimeStamp + 1, // Increment last log timestamp by 1 second
+//             Flag: "OFFLINE",
+//             ACStatus: "OFF",
+//         };
+//         if (timeDiffMinutes > 300 && lastLog.ACStatus != offlineData.ACStatus && lastLog) {
+//             console.log("line 1196");
+//             let offlineLog = new NewApplianceLogModel(offlineData);
+//             await offlineLog.save();
+//             NewAllApplianceLog = new NewApplianceLogModel(newData);
+//             await NewAllApplianceLog.save();
+//             return;
+//         }
+//         if (lastLog?.Flag != "OFFLINE" && data.Flag === "OFFLINE" && lastLog?.ACStatus != data.Ac_Status) {
+//             NewAllApplianceLog = new NewApplianceLogModel(newData);
+//             await NewAllApplianceLog.save();
+//             return;
+//         }
+//         if (newData?.OptimizationMode != lastLog?.OptimizationMode && newData?.CompStatus != lastLog?.CompStatus && data.flag != "OFFLINE") {
+//             NewAllApplianceLog = new NewApplianceLogModel(newData);
+//             await NewAllApplianceLog.save();
+
+//         } else if (newData?.OptimizationMode === lastLog?.OptimizationMode && newData?.CompStatus != lastLog?.CompStatus) {
+//             NewAllApplianceLog = new NewApplianceLogModel(newData);
+//             await NewAllApplianceLog.save();
+
+//         } else if (newData?.OptimizationMode != lastLog?.OptimizationMode && newData?.CompStatus === lastLog?.CompStatus) {
+//             console.log({ success: false, message: "Unable to Save Data ", data: data });
+
+//         }
+//     } else {
+//         NewAllApplianceLog = new NewApplianceLogModel(newData);
+//         await NewAllApplianceLog.save();
+
+//     }
+//     console.log({ success: true, message: "Data Saved Successfully", data: NewAllApplianceLog });
+// }

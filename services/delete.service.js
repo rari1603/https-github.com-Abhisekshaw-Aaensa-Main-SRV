@@ -6,6 +6,7 @@ const GatewayModel = require('../models/gateway.model');
 const OptimizerModel = require('../models/optimizer.model');
 const GatewayLogModel = require('../models/GatewayLog.model');
 const OptimizerLogModel = require('../models/OptimizerLog.model');
+const NewApplianceLogModel = require('../models/NewApplianceLog.model');
 
 // Enterprise and associated data delete
 exports.deleteEnterprise = async (id) => {
@@ -91,6 +92,8 @@ exports.deleteGateway = async (id) => {
 // Optimizer data delete
 exports.deleteOptimizer = async (id) => {
     try {
+        const optimizerData = await OptimizerModel.findOne({ _id: id });
+        await NewApplianceLogModel.deleteMany({ OptimizerID: optimizerData.OptimizerID });
         const optimizer = await OptimizerModel.findByIdAndDelete({ _id: id });
         if (!optimizer) {
             return ({ success: false, message: "Optimizer not found for deletion." });
@@ -106,7 +109,7 @@ exports.deleteOptimizer = async (id) => {
 
 // EnterpriseUser data delete
 exports.deleteEnterpriseUser = async (id) => {
-    try { 
+    try {
         const EnterpriseUser = await EnterpriseUserModel.findByIdAndDelete({ EnterpriseID: id });
         if (!EnterpriseUser) {
             return ({ success: false, message: "EnterpriseUser not found for deletion." });
@@ -138,6 +141,7 @@ exports.deleteGatewayLog = async (id) => {
 exports.deleteOptimizerLog = async (id) => {
     try {
         const OptimizerLog = await OptimizerLogModel.deleteMany({ OptimizerID: id });
+
         if (!OptimizerLog) {
             return ({ success: false, message: "OptimizerLog not found for deletion." });
         }

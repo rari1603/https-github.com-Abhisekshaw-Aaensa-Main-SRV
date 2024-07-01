@@ -8,14 +8,19 @@ const { decode } = require('../../utility/JwtDecoder');
 const OptimizerModel = require('../../models/optimizer.model');
 const GatewayLogModel = require('../../models/GatewayLog.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
+const axios = require('axios');
+const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
 
 
 
 // EnterpriseList
 exports.EnterpriseListData = async (req, res) => {
+
+
+
     try {
         const AllEnt = await EnterpriseAdminModel.find({});
-
+      
         if (req.params.flag === 'name') {
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
         }
@@ -416,6 +421,11 @@ exports.OptimizerDetails = async (req, res) => {
                 .sort({ createdAt: -1 })  // Sort in descending order based on createdAt
                 .limit(1);
 
+
+        
+            const key = await LocationKey(Location.Lat, Location.Long);
+            const weather = await Accuweather(key);
+
             const DATA = {
                 Optimizer: {
                     _id: Optimizer?._id,
@@ -435,6 +445,8 @@ exports.OptimizerDetails = async (req, res) => {
                 humidity: OptimizerLogData?.Humidity,
                 TimeStamp: OptimizerLogData?.TimeStamp,
                 Location,
+                AmbientTemperature: weather.data[0].ApparentTemperature.Metric.Value,
+                AmbientHumidity: weather.data[0].RelativeHumidity,
             };
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: DATA });
 
@@ -449,7 +461,43 @@ exports.OptimizerDetails = async (req, res) => {
 
 const { ObjectId } = require('mongoose').Types;
 
+const LocationKey = async (lat, long) => {
+    let config = {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `http://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=iV4ZAgc5DoSoc3EiDciIas8ePgSn7lH5&q=${lat},${long}`,
+        headers: {}
+    };
 
+    try {
+        const response = await axios.request(config);
+        return response.data.Key;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+
+}
+const Accuweather = async (key) => {
+    const axios = require('axios');
+
+    let config = {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `http://dataservice.accuweather.com/currentconditions/v1/${key}?apikey=iV4ZAgc5DoSoc3EiDciIas8ePgSn7lH5&details=true`,
+        headers: {}
+    };
+
+    try {
+        const response = await axios.request(config);
+        console.log(response.data[0]);
+        return response;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+
+}
 
 
 // GatewayDetails

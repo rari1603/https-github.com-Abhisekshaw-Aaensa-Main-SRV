@@ -10,6 +10,7 @@ const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseUserModel = require('../../models/enterprise_user.model');
 const StateModel = require('../../models/state.model');
 const StateLocationModel = require('../../models/enterprise_state_location.model');
+const ApplianceModel = require('../../models/NewApplianceLog.model');
 
 exports.Optimizer = async (req, res) => {
     const fakeOptimizerData = {
@@ -131,11 +132,12 @@ const generateRandomData = async (GatewayID, OptimizerID) => ({
 exports.addManyDataDB = async (req, res) => {
     // await GatewayModel.updateMany({}, { $set: { BypassMode: "" } });
     // await StateLocationModel.updateMany({}, { $set: { BypassMode: "" } });
-    await OptimizerLogModel.updateMany({}, {
-        $set: {
-            DeviceStatus: true
-        }
-    });
+    await ApplianceModel.updateMany({}, { $set: { ACStatus: "UNKNOWN" } });
+    // await OptimizerLogModel.updateMany({}, {
+    //     $set: {
+    //         DeviceStatus: true
+    //     }
+    // });
     // await DataLogModel.updateMany({}, { $set: { isDelete: false } });
     // await UserModel.updateMany({}, { $set: { isDelete: false } });
     // await EnterpriseModel.updateMany({}, { $set: { isDelete: false } });

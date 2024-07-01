@@ -327,7 +327,7 @@ exports.AllMeterData = async (req, res) => {
         let pageWiseTimestamp = {};
         let pageReset = false;
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
-            
+
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
             pageWiseTimestamp.page = {};
 
@@ -335,11 +335,11 @@ exports.AllMeterData = async (req, res) => {
 
             // console.log("LastRef condi......");
             if (flag == "Prev") {
-               
+
 
                 startIstTimestampUTC = PrevTimeStamp
             } else {
-               
+
 
                 startIstTimestampUTC = LastRef;
             }
@@ -351,7 +351,7 @@ exports.AllMeterData = async (req, res) => {
             pageReset = true;
             skip = 0;
         }
-      
+
 
 
         // Fetch Enterprise data
@@ -510,8 +510,6 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         // Adjust timestamps for IST
         const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
-
-
 
         const Enterprise = await EnterpriseModel.findById(enterprise_id).lean();
 
@@ -815,7 +813,6 @@ const TREND_INTERVAL_ARRAY = {
 
 exports.UsageTrends = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
-    console.log(req.body);
     const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
 
     if (!enterprise_id) {
@@ -910,6 +907,7 @@ exports.UsageTrends = async (req, res) => {
         // let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         // console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
         let data = [];
+        var count = 0;
 
         while (currentStart.getTime() / 1000 <= endIstTimestamp) {
             switch (Interval) {
@@ -1120,27 +1118,143 @@ exports.UsageTrends = async (req, res) => {
                                         }
                                     }
                                 }
-                            },
+                            }
                         }
                     },
                     {
                         $project: {
                             StartTime: startIstTimestampUTC.toString(),
                             EndTime: endIstTimestampUTC.toString(),
-                            ThermostatCutoffTimes: '$ThermostatCutoffTimes.result',
-                            DeviceCutoffTimes: '$DeviceCutoffTimes.result',
-                            RemainingRunTimes: '$RemainingRunTimes.result',
                             totalCutoffTimeThrm: { $sum: '$ThermostatCutoffTimes.result.cutoffTimeThrm' },
                             totalCutoffTimeOpt: { $sum: '$DeviceCutoffTimes.result.cutoffTimeOpt' },
                             totalRemainingTime: { $sum: '$RemainingRunTimes.result.RemainingTime' }
                         }
                     }
                 ];
+
+
+
                 const PD = await PipelineData(pipeline);
 
                 if (PD.length !== 0) {
-                    data.push(...PD);
+                    const Optimizer = await OptimizerModel.findOne({ OptimizerID: Optimizerid });
+
+                    if (Optimizer) {
+                        PD.forEach(entry => {
+                            entry.OptimizerName = Optimizer.OptimizerName;
+                            entry.ACTonnage = Optimizer.ACTonnage;
+                        });
+                        if (Interval === "Day") {
+                            console.log({ startIstTimestampUTC });
+                            // Ensure startIstTimestampUTC is set to 00:00:00 on the specified date
+                            const startOfDay = new Date(startIstTimestampUTC * 1000); // Convert to milliseconds
+                            console.log({ startOfDay }, "&&^^^^^^^^");
+                            startOfDay.setUTCHours(0, 0, 0, 0);
+                            console.log('setUTCHours', startOfDay);
+                            const startTimestampUTC = Math.floor(startOfDay.getTime() / 1000); // Convert back to seconds
+                            const StartTime = startTimestampUTC - istOffsetSeconds;
+                            console.log(StartTime, "--------StartTime--------");
+
+                            const newPipeline = [
+                                {
+                                    $match: {
+                                        OptimizerID: Optimizerid,
+                                        TimeStamp: { $gte: StartTime.toString(), $lte: endIstTimestampUTC.toString() }
+                                    }
+                                },
+                                { $sort: { TimeStamp: 1 } },
+                                {
+                                    $addFields: {
+                                        TimeStamp: { $toLong: '$TimeStamp' }
+                                    }
+                                },
+                                {
+                                    $group: {
+                                        _id: Optimizerid,
+                                        entries: { $push: '$$ROOT' }
+                                    }
+                                },
+                                {
+                                    $project: {
+                                        ACCutoffTimes: {
+                                            $reduce: {
+                                                input: '$entries',
+                                                initialValue: { previous: null, result: [], expectingNextOn: true },
+                                                in: {
+                                                    previous: {
+                                                        $cond: [
+                                                            {
+                                                                $and: [
+                                                                    { $eq: ['$$this.ACStatus', 'ON'] },
+                                                                    '$$value.expectingNextOn',
+                                                                    { $eq: ['$$value.previous', null] }
+                                                                ]
+                                                            },
+                                                            '$$this',
+                                                            {
+                                                                $cond: [
+                                                                    { $eq: ['$$this.ACStatus', 'OFF'] },
+                                                                    null,
+                                                                    '$$value.previous'
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    expectingNextOn: {
+                                                        $cond: [
+                                                            { $eq: ['$$this.ACStatus', 'OFF'] },
+                                                            true,
+                                                            { $cond: [{ $eq: ['$$this.ACStatus', 'ON'] }, false, '$$value.expectingNextOn'] }
+                                                        ]
+                                                    },
+                                                    result: {
+                                                        $cond: [
+                                                            {
+                                                                $and: [
+                                                                    { $eq: ['$$this.ACStatus', 'OFF'] },
+                                                                    { $ne: ['$$value.previous', null] },
+                                                                    { $eq: ['$$value.previous.ACStatus', 'ON'] }
+                                                                ]
+                                                            },
+                                                            {
+                                                                $concatArrays: [
+                                                                    '$$value.result',
+                                                                    [{
+                                                                        ACOnTime: '$$value.previous.TimeStamp',
+                                                                        ACOffTime: '$$this.TimeStamp'
+                                                                    }]
+                                                                ]
+                                                            },
+                                                            '$$value.result'
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    $project: {
+                                        ACCutoffTimes: '$ACCutoffTimes.result'
+                                    }
+                                }
+                            ];
+
+                            const newPD = await PipelineData(newPipeline);
+                            PD.forEach(entry => {
+                                const newEntry = newPD.find(item => item._id === entry._id);
+                                if (newEntry) {
+                                    entry.ACCutoffTimes = newEntry.ACCutoffTimes;
+                                }
+                            });
+
+                            data.push(...PD);
+                        } else {
+                            data.push(...PD);
+                        }
+                    }
                 }
+
             }
 
             switch (Interval) {

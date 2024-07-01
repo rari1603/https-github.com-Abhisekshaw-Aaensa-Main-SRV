@@ -9,15 +9,19 @@ const NewApplianceLogSchema = new mongoose.Schema({
     },
     CompStatus: {
         type: String,
-        enum:["COMPON","COMPOFF+OPT","COMPOFF+THRMO","COMPOFF","--"] 
+        enum: ["COMPON", "COMPOFF+OPT", "COMPOFF+THRMO", "COMPOFF", "--"]
     },
     OptimizationMode: {
         type: String,
-        enum:["OPTIMIZATION","NON-OPTIMIZATION","--"] 
+        enum: ["OPTIMIZATION", "NON-OPTIMIZATION", "--"]
     },
     Flag: {
         type: String,
-        default: "ONLINE" 
+        default: "ONLINE"
+    },
+    ACStatus: {
+        type: String,
+        enum: ["OFF", "ON", "UNKNOWN"]
     },
     TimeStamp: {
         type: String

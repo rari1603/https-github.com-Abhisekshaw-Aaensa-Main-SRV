@@ -2,7 +2,7 @@ const { stringify } = require("nodemon/lib/utils");
 
 const DeviceDownloadCSV = async (data, Interval) => {
     // Define headers
-    const headers = ['GatewayID', 'OptimizerID', 'Date', 'Time', 'RoomTemperature', 'Humidity', 'CoilTemperature', 'OptimizerMode'];
+    const headers = ['GatewayID', 'OptimizerID','ACTonnage',"OptimizerName", 'Date', 'Time', 'RoomTemperature', 'Humidity', 'GrillTemperature', 'OptimizerMode'];
 
 
     // Initialize CSV content with headers
@@ -16,7 +16,7 @@ const DeviceDownloadCSV = async (data, Interval) => {
                         // Add data to CSV content
                         const dateString = new Date(parseInt(log.TimeStamp) * 1000).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split(", ");
                         const TimeString = new Date(parseInt(log.TimeStamp) * 1000).toLocaleString().split(", ");
-                        csvContent += `"'${log.Gateway.GatewayID}'","'${log.OptimizerID.OptimizerID}'","${dateString}","${TimeString[1]}","${log.RoomTemperature}","${log.Humidity}","${log.CoilTemperature}","${log.OptimizerMode}"\n`;
+                        csvContent += `"'${log.Gateway.GatewayID}'","'${log.OptimizerID.OptimizerID}'","${log.OptimizerID.ACTonnage}","${log.OptimizerID.OptimizerName}","${dateString}","${TimeString[1]}","${log.RoomTemperature}","${log.Humidity}","${log.CoilTemperature}","${log.OptimizerMode}"\n`;
 
                     });
                 });

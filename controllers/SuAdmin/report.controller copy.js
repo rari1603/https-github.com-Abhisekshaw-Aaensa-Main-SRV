@@ -79,7 +79,7 @@ exports.AllDeviceData = async (req, res) => {
         let pageWiseTimestamp = {};
         let pageReset = false;
 
-       
+
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
             console.log(validatedPage, "86");
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
@@ -845,6 +845,7 @@ exports.UsageTrends = async (req, res) => {
 
         for (let i = 0; i < optimizerIds.length; i++) {
             const Optimizerid = optimizerIds[i];
+
             const pipeline = [
                 {
                     $match: {
@@ -1027,7 +1028,16 @@ exports.UsageTrends = async (req, res) => {
             ];
             const PD = await PipelineData(pipeline);
             if (PD.length !== 0) {
-                // console.log(PD.length);
+                const Optimizer = await OptimizerModel.findOne({ OptimizerID: Optimizerid });
+
+                if (Optimizer) {
+                    PD.forEach(entry=>{
+                        console.log({entry},"8888888888888888888");
+                        entry.OptimizerName= Optimizer.OptimizerName;
+                        entry.ACTonnage= Optimizer.ACTonnage;
+                    });
+                }
+
                 data.push(...PD); // Spread operator to push elements individually
             }
         }

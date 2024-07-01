@@ -130,6 +130,8 @@ exports.UpdateEnterpriseStateLocation = async (req, res) => {
                     State_ID,
                     LocationName,
                     Address,
+                    Lat, 
+                    Long,
                 },
                 { new: true }); // This option returns the modified document rather than the original);
             return res.status(201).json({ success: true, message: "Enterprise Location updated successfully." });

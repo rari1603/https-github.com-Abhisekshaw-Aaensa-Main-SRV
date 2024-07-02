@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Edit Document - <%= collectionName %>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin-top: 50px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Edit Document - <%= collectionName %>
+        </h1>
+        <form action="/viewer/collection/<%= collectionName %>/update/<%= document._id %>" method="POST">
+            <div class="form-group">
+                <label for="field1">Field 1</label>
+                <input type="text" class="form-control" id="field1" name="newData.field1"
+                    value="<%= document.field1 %>">
+            </div>
+            <div class="form-group">
+                <label for="field2">Field 2</label>
+                <input type="text" class="form-control" id="field2" name="newData.field2"
+                    value="<%= document.field2 %>">
+            </div>
+            <!-- Add more fields as needed based on your document schema -->
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="/viewer/collection/<%= collectionName %>" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>

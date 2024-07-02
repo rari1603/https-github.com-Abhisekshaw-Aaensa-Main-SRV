@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Collection: <%= collectionName %>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 8px 16px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .pagination a.active {
+            background-color: #4CAF50;
+            color: white;
+            border: 1px solid #4CAF50;
+        }
+
+        .pagination a:hover {
+            background-color: #4CAF50;
+            color: white;
+            border: 1px solid #4CAF50;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Collection: <%= collectionName %>
+                </h1>
+                <a href="/viewer/collections" class="btn btn-primary mb-3">Back to Collections</a>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" style="font-size: small;">
+                        <thead class="table-success">
+                            <tr>
+                                <% fields.forEach(field=> { %>
+                                    <th>
+                                        <%= field %>
+                                    </th>
+                                    <% }) %>
+                                        <th colspan="2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% documents.forEach(doc=> { %>
+                                <tr>
+                                    <% fields.forEach(field=> { %>
+                                        <td>
+                                            <% if (typeof doc[field]==='object' && doc[field] !==null) { %>
+                                                <pre><%= JSON.stringify(doc[field], null, 2) %></pre>
+                                                <% } else { %>
+                                                    <%= doc[field] %>
+                                                        <% } %>
+                                        </td>
+                                        <% }) %>
+                                            <!-- Delete Button -->
+                                            <td>
+                                                <form
+                                                    action="/viewer/collection/<%= collectionName %>/delete/<%= doc._id %>"
+                                                    method="POST">
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                </form>
+                                            </td>
+                                            <!-- Edit Button -->
+                                            <td>
+                                                <a href="/viewer/collection/<%= collectionName %>/edit/<%= doc._id %>"
+                                                    class="btn btn-warning btn-sm">Edit</a>
+                                            </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <nav>
+                    <ul class="pagination">
+                        <% if (page> 1) { %>
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="/viewer/collection/<%= collectionName %>?page=<%= page - 1 %>">Previous</a>
+                            </li>
+                            <% } %>
+
+                                <% if (page> 3) { %>
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="/viewer/collection/<%= collectionName %>?page=1">1</a>
+                                    </li>
+                                    <% if (page> 4) { %>
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                        <% } %>
+                                            <% } %>
+
+                                                <% for (let i=Math.max(2, page - 2); i <=Math.min(totalPages - 1, page +
+                                                    2); i++) { %>
+                                                    <li class="page-item <%= page === i ? 'active' : '' %>">
+                                                        <a class="page-link"
+                                                            href="/viewer/collection/<%= collectionName %>?page=<%= i %>">
+                                                            <%= i %>
+                                                        </a>
+                                                    </li>
+                                                    <% } %>
+
+                                                        <% if (page < totalPages - 2) { %>
+                                                            <% if (page < totalPages - 3) { %>
+                                                                <li class="page-item disabled"><span
+                                                                        class="page-link">...</span></li>
+                                                                <% } %>
+                                                                    <li class="page-item">
+                                                                        <a class="page-link"
+                                                                            href="/viewer/collection/<%= collectionName %>?page=<%= totalPages %>">
+                                                                            <%= totalPages %>
+                                                                        </a>
+                                                                    </li>
+                                                                    <% } %>
+
+                                                                        <% if (page < totalPages) { %>
+                                                                            <li class="page-item">
+                                                                                <a class="page-link"
+                                                                                    href="/viewer/collection/<%= collectionName %>?page=<%= page + 1 %>">Next</a>
+                                                                            </li>
+                                                                            <% } %>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>

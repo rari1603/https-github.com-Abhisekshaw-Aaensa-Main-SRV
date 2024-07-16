@@ -1,8 +1,9 @@
 const { stringify } = require("nodemon/lib/utils");
+const fs = require('fs');
 
 const DeviceDownloadCSV = async (data, Interval) => {
     // Define headers
-    const headers = ['GatewayID', 'OptimizerID','ACTonnage',"OptimizerName", 'Date', 'Time', 'RoomTemperature', 'Humidity', 'GrillTemperature', 'OptimizerMode'];
+    const headers = ['GatewayID', 'OptimizerID', 'ACTonnage', "OptimizerName", 'Date', 'Time', 'RoomTemperature', 'Humidity', 'GrillTemperature', 'OptimizerMode'];
 
 
     // Initialize CSV content with headers
@@ -63,7 +64,61 @@ const MeterDownloadCSV = async (data, Interval) => {
     return csvContent;
 }
 
+const UsageTrendDownload = async (data, Interval) => {
+    // Function to format time into hrs:min:sec format
+    const formatTime = (totalSeconds) => {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours} hrs: ${minutes} min: ${seconds} sec`;
+    };
+    
+    const csvData = data.map((item) => {
+        const day = new Date(parseInt(item.StartTime) * 1000).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        const totalCutoffTimeThrm = formatTime(item.totalCutoffTimeThrm);
+        const totalCutoffTimeOpt = formatTime(item.totalCutoffTimeOpt);
+        const totalRemainingTime = formatTime(item.totalRemainingTime);
+        const totalruntime = formatTime(item.totalRemainingTime + item.totalCutoffTimeOpt + item.totalCutoffTimeThrm);
+        
+        let acOnTimes = '';
+        let acOffTimes = '';
+        
+        if (Interval === "Day") {
+            acOnTimes = `"${item.ACCutoffTimes.filter(time => time.ACOnTime).map(time => new Date(time.ACOnTime * 1000).toLocaleTimeString()).join(', ')}"`;
+            acOffTimes = `"${item.ACCutoffTimes.filter(time => time.ACOffTime).map(time => new Date(time.ACOffTime * 1000).toLocaleTimeString()).join(', ')}"`;
+        }
+        
+        return {
+            'DAY': day,
+            'OPTIMIZER ID': item._id,
+            'THERMOSTAT CUTOFF (HRS)': totalCutoffTimeThrm,
+            'DEVICE CUTOFF (HRS)': totalCutoffTimeOpt,
+            'REMAINING RUNTIME(HRS)': totalRemainingTime,
+            'TOTAL RUNTIME(HRS)': totalruntime,
+            ...(Interval === "Day" && {'AC ON Time': acOnTimes, 'AC OFF TIME': acOffTimes}),
+        };
+    });
+    
+    const headers = ['DAY', 'OPTIMIZER ID', 'THERMOSTAT CUTOFF (HRS)', 'DEVICE CUTOFF (HRS)', 'REMAINING RUNTIME(HRS)', 'TOTAL RUNTIME(HRS)'];
+    
+    if (Interval === "Day") {
+        headers.push('AC ON Time', 'AC OFF TIME');
+    }
+    
+    const csvRows = [headers.join(',')];
+    csvData.forEach(row => {
+        const value = headers.map(header => row[header]);
+        csvRows.push(value.join(','));
+        
+    });
+    
+    const csvContent = csvRows.join('\n');
+    return csvContent;
+};
+
+
 module.exports = {
     DeviceDownloadCSV,
-    MeterDownloadCSV
+    MeterDownloadCSV,
+    UsageTrendDownload
 };

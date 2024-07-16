@@ -815,18 +815,18 @@ exports.DownloadMeterDataReport = async (req, res) => {
     }
 };
 
-exports.DownloadUsageTrendsReport = async (req, res) => {
+exports.DownloadUsageTrendsReport = async (req, res) =>{
     const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
     const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
-
+    
     if (!enterprise_id) {
         return res.status(400).json({
             success: false,
             message: 'enterprise_id is required'
-        });
-    }
-
-    console.log("this is working");
+            });
+            }
+            
+            console.log("this is working");
     try {
         // Fetch the Enterprise based on enterprise_id
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
@@ -911,7 +911,8 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         // let endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
         // let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         // console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
-        let data = [];
+        let data = [];  
+        var count = 0;
 
         while (currentStart.getTime() / 1000 <= endIstTimestamp) {
             switch (Interval) {
@@ -1335,8 +1336,8 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
                             let startIstTimestampsUTC;
                             if (!Twelve) {
                                 startIstTimestampsUTC = setToMidnight(startIstTimestampUTC);
-                            } else {
-                                startIstTimestampsUTC = startIstTimestampUTC;
+                            }else{
+                                startIstTimestampsUTC=startIstTimestampUTC;
                             }
                             const newPipeline = [
                                 {
@@ -1515,7 +1516,7 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
                     break;
             }
         }
-        const Download = await UtilDown.UsageTrendDownload(data, Interval);
+        const Download = await UtilDown.UsageTrendDownload(data);
 
         return res.send(Download);
     } catch (error) {
@@ -1633,7 +1634,7 @@ exports.UsageTrends = async (req, res) => {
         // let endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
         // let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         // console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
-        let data = [];
+        let data = [];  
         var count = 0;
 
         while (currentStart.getTime() / 1000 <= endIstTimestamp) {
@@ -2058,8 +2059,8 @@ exports.UsageTrends = async (req, res) => {
                             let startIstTimestampsUTC;
                             if (!Twelve) {
                                 startIstTimestampsUTC = setToMidnight(startIstTimestampUTC);
-                            } else {
-                                startIstTimestampsUTC = startIstTimestampUTC;
+                            }else{
+                                startIstTimestampsUTC=startIstTimestampUTC;
                             }
                             const newPipeline = [
                                 {
@@ -2138,7 +2139,7 @@ exports.UsageTrends = async (req, res) => {
                                                                 $concatArrays: [
                                                                     '$$value.result',
                                                                     [{
-
+                                                                         ACOnTime: '$$value.previous.TimeStamp',
                                                                         ACOffTime: '$$this.TimeStamp'
                                                                     }]
                                                                 ]
@@ -2148,39 +2149,19 @@ exports.UsageTrends = async (req, res) => {
                                                                     {
                                                                         $and: [
                                                                             { $eq: ['$$this.ACStatus', 'ON'] },
-                                                                            { $ne: ['$$value.previous', null] },
-                                                                            { $eq: ['$$value.previous.ACStatus', 'OFF'] }
+                                                                            { $eq: ['$$value.previous', null] },
+
                                                                         ]
                                                                     },
                                                                     {
                                                                         $concatArrays: [
                                                                             '$$value.result',
                                                                             [{
-                                                                                // ACOnTime: '$$value.previous.TimeStamp',
-                                                                                ACOnTime: '$$this.TimeStamp',
+                                                                                ACOnTime: '$$this.TimeStamp'
                                                                             }]
                                                                         ]
                                                                     },
-                                                                    {
-                                                                        $cond: [
-                                                                            {
-                                                                                $and: [
-                                                                                    { $eq: ['$$this.ACStatus', 'ON'] },
-                                                                                    { $eq: ['$$value.previous', null] },
-
-                                                                                ]
-                                                                            },
-                                                                            {
-                                                                                $concatArrays: [
-                                                                                    '$$value.result',
-                                                                                    [{
-                                                                                        ACOnTime: '$$this.TimeStamp'
-                                                                                    }]
-                                                                                ]
-                                                                            },
-                                                                            '$$value.result'
-                                                                        ]
-                                                                    }
+                                                                    '$$value.result'
                                                                 ]
                                                             }
                                                         ]
@@ -2238,44 +2219,6 @@ exports.UsageTrends = async (req, res) => {
                     break;
             }
         }
-
-        if (Interval === "Day") {
-            const rearrangeACCutoffTimes = (data) => {
-                data.forEach(item => {
-                    const newCutoffTimes = [];
-                    let currentCutoff = {};
-
-                    item.ACCutoffTimes.forEach(time => {
-                        if (time.hasOwnProperty('ACOnTime')) {
-                            if (Object.keys(currentCutoff).length > 0) {
-                                newCutoffTimes.push(currentCutoff);
-                                currentCutoff = {};
-                            }
-                            currentCutoff.ACOnTime = time.ACOnTime;
-                        } else if (time.hasOwnProperty('ACOffTime')) {
-                            currentCutoff.ACOffTime = time.ACOffTime;
-                            newCutoffTimes.push(currentCutoff);
-                            currentCutoff = {};
-                        }
-                    });
-
-                    if (Object.keys(currentCutoff).length > 0) {
-                        newCutoffTimes.push(currentCutoff);
-                    }
-
-                    item.ACCutoffTimes = newCutoffTimes;
-                });
-            };
-
-            rearrangeACCutoffTimes(data);
-            return res.status(200).json({
-                success: true,
-                data: data
-            });
-
-        }
-
-
 
         return res.status(200).json({
             success: true,

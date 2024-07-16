@@ -27,6 +27,8 @@ router.post('/get/all/usage/trends',ReportController.UsageTrends)
 router.post('/download/all/devicedata/report', ReportController.DownloadDeviceDataReport);
 // Download meter report
 router.post('/download/all/meterdata/report', ReportController.DownloadMeterDataReport);
+// Download usageTrend report
+router.post('/download/all/usagetrend/report', ReportController.DownloadUsageTrendsReport);
 
 
 // router.post('/get/all/device/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);

@@ -117,7 +117,7 @@ exports.UpdateEnterpriseState = async (req, res) => {
 
 // Update EnterpriseStateLocation
 exports.UpdateEnterpriseStateLocation = async (req, res) => {
-    const { Enterprise_ID, State_ID, LocationName, Address } = req.body;
+    const { Enterprise_ID, State_ID, LocationName, Address,Lat, Long } = req.body;
     const { location_id } = req.params;
 
     try {

@@ -117,9 +117,7 @@ exports.AllDeviceData = async (req, res) => {
             skip = 0;
         }
 
-        console.log("jsgdjasg");
-        return res.send("dasdasd");
-
+        
         const Enterprise = await EnterpriseModel.findById(enterprise_id).lean();
 
         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
@@ -132,6 +130,10 @@ exports.AllDeviceData = async (req, res) => {
             acc[state._id] = state;
             return acc;
         }, {});
+
+        console.log(stateIdToState);
+        return res.send(stateIdToState);
+
 
         const locationQueries = EntStates.map(State => {
             return location_id ? { _id: location_id } : { Enterprise_ID: State.Enterprise_ID, State_ID: State.State_ID };

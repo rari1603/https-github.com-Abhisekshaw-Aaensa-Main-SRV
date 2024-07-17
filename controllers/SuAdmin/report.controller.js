@@ -131,8 +131,7 @@ exports.AllDeviceData = async (req, res) => {
             return acc;
         }, {});
 
-        console.log(stateIdToState);
-        return res.send(stateIdToState);
+       
 
 
         const locationQueries = EntStates.map(State => {
@@ -169,7 +168,8 @@ exports.AllDeviceData = async (req, res) => {
             .limit(validatedPageSize)
             .lean();
 
-      
+            console.log(OptimizerLogs);
+            return res.send(OptimizerLogs);
 
         const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
             if (!acc[log.GatewayID]) acc[log.GatewayID] = [];

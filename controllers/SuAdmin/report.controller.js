@@ -117,7 +117,8 @@ exports.AllDeviceData = async (req, res) => {
             skip = 0;
         }
 
-
+        console.log("jsgdjasg");
+        return res.send("dasdasd");
 
         const Enterprise = await EnterpriseModel.findById(enterprise_id).lean();
 
@@ -166,8 +167,7 @@ exports.AllDeviceData = async (req, res) => {
             .limit(validatedPageSize)
             .lean();
 
-        console.log(OptimizerLogs);
-        return res.send(OptimizerLogs);
+      
 
         const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
             if (!acc[log.GatewayID]) acc[log.GatewayID] = [];

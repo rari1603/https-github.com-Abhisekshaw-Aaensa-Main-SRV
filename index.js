@@ -1,34 +1,30 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { connectToDatabase } = require('./configs/database.config');
-// Connect to the database
-connectToDatabase();
 const Auth = require('./routes/auth.routes');
 const SuAdmin = require('./routes/super.admin.routes');
 const Enterprise = require('./routes/enterprise.routes');
 const SystemInt = require('./routes/system.int.routes');
 const Hardware = require('./routes/hardware.routes');
-
 const v1Router = require('./routes/v1.routes');
 const entRouter = require('./routes/enterprise.routes');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const path = require('path');
-// morgan Middleware: A logging middleware that logs information about incoming requests. 
-// It can be useful for debugging and monitoring.This logs incoming requests with additional information, 
-// such as the HTTP method, status code, and response time.
 const morgan = require('morgan');
-// helmet Middleware: Enhances your application's security by setting various HTTP headers. 
-// It helps protect against common web vulnerabilities.This middleware automatically sets headers like X-Content-Type-Options, 
-// Strict-Transport-Security, and others.
 const helmet = require('helmet');
 const cors = require('cors');
-const app = express();
 const moment = require('moment-timezone');
 const os = require('os');
+const timeout = require('connect-timeout');
+
+// Connect to the database
+connectToDatabase();
+
 // Set the default time zone for the application (Asia/Kolkata in this example)
 moment.tz.setDefault('Asia/Kolkata');
 
+const app = express();
 
 // Middleware
 app.use(express.json());
@@ -39,13 +35,20 @@ app.use(morgan('dev'));
 // app.use(helmet());
 app.use(cors());
 app.use(require('express-status-monitor')());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// Set timeout for all requests
+app.use(timeout('5m')); // Set timeout to 5 minutes
+
+// Middleware to handle timeout
+app.use((req, res, next) => {
+    if (!req.timedout) next();
+});
+
 // views
 app.set("view engine", "ejs");
 app.set("views", "views");
-
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 app.get('/health', (req, res) => {
     try {
@@ -56,6 +59,7 @@ app.get('/health', (req, res) => {
             .flat()
             .filter(interfaceInfo => interfaceInfo.family === 'IPv4')
             .map(interfaceInfo => interfaceInfo.address);
+
         if (mongoose.connection.name) {
             const message = {
                 host: ipv4Addresses[0],
@@ -86,13 +90,9 @@ app.use('/api/auth', Auth);
 app.use('/api/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
 app.use('/api/system', SystemInt);
-
 app.use('/api/hardware', Hardware);
-
-
 app.use('/api/fake', v1Router);
 // app.use('/api/srv-1', entRouter);
-
 
 app.get('/api/hi', (req, res) => {
     res.send("Hello I am Server, Happy To See You..")
@@ -176,7 +176,6 @@ app.post('/viewer/collection/:name/delete/:id', ensureDatabaseConnection, async 
     try {
         const collectionName = req.params.name;
         const documentId = req.params.id;
-        // log
 
         await mongoose.connection.db.collection(collectionName).deleteOne({ _id: new mongoose.Types.ObjectId(documentId) });
 
@@ -193,14 +192,9 @@ app.get('/viewer/collection/:name/edit/:id', ensureDatabaseConnection, async (re
         const collectionName = req.params.name;
         const documentId = req.params.id;
 
-
         const collection = mongoose.connection.db.collection(collectionName);
-        const document = await collection.find({ _id: mongoose.Types.ObjectId(documentId) });
-        console.log({
-            collectionName,
-            documentId,
-            document
-        });
+        const document = await collection.findOne({ _id: mongoose.Types.ObjectId(documentId) });
+
         if (!document) {
             return res.status(404).send('Document not found');
         }
@@ -240,38 +234,32 @@ app.post('/viewer/collection/:name/update/:id', ensureDatabaseConnection, async 
 
 // -------------------------------------------------- DB VIEWER ----------------------------------------------
 
-
 // Internal Server Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err);
-    res.status(500).json(
-        {
-            status: 500,
-            message: 'Server error!'
-        }
-    );
+    res.status(500).json({
+        status: 500,
+        message: 'Server error!'
+    });
     // res.status(500).sendFile(path.join(__dirname, 'pages', '500.html'));
 });
-
-
 
 // Page Not Found middleware
 app.use((req, res, next) => {
     console.log(res.statusCode); // Corrected to res.statusCode
-    res.status(404).json(
-        {
-            status: 404,
-            message: 'Page not found!'
-        }
-    );
+    res.status(404).json({
+        status: 404,
+        message: 'Page not found!'
+    });
     // res.status(404).sendFile(path.join(__dirname, 'pages', '404.html'));
 });
-
-
 
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || `http://localhost:${PORT}`;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server listening on port ${HOST}`);
 });
+
+// Set server timeout to 5 minutes
+server.timeout = 300000;

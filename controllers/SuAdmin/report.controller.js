@@ -225,7 +225,8 @@ exports.AllDeviceData = async (req, res) => {
 
 
         // At this point, responseData and DEVICE_LOG are built and can be used further.
-
+        console.log(responseData);
+        return res.send(responseData);
 
         // fs.writeFileSync("response.json", JSON.stringify(responseData));
 
@@ -250,7 +251,7 @@ exports.AllDeviceData = async (req, res) => {
                 pageReset
             });
         }
-console.log("response send to client ");
+        console.log("response send to client ");
         return res.send({
             success: true,
             message: "Data fetched successfully",

@@ -37,6 +37,7 @@ const INTERVAL_ARRAY = {
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
+    console.log("calling device Data controller$$$$$$$$$$$$$$$$$$$$$$$$$$$===========");
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
     const { page, flag, PrevTimeStamp } = req.query;
 
@@ -249,7 +250,7 @@ exports.AllDeviceData = async (req, res) => {
                 pageReset
             });
         }
-
+console.log("response send to client ");
         return res.send({
             success: true,
             message: "Data fetched successfully",
@@ -868,6 +869,7 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
                 message: 'Locations not found'
             });
         }
+        console.log("This is location query logs -----------------");
         const locationIds = locations.map(location => location._id);
         // Prepare the query for GatewayModel based on locationIds and optional gateway_id
         const gatewayQuery = {

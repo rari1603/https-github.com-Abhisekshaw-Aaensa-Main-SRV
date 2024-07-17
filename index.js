@@ -148,7 +148,7 @@ app.get('/viewer/collection/:name', ensureDatabaseConnection, async (req, res) =
     try {
         const collectionName = req.params.name;
         const page = parseInt(req.query.page) || 1;
-        const limit = 100;
+        const limit = 20;
         const skip = (page - 1) * limit;
 
         const collection = mongoose.connection.db.collection(collectionName);

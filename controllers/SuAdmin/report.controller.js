@@ -166,6 +166,9 @@ exports.AllDeviceData = async (req, res) => {
             .limit(validatedPageSize)
             .lean();
 
+        console.log(OptimizerLogs);
+        return res.send(OptimizerLogs);
+
         const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
             if (!acc[log.GatewayID]) acc[log.GatewayID] = [];
             acc[log.GatewayID].push(log);
@@ -225,8 +228,7 @@ exports.AllDeviceData = async (req, res) => {
 
 
         // At this point, responseData and DEVICE_LOG are built and can be used further.
-        console.log(responseData);
-        return res.send(responseData);
+
 
         // fs.writeFileSync("response.json", JSON.stringify(responseData));
 

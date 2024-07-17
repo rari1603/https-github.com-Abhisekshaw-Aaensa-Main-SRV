@@ -168,8 +168,8 @@ exports.AllDeviceData = async (req, res) => {
             .limit(validatedPageSize)
             .lean();
 
-            console.log(OptimizerLogs);
-            return res.send(OptimizerLogs);
+            // console.log(OptimizerLogs);
+            // return res.send(OptimizerLogs);
 
         const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
             if (!acc[log.GatewayID]) acc[log.GatewayID] = [];

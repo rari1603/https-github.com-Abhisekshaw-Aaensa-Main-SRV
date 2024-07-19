@@ -148,8 +148,9 @@ exports.Store = async (req, res) => {
     console.log({ Body: JSON.stringify(req.body) });
 
     if (gateway_id == "864292049541889") {
-        return res.status(200).send({ success: true, message: "Processing stopped for gateway ID 864292049541889" });
+        console.log({ Body: JSON.stringify(req.body) });
     }
+
 
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
@@ -157,27 +158,45 @@ exports.Store = async (req, res) => {
     };
 
     try {
-        const gateway = await GatewayModel.findOne({ GatewayID: gateway_id }).lean();
+        const gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
         if (!gateway) {
             return res.status(404).send(`Gateway with ID ${req.body.GatewayID} not found`);
         }
+        const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id });
+        // console.log({ AssignedOptimizers });
+        const AssignedOptimizerIDs = AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim());
+        // console.log({ AssignedOptimizerIDs });
 
-        const AssignedOptimizers = await OptimizerModel.find({ GatewayId: gateway._id }).lean();
-        const AssignedOptimizerIDs = new Set(AssignedOptimizers.map(optimizer => optimizer.OptimizerID.trim()));
-        const OnlineOptimizerIDs = new Set(optimizers.map(optimizer => optimizer.OptimizerID.trim()));
+        const OnlineOptimizers = optimizers;
+        // console.log({ OnlineOptimizers });
 
-        const OfflineOptimizerIDs = [...AssignedOptimizerIDs].filter(id => !OnlineOptimizerIDs.has(id));
+        const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID.trim());
+        // console.log({ OnlineOptimizerIDs });
 
-        // Mark all optimizers as offline and then mark online optimizers
+        const OfflineOptimizerIDs = AssignedOptimizerIDs.filter(id => !OnlineOptimizerIDs.includes(id));
+        // console.log({ OfflineOptimizerIDs });
+
+        // First, mark all optimizers as offline
         await OptimizerModel.updateMany(
-            { OptimizerID: { $in: Array.from(AssignedOptimizerIDs) } },
+            { OptimizerID: { $in: AssignedOptimizerIDs } },
             { $set: { isOnline: false } }
         );
 
-        await OptimizerModel.updateMany(
-            { OptimizerID: { $in: Array.from(OnlineOptimizerIDs) } },
-            { $set: { isOnline: true } }
-        );
+        // Then, mark online optimizers
+        await Promise.all(OnlineOptimizers.map(async optimizer => {
+            const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
+
+            await OptimizerModel.updateOne(
+                { OptimizerID: optimizer.OptimizerID },
+                {
+                    $set: {
+                        isOnline: isAssigned
+                    }
+                },
+                { new: true }
+            );
+        }));
+
 
         const gatewayId = gateway._id;
         const { TimeStamp, Phases, KVAH, KWH, PF } = data;
@@ -194,94 +213,95 @@ exports.Store = async (req, res) => {
             return acc;
         }, {});
 
-        const gatewayLog = await GatewayLogModel.create({
+        const gatewayLog = await GatewayLogModel({
             GatewayID: gatewayId,
             TimeStamp: TimeStamp,
             Phases: sanitizedPhases,
             KVAH: handleNaN(KVAH).toFixed(2),
             KWH: handleNaN(KWH).toFixed(2),
             PF: handleNaN(PF).toFixed(2),
-        });
+        }).save();
 
         // Store online optimizer's data
         const optimizerLogPromises = optimizers.map(async element => {
-            const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID }).lean();
+            const optimizer = await OptimizerModel.findOne({ OptimizerID: element.OptimizerID });
 
             if (!optimizer) {
-                console.log(`Optimizer with ID ${element.OptimizerID} not found`);
-                return;
+                console.log(`Optimizer with ID ${req.body.OptimizerID} not found`);
             }
 
-            const data = {
-                Opt_id: optimizer._id,
-                OptimizerID: element.OptimizerID,
-                DeviceStatus: true,
-                CompStatus: element.CompStatus,
-                OptimizerMode: element.OptimizerMode,
-                TimeStamp: TimeStamp, // Unix timestamp
-                Flag: "ONLINE",
-                Ac_Status: element.Ac_Status,
+
+            if (optimizer) {
+                const data = {
+                    Opt_id: optimizer._id,
+                    OptimizerID: element.OptimizerID,
+                    DeviceStatus: true,
+                    CompStatus: element.CompStatus,
+                    OptimizerMode: element.OptimizerMode,
+                    TimeStamp: TimeStamp, // Unix timestamp
+                    Flag: "ONLINE",
+                    Ac_Status: element.Ac_Status,
+                }
+
+                await CounterFlag(data);
+
+                return OptimizerLogModel({
+                    OptimizerID: optimizer._id,
+                    GatewayID: gatewayId,
+                    GatewayLogID: gatewayLog._id,
+                    DeviceStatus: true, // optimizer.isOnline,
+                    TimeStamp: TimeStamp,
+                    RoomTemperature: element.RoomTemperature,
+                    Humidity: (element.Humidity).toFixed(2),
+                    CoilTemperature: element.CoilTemperature,
+                    OptimizerMode: element.OptimizerMode,
+                }).save();
             }
-
-            await CounterFlag(data);
-
-            return OptimizerLogModel.create({
-                OptimizerID: optimizer._id,
-                GatewayID: gatewayId,
-                GatewayLogID: gatewayLog._id,
-                DeviceStatus: true, // optimizer.isOnline,
-                TimeStamp: TimeStamp,
-                RoomTemperature: element.RoomTemperature,
-                Humidity: handleNaN(element.Humidity).toFixed(2),
-                CoilTemperature: element.CoilTemperature,
-                OptimizerMode: element.OptimizerMode,
-            });
         });
 
         await Promise.all(optimizerLogPromises);
 
         // Store offline optimizer's data
-        const offlineLogPromises = OfflineOptimizerIDs.map(async id => {
-            const optimizer = await OptimizerModel.findOne({ OptimizerID: id }).lean();
+        await Promise.all(OfflineOptimizerIDs.map(async id => {
+            const optimizer = await OptimizerModel.findOne({ OptimizerID: id });
 
             if (!optimizer) {
                 console.log(`Optimizer with ID ${id} not found`);
-                return;
             }
 
-            const data = {
-                Opt_id: optimizer._id,
-                OptimizerID: optimizer.OptimizerID,
-                DeviceStatus: false,
-                CompStatus: "--",
-                OptimizerMode: "--",
-                TimeStamp: Math.floor(Date.now() / 1000), // Unix timestamp
-                Flag: "OFFLINE",
-                Ac_Status: "OFF",
+            if (optimizer) {
+                const data = {
+                    Opt_id: optimizer._id,
+                    OptimizerID: optimizer.OptimizerID,
+                    DeviceStatus: false,
+                    CompStatus: "--",
+                    OptimizerMode: "--",
+                    TimeStamp: Math.floor(new Date().getTime() / 1000), // Unix timestamp
+                    Flag: "OFFLINE",
+                    Ac_Status: "OFF",
+                }
+
+                await CounterFlag(data);
+
+                return OptimizerLogModel({
+                    OptimizerID: optimizer._id,
+                    GatewayID: gatewayId,
+                    GatewayLogID: gatewayLog._id,
+                    DeviceStatus: false, // optimizer.isOnline,
+                    TimeStamp: TimeStamp,
+                    RoomTemperature: 0,
+                    Humidity: 0,
+                    CoilTemperature: 0,
+                    OptimizerMode: "N/A",
+                }).save();
             }
-
-            await CounterFlag(data);
-
-            return OptimizerLogModel.create({
-                OptimizerID: optimizer._id,
-                GatewayID: gatewayId,
-                GatewayLogID: gatewayLog._id,
-                DeviceStatus: false, // optimizer.isOnline,
-                TimeStamp: TimeStamp,
-                RoomTemperature: 0,
-                Humidity: 0,
-                CoilTemperature: 0,
-                OptimizerMode: "N/A",
-            });
-        });
-
-        await Promise.all(offlineLogPromises);
+        }));
 
         return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
         console.error({ StoreError: error.message });
-        res.status(500).send({ success: false, message: error.message });
+        res.status(404).send({ success: false, message: error.message });
     }
 };
 

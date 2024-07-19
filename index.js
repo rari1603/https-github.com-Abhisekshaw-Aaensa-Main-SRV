@@ -98,6 +98,21 @@ app.get('/api/hi', (req, res) => {
     res.send("Hello I am Server, Happy To See You..")
 });
 
+app.get('/download/zip', (req, res) => {
+    const filePath = path.join('C:/Users/abhis/OneDrive/Desktop/Server/Aaensa-Main-SRV -02/test.zip');
+    
+    // Log the file path to confirm it's correct
+    console.log(`File path: ${filePath}`);
+
+    res.download(filePath, (err) => {
+        if (err) {
+            // Log the error details
+            console.error('Error occurred while downloading the file:', err);
+            res.status(500).send('Error occurred while downloading the file.');
+        }
+    });
+});
+
 // -------------------------------------------------- DB VIEWER ----------------------------------------------
 // Connect to MongoDB using environment variable
 const connectionString = process.env.MONGODB_URI;

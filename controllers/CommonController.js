@@ -30,7 +30,7 @@ exports.DashboardDetails = async (req, res) => {
     ];
 
     // The cutoff timestamp (in seconds)
-    const cutoffTimestamp = 1720981800;
+    const cutoffTimestamp = 1721001600;
 
     // Convert the cutoff timestamp to a date object
     const cutoffDate = new Date(cutoffTimestamp * 1000);

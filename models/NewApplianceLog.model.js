@@ -5,7 +5,8 @@ const moment = require('moment-timezone');
 const NewApplianceLogSchema = new mongoose.Schema({
     OptimizerID: {
         type: String,
-        required: true
+        required: true,
+        index: true // Create index on OptimizerID
     },
     CompStatus: {
         type: String,
@@ -24,7 +25,8 @@ const NewApplianceLogSchema = new mongoose.Schema({
         enum: ["OFF", "ON", "UNKNOWN"]
     },
     TimeStamp: {
-        type: String
+        type: String,
+        index: true // Create index on Timestamp
     }
 }, { timestamps: true });
 

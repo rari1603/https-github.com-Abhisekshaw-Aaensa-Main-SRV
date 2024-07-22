@@ -6,12 +6,14 @@ const EnterpriseStateSchema = new mongoose.Schema({
     Enterprise_ID: { // primary _id
         type: Schema.Types.ObjectId,
         ref: "Enterprise",
-        require: true
+        require: true,
+        index: true // Create index on EnterpriseID
     },
     State_ID: { // primary _id
         type: Schema.Types.ObjectId,
         ref: "State",
-        require: true
+        require: true,
+        index: true // Create index on StateId
     },
     isDelete: {
         type: Boolean,

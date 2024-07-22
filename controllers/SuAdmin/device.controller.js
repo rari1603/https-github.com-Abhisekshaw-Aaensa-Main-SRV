@@ -26,7 +26,19 @@ exports.AddEnterpriseState = async (req, res) => {
 exports.AddEnterpriseStateLocation = async (req, res) => {
     const { Enterprise_ID, State_ID, LocationName, Address, Lat, Long } = req.body;
     try {
-        const NewEntStateLocation = new EnterpriseStateLocationModel({ Enterprise_ID, State_ID, LocationName, Address, Lat, Long });
+        const trimmedLocationName = LocationName.trim();
+        const trimmedAddress = Address.trim();
+        const trimmedLat = Lat.trim();
+        const trimmedLong = Long.trim();
+
+        const NewEntStateLocation = new EnterpriseStateLocationModel({
+            Enterprise_ID,
+            State_ID,
+            LocationName: trimmedLocationName,
+            Address: trimmedAddress,
+            Lat: trimmedLat,
+            Long: trimmedLong
+        });
 
         const test = await NewEntStateLocation.save();
         console.log(test);
@@ -37,6 +49,7 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 }
+
 
 // Add gateway
 exports.AddGateway = async (req, res) => {

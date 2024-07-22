@@ -8,15 +8,20 @@ const GatewaySchema = new mongoose.Schema({
     EnterpriseInfo: { // primary _id of EnterpriseStateLocation schema/model
         type: Schema.Types.ObjectId,
         ref: "EnterpriseStateLocation",
-        require: true
+        require: true,
+        index: true // Create index on Enterprise info id
     },
     OnboardingDate: { type: String },
-    GatewayID: { type: String, unique: true },
+    GatewayID: {
+        type: String, unique: true,
+        index: true // Create index on GatewayID
+    },
     NetworkSSID: { type: String },
     NetworkPassword: { type: String },
     EnterpriseUserID: { // primary _id of EnterpriseUser schema/model
         type: Schema.Types.ObjectId,
-        ref: "EnterpriseUser"
+        ref: "EnterpriseUser",
+        index: true // Create index on EnterpriseUserID
     },
     Switch: { type: Boolean, default: false },
     isDelete: {

@@ -48,10 +48,10 @@ exports.CheckEntStateLocation = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "State is required!", key: "State_ID" });
 
         }
-        if (!LocationName) {
-            return res.status(401).json({ success: false, message: "Location name is required!", key: "LocationName" });
+        // if (!LocationName) {
+        //     return res.status(401).json({ success: false, message: "Location name is required!", key: "LocationName" });
 
-        }
+        // }
         if (!Address) {
             return res.status(401).json({ success: false, message: "An Address is required!", key: "Address" });
 

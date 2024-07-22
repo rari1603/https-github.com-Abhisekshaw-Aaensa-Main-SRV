@@ -3,7 +3,10 @@ const Schema = mongoose.Schema;
 const moment = require('moment-timezone');
 
 const EnterpriseSchema = new mongoose.Schema({
-    EnterpriseName: { type: String },
+    EnterpriseName: {
+        type: String,
+        index: true // Create index on EnterpriseName
+    },
     ContactInfo: {
         Email: { type: String },
         Name: { type: String },

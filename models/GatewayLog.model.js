@@ -7,9 +7,14 @@ const GatewayLogSchema = new mongoose.Schema({
     GatewayID: {
         type: Schema.Types.ObjectId,
         ref: "Gateway",
-        required: true
+        required: true,
+        index: true // Create index on GatewayID
     },
-    TimeStamp: { type: String, required: true },
+    TimeStamp: {
+        type: String,
+        required: true,
+        index: true // Create index on TimeStamp
+    },
     Phases: {
         Ph1: {
             Voltage: { type: Number },

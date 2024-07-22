@@ -6,7 +6,8 @@ const EnterpriseUserSchema = new mongoose.Schema({
     EnterpriseID: {
         type: Schema.Types.ObjectId,
         ref: "Enterprise",
-        require: true
+        require: true,
+        index: true // Create index on EnterpriseID
     },
     username: { type: String },
     email: { type: String },

@@ -145,16 +145,16 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
-    //console.log({ Body: JSON.stringify(req.body) });
+    console.log({ Body: JSON.stringify(req.body) });
 
-    if (gateway_id == "NGCS2023011013") {
-        console.log({ Body: JSON.stringify(req.body) });
-    }
+    // if (gateway_id == "NGCS2023011013") {
+    //     console.log({ Body: JSON.stringify(req.body) });
+    // }
 
-    // Stop further processing if gateway_id equals "864292049541889"
-    if (gateway_id === "864292049541889") {
-        return res.status(200).send({ success: true, message: "Processing stopped for gateway ID 864292049541889" });
-    }
+    // // Stop further processing if gateway_id equals "864292049541889"
+    // if (gateway_id === "864292049541889") {
+    //     return res.status(200).send({ success: true, message: "Processing stopped for gateway ID 864292049541889" });
+    // }
 
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
@@ -1169,13 +1169,13 @@ const compressor = async (data) => {
     const secondLastLog = OptlastLog.length > 1 ? OptlastLog[1] : null;
 
     if (lastLog) {
-        const timeDiffSeconds = newData.TimeStamp - secondLastLog?.TimeStamp || 0;
+        const timeDiffSeconds = Number(newData.TimeStamp) - Number(secondLastLog?.TimeStamp) || 0;
         const offlineData = {
             Opt_id,
             OptimizerID,
             CompStatus: "--",
             OptimizationMode: "--",
-            TimeStamp: secondLastLog?.TimeStamp + 1, // Increment last log timestamp by 1 second
+            TimeStamp: Number(secondLastLog?.TimeStamp) + 1, // Increment last log timestamp by 1 second
             Flag: "OFFLINE",
             ACStatus: "OFF"
         };

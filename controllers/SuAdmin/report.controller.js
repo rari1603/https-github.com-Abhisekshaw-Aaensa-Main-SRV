@@ -37,7 +37,6 @@ const INTERVAL_ARRAY = {
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
-    console.log("calling device Data controller$$$$$$$$$$$$$$$$$$$$$$$$$$$===========");
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
     const { page, flag, PrevTimeStamp } = req.query;
 

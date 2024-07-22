@@ -21,19 +21,19 @@ exports.getStates = async (req, res) => {
 exports.DashboardDetails = async (req, res) => {
 
     // List of optimizer IDs to delete
-    const optimizerIDs = [
-        "NGCSE732B495BC", "NGCSE2E3E1AA44", "NGCSE732B49508", "NGCSE732B56AD4",
-        "NGCSE732B495BC", "NGCSE732B49508", "NGCSE732B4956C", "NGCSE732B486B0",
-        "NGCSE732B56B98", "NGCSE732B49524", "NGCSE7BD21551C", "NGCSEB146DB9D0",
-        "NGCSE732B56354", "NGCSE732B563E4", "NGCSE2E3E1AA00", "NGCSE7BD2118E0",
-        "NGCSE732B49560", "NGCSE732B49560", "NGCSEB146BE4E0", "NGCSEB146BE4E0"
-    ];
+    // const optimizerIDs = [
+    //     "NGCSE732B495BC", "NGCSE2E3E1AA44", "NGCSE732B49508", "NGCSE732B56AD4",
+    //     "NGCSE732B495BC", "NGCSE732B49508", "NGCSE732B4956C", "NGCSE732B486B0",
+    //     "NGCSE732B56B98", "NGCSE732B49524", "NGCSE7BD21551C", "NGCSEB146DB9D0",
+    //     "NGCSE732B56354", "NGCSE732B563E4", "NGCSE2E3E1AA00", "NGCSE7BD2118E0",
+    //     "NGCSE732B49560", "NGCSE732B49560", "NGCSEB146BE4E0", "NGCSEB146BE4E0"
+    // ];
 
-    // The cutoff timestamp (in seconds)
-    const cutoffTimestamp = 1721001600;
+    // // The cutoff timestamp (in seconds)
+    // const cutoffTimestamp = 1721001600;
 
-    // Convert the cutoff timestamp to a date object
-    const cutoffDate = new Date(cutoffTimestamp * 1000);
+    // // Convert the cutoff timestamp to a date object
+    // const cutoffDate = new Date(cutoffTimestamp * 1000);
     // const { user,
     //     path,
     //     baseUrl,
@@ -48,11 +48,35 @@ exports.DashboardDetails = async (req, res) => {
     // });
     try {
         // Delete documents that match the given optimizer IDs and are older than the cutoff timestamp
-        const deleteResult = await NewApplianceLogModel.deleteMany({
-            OptimizerID: { $in: optimizerIDs },
-            createdAt: { $lt: cutoffDate }
-        });
-        console.log(`Deleted ${deleteResult.deletedCount} documents`);
+        // const deleteResult = await NewApplianceLogModel.deleteMany({
+        //     OptimizerID: { $in: optimizerIDs },
+        //     createdAt: { $lt: cutoffDate }
+        // });
+        // console.log(`Deleted ${deleteResult.deletedCount} documents`);
+
+
+
+
+         // Find all documents where ACStatus is 'OFF'
+         const logs = await NewApplianceLogModel.find({ ACStatus: 'OFF' });
+
+         // Loop through each document
+         for (let log of logs) {
+             // Get the current TimeStamp
+             let currentTimestamp = log.TimeStamp;
+ 
+             // Check if the TimeStamp length is 11
+             if (currentTimestamp.length === 11) {
+                 // Remove the last digit
+                 let updatedTimestamp = currentTimestamp.slice(0, -1);
+ 
+                 // Update the document with the new TimeStamp
+                 log.TimeStamp = updatedTimestamp;
+                 await log.save();
+                console.log('TimeStamps updated successfully');
+             }
+         }
+ 
 
         var EnterpriseQuery = {};
         var EnterpriseStateQuery = {};

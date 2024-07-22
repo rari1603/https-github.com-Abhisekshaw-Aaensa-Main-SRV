@@ -130,8 +130,14 @@ exports.UpdateEnterpriseState = async (req, res) => {
 
 // Update EnterpriseStateLocation
 exports.UpdateEnterpriseStateLocation = async (req, res) => {
-    const { Enterprise_ID, State_ID, LocationName, Address,Lat, Long } = req.body;
+    let { Enterprise_ID, State_ID, LocationName, Address, Lat, Long } = req.body;
     const { location_id } = req.params;
+
+    // Trim the fields
+    LocationName = LocationName.trim();
+    Address = Address.trim();
+    Lat = Lat.trim();
+    Long = Long.trim();
 
     try {
         const EntStateLocation = await EnterpriseStateLocationModel.findOne({ _id: location_id, Enterprise_ID, State_ID });
@@ -143,10 +149,10 @@ exports.UpdateEnterpriseStateLocation = async (req, res) => {
                     State_ID,
                     LocationName,
                     Address,
-                    Lat, 
+                    Lat,
                     Long,
                 },
-                { new: true }); // This option returns the modified document rather than the original);
+                { new: true }); // This option returns the modified document rather than the original
             return res.status(201).json({ success: true, message: "Enterprise Location updated successfully." });
         } else {
             return res.status(404).json({ success: false, message: "Enterprise Location not found." });
@@ -157,6 +163,7 @@ exports.UpdateEnterpriseStateLocation = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 }
+
 
 // Update Gateway
 exports.UpdateGateway = async (req, res) => {

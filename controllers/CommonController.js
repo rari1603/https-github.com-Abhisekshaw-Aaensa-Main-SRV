@@ -58,24 +58,24 @@ exports.DashboardDetails = async (req, res) => {
 
 
          // Find all documents where ACStatus is 'OFF'
-         const logs = await NewApplianceLogModel.find({ ACStatus: 'OFF' });
+        //  const logs = await NewApplianceLogModel.find({ ACStatus: 'OFF' });
 
-         // Loop through each document
-         for (let log of logs) {
-             // Get the current TimeStamp
-             let currentTimestamp = log.TimeStamp;
+        //  // Loop through each document
+        //  for (let log of logs) {
+        //      // Get the current TimeStamp
+        //      let currentTimestamp = log.TimeStamp;
  
-             // Check if the TimeStamp length is 11
-             if (currentTimestamp.length === 11) {
-                 // Remove the last digit
-                 let updatedTimestamp = currentTimestamp.slice(0, -1);
+        //      // Check if the TimeStamp length is 11
+        //      if (currentTimestamp.length === 11) {
+        //          // Remove the last digit
+        //          let updatedTimestamp = currentTimestamp.slice(0, -1);
  
-                 // Update the document with the new TimeStamp
-                 log.TimeStamp = updatedTimestamp;
-                 await log.save();
-                console.log('TimeStamps updated successfully');
-             }
-         }
+        //          // Update the document with the new TimeStamp
+        //          log.TimeStamp = updatedTimestamp;
+        //          await log.save();
+        //         console.log('TimeStamps updated successfully');
+        //      }
+        //  }
  
 
         var EnterpriseQuery = {};

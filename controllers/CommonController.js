@@ -5,6 +5,7 @@ const EnterpriseStateLocationModel = require('../models/enterprise_state_locatio
 const GatewayModel = require('../models/gateway.model');
 const OptimizerModel = require('../models/optimizer.model');
 const EnterpriseUserModel = require('../models/enterprise_user.model');
+const NewApplianceLogModel = require('../models/NewApplianceLog.model');
 
 exports.getStates = async (req, res) => {
     try {
@@ -19,8 +20,20 @@ exports.getStates = async (req, res) => {
 // Get dashboard details 
 exports.DashboardDetails = async (req, res) => {
 
-    
+    // List of optimizer IDs to delete
+    const optimizerIDs = [
+        "NGCSE732B495BC", "NGCSE2E3E1AA44", "NGCSE732B49508", "NGCSE732B56AD4",
+        "NGCSE732B495BC", "NGCSE732B49508", "NGCSE732B4956C", "NGCSE732B486B0",
+        "NGCSE732B56B98", "NGCSE732B49524", "NGCSE7BD21551C", "NGCSEB146DB9D0",
+        "NGCSE732B56354", "NGCSE732B563E4", "NGCSE2E3E1AA00", "NGCSE7BD2118E0",
+        "NGCSE732B49560", "NGCSE732B49560", "NGCSEB146BE4E0", "NGCSEB146BE4E0"
+    ];
 
+    // The cutoff timestamp (in seconds)
+    const cutoffTimestamp = 1720981800;
+
+    // Convert the cutoff timestamp to a date object
+    const cutoffDate = new Date(cutoffTimestamp * 1000);
     // const { user,
     //     path,
     //     baseUrl,
@@ -34,6 +47,13 @@ exports.DashboardDetails = async (req, res) => {
     //     route, decodedData
     // });
     try {
+        // Delete documents that match the given optimizer IDs and are older than the cutoff timestamp
+        const deleteResult = await NewApplianceLogModel.deleteMany({
+            OptimizerID: { $in: optimizerIDs },
+            createdAt: { $lt: cutoffDate }
+        });
+        console.log(`Deleted ${deleteResult.deletedCount} documents`);
+
         var EnterpriseQuery = {};
         var EnterpriseStateQuery = {};
         var GatewayQuery = {};

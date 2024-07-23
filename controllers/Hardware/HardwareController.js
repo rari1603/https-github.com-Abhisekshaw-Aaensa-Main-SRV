@@ -145,11 +145,11 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
-    console.log({ Body: JSON.stringify(req.body) });
+    // console.log({ Body: JSON.stringify(req.body) });
 
-    // if (gateway_id == "NGCS2023011013") {
-    //     console.log({ Body: JSON.stringify(req.body) });
-    // }
+    if (gateway_id == "NGCS2023011037") {
+        console.log({ Body: JSON.stringify(req.body) });
+    }
 
     // // Stop further processing if gateway_id equals "864292049541889"
     // if (gateway_id === "864292049541889") {

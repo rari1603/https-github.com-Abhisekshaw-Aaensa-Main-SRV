@@ -357,7 +357,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         }
 
         // Step 3: Determine offline optimizers
-        const offlineThreshold = new Date(Date.now() - 1 * 60 * 1000); // 1 minutes ago
+        const offlineThreshold = new Date(Date.now() - 3 * 60 * 1000); // 3 minutes ago
 
         // Inside your try block
         await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {

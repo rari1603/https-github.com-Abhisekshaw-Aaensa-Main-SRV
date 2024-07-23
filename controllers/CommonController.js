@@ -54,10 +54,7 @@ exports.DashboardDetails = async (req, res) => {
         // });
         // console.log(`Deleted ${deleteResult.deletedCount} documents`);
 
-
-
-
-         // Find all documents where ACStatus is 'OFF'
+        // Find all documents where ACStatus is 'OFF'
         //  const logs = await NewApplianceLogModel.find({ ACStatus: 'OFF' });
 
         //  // Loop through each document

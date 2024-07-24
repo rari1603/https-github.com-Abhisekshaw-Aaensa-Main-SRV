@@ -331,8 +331,8 @@ exports.AllMeterData = async (req, res) => {
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
         console.log({ Gatewayid });
 
-        const startIstTimestamp = istToTimestamp(startDate) / 1000;
-        const endIstTimestamp = istToTimestamp(endDate) / 1000;
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
@@ -529,8 +529,8 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
 
-        const startIstTimestamp = istToTimestamp(startDate) / 1000;
-        const endIstTimestamp = istToTimestamp(endDate) / 1000;
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
@@ -678,8 +678,8 @@ exports.DownloadMeterDataReport = async (req, res) => {
         // const Interval = "Actual";
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
-        const startIstTimestamp = istToTimestamp(startDate) / 1000;
-        const endIstTimestamp = istToTimestamp(endDate) / 1000;
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
@@ -921,8 +921,8 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         }
         const optimizerIds = optimizers.map(optimizer => optimizer.OptimizerID);
 
-        let startIstTimestamp = istToTimestamp(startDate) / 1000;
-        let endIstTimestamp = istToTimestamp(endDate) / 1000;
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
 
         let istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
 
@@ -1643,8 +1643,8 @@ exports.UsageTrends = async (req, res) => {
         }
         const optimizerIds = optimizers.map(optimizer => optimizer.OptimizerID);
 
-        let startIstTimestamp = istToTimestamp(startDate) / 1000;
-        let endIstTimestamp = istToTimestamp(endDate) / 1000;
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
 
         let istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
 

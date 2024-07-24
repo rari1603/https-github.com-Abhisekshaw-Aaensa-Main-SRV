@@ -62,10 +62,10 @@ exports.AllDeviceData = async (req, res) => {
     const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
     try {
+        console.log({ startDate }, "############33333");
+        const startTimestamp = parseISTDateString(startDate);
 
-        const startTimestamp= parseISTDateString(startDate);
-
-        console.log({startTimestamp},"*********************");
+        console.log({ startTimestamp }, "*********************");
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;

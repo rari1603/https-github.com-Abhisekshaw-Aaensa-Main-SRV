@@ -67,8 +67,8 @@ exports.AllDeviceData = async (req, res) => {
 
         console.log({ startTimestamp }, "*********************");
 
-        const startIstTimestamp = istToTimestamp(startDate) / 1000;
-        const endIstTimestamp = istToTimestamp(endDate) / 1000;
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
 
         console.log({ startIstTimestamp }, "_____________-----------");
 

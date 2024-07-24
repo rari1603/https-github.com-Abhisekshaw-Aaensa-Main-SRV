@@ -63,8 +63,14 @@ exports.AllDeviceData = async (req, res) => {
 
     try {
 
+        const startTimestamp= parseISTDateString(startDate);
+
+        console.log({startTimestamp},"*********************");
+
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
+
+        console.log({ startIstTimestamp }, "_____________-----------");
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
@@ -73,7 +79,7 @@ exports.AllDeviceData = async (req, res) => {
         startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
         const countPoint = startIstTimestamp - istOffsetSeconds;
-
+        console.log({ startIstTimestampUTC }, "============+++++++");
         // Validate page and pageSize parameters
         let validatedPage = Math.max(1, parseInt(page, 10)) || 1;
         let validatedPageSize;
@@ -116,7 +122,7 @@ exports.AllDeviceData = async (req, res) => {
             skip = 0;
         }
 
-        
+
         const Enterprise = await EnterpriseModel.findById(enterprise_id).lean();
 
         const enterpriseStateQuery = state_id ? { Enterprise_ID: Enterprise._id, State_ID: state_id } : { Enterprise_ID: Enterprise._id };
@@ -130,7 +136,7 @@ exports.AllDeviceData = async (req, res) => {
             return acc;
         }, {});
 
-       
+
 
 
         const locationQueries = EntStates.map(State => {
@@ -275,6 +281,16 @@ exports.AllDeviceData = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Internal Server Error', err: error.message });
     }
 };
+
+
+function parseISTDateString(dateString) {
+    // Parse the date string into a Date object
+    const date = new Date(dateString);
+    // Return the Unix timestamp in seconds
+    return date.getTime() / 1000;
+}
+
+
 // console.log({
 //     startIstTimestampUTC: { unix: startIstTimestampUTC, humanReadable: new Date(startIstTimestampUTC * 1000).toLocaleString() },
 //     endIstTimestampUTC: { unix: endIstTimestampUTC, humanReadable: new Date(endIstTimestampUTC * 1000).toLocaleString() },

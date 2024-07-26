@@ -580,7 +580,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
                 OptimizerModel: "Optimizer",
                 options: { lean: true }
             })
-            .sort({ TimeStamp: 1 })
+            // .sort({ TimeStamp: 1 })
             .lean();
 
         const gatewayIdToLogs = OptimizerLogs.reduce((acc, log) => {
@@ -744,9 +744,9 @@ exports.DownloadMeterDataReport = async (req, res) => {
                     $or: gatewayLogQueries
                 }
             },
-            {
-                $sort: { TimeStamp: 1 }
-            }
+            // {
+            //     $sort: { TimeStamp: 1 }
+            // }
         ]);
 
 

@@ -15,7 +15,7 @@ const EnterpriseStateLocationSchema = new mongoose.Schema({
         require: true,
         index: true // Create index on StateId
     },
-    LocationName: { type: String },
+    LocationName: { type: String, index: true },
     Address: { type: String },
     Lat: { type: String, default: false },
     Long: { type: String, default: false },
@@ -23,8 +23,12 @@ const EnterpriseStateLocationSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    BypassMode: { type: String, default: "" },
+    BypassMode: { type: String, default: "", index: true },
 }, { timestamps: true });
+
+//Compound Index on Enterprise_ID & State_ID
+EnterpriseStateLocationSchema.index({ Enterprise_ID: 1, State_ID: 1 });
+
 // Middleware to convert timestamps to IST before saving
 EnterpriseStateLocationSchema.pre('save', function (next) {
     // Convert timestamps to IST

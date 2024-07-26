@@ -13,15 +13,17 @@ const OptimizerLogSchema = new mongoose.Schema({
     GatewayID: {
         type: Schema.Types.ObjectId,
         ref: "Gateway",
-        required: true
+        required: true,
+        index: true
     },
     GatewayLogID: {
         type: Schema.Types.ObjectId,
         ref: "GatewayLog",
-        required: true
+        required: true,
+        index: true
     },
     DeviceStatus: { type: Boolean, default: false },
-    TimeStamp: { type: String },
+    TimeStamp: { type: String, index: true },
     RoomTemperature: { type: Number },
     Humidity: { type: Number },
     CoilTemperature: { type: Number },
@@ -36,6 +38,10 @@ const OptimizerLogSchema = new mongoose.Schema({
 
 // Create index on createdAt field
 OptimizerLogSchema.index({ createdAt: -1 });
+
+OptimizerLogSchema.index({ GatewayID: 1, TimeStamp: 1 });
+
+OptimizerLogSchema.index({ OptimizerID: 1, TimeStamp: 1 });
 
 // Middleware to convert timestamps to IST before saving
 OptimizerLogSchema.pre('save', function (next) {

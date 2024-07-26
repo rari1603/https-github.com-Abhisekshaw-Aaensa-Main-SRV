@@ -48,6 +48,9 @@ const GatewayLogSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+//Compound Index on GatewayID & TimeStamp
+GatewayLogSchema.index({ GatewayID: 1, TimeStamp: 1 });
+
 // Middleware to convert timestamps to IST before saving
 GatewayLogSchema.pre('save', function (next) {
     // Convert timestamps to IST

@@ -30,6 +30,8 @@ const NewApplianceLogSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+NewApplianceLogSchema.index({ OptimizerID: 1, TimeStamp: 1 })
+
 // Middleware to convert timestamps to IST before saving
 NewApplianceLogSchema.pre('save', function (next) {
     // Convert timestamps to IST

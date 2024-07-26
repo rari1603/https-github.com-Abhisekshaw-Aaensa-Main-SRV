@@ -6,9 +6,10 @@ const OptimizerSchema = new mongoose.Schema({
     GatewayId: {
         type: Schema.Types.ObjectId,
         ref: 'Gateway',
-        required: true
+        required: true,
+        index: true 
     },
-    OptimizerID: { type: String, unique: true },
+    OptimizerID: { type: String, unique: true, index: true  },
     OptimizerName: { type: String }, // NickName
     isOnline: { type: Boolean, default: false },
     isBypass: {

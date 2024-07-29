@@ -384,12 +384,14 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
 
             const latestLog = latestLogMap.get(optimizer._id);
+            const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
             console.log({
                 offlineThreshold,
                 optID: optimizer._id,
-                latestLog: latestLog
+                latestLog: latestLog,
+                createdAt: latestLog.createdAt,
+                isOnline
             });
-            const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
             await optimizer.updateOne({ isOnline: isOnline });
         }));
 

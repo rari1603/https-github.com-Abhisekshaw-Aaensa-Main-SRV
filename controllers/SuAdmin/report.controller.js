@@ -678,13 +678,17 @@ exports.DownloadMeterDataReport = async (req, res) => {
         // const Interval = "Actual";
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
+        console.log({endDate});
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
+        console.log({ endIstTimestamp });
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
+        
         // Adjust timestamps for IST
         const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+        console.log({ endIstTimestampUTC });
 
         // Fetch Enterprise data
         const enterprise = await EnterpriseModel.findOne({ _id: Customer });
@@ -846,7 +850,6 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         });
     }
 
-    console.log("this is working");
     try {
         // Fetch the Enterprise based on enterprise_id
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
@@ -888,7 +891,6 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
                 message: 'Locations not found'
             });
         }
-        console.log("This is location query logs -----------------");
         const locationIds = locations.map(location => location._id);
         // Prepare the query for GatewayModel based on locationIds and optional gateway_id
         const gatewayQuery = {

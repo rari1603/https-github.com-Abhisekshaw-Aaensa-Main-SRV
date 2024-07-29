@@ -147,9 +147,9 @@ exports.Store = async (req, res) => {
 
     console.log({ Body: JSON.stringify(req.body) });
 
-    // if (gateway_id == "NGCS2023011037") {
-    //     console.log({ Body: JSON.stringify(req.body) });
-    // }
+    if (gateway_id == "NGCS2023011029") {
+        console.log({ Body: JSON.stringify(req.body) });
+    }
 
  
 

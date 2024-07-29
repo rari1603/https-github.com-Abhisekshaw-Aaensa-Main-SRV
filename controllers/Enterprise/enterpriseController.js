@@ -361,7 +361,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 
         // Step 3: Determine offline optimizers
         const offlineThreshold = new Date(Date.now() - 3 * 60 * 1000); // 3 minutes ago
-        console.log({ offlineThreshold });
+
         // Retrieve the latest logs for all optimizers
         const optimizerIds = AllEnterpriseStateLocationGatewayOptimizer.map(optimizer => optimizer._id);
         const latestLogs = await OptimizerLogModel.aggregate([
@@ -381,7 +381,12 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 
         // Update the isOnline field for each optimizer based on the latest log
         await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
+            
             const latestLog = latestLogMap.get(optimizer._id);
+            console.log({
+                offlineThreshold,
+                latestLog
+            });
             const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
             await optimizer.updateOne({ isOnline: isOnline });
         }));
@@ -401,7 +406,6 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         return res.status(200).json(response);
 
     } catch (err) {
-        console.log(" this is catch block ");
         console.error(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }

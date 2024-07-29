@@ -376,25 +376,25 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
             }
         ]);
         // -------------------------------------------------------
-        
+
         // -------------------------------------------------------
 
         // Create a map of optimizerId to its latest log
         const latestLogMap = new Map();
         latestLogs.forEach(log => latestLogMap.set(log._id, log.latestLog));
-        console.log({ latestLogs }, "____+++++++");
+        console.log(latestLogs);
         // Update the isOnline field for each optimizer based on the latest log
         await Promise.all(AllEnterpriseStateLocationGatewayOptimizer.map(async optimizer => {
 
             const latestLog = latestLogMap.get(optimizer._id);
             const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
-            console.log({
-                offlineThreshold,
-                optID: optimizer._id,
-                latestLog: latestLog,
-                createdAt: latestLog.createdAt,
-                isOnline
-            });
+            // console.log({
+            //     offlineThreshold,
+            //     optID: optimizer._id,
+            //     latestLog: latestLog,
+            //     createdAt: latestLog.createdAt,
+            //     isOnline
+            // });
             await optimizer.updateOne({ isOnline: isOnline });
         }));
 

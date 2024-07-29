@@ -356,6 +356,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
 
         // If no optimizers found, return 404
         if (AllEnterpriseStateLocationGatewayOptimizer.length === 0) {
+            console.log("No optimizers found for the given gateway ID.");
             return res.status(404).json({ success: false, message: 'No optimizers found for the given gateway ID.' });
         }
 

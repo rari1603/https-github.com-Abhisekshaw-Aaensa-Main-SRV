@@ -330,8 +330,9 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
 // EnterpriseStateLocationGatewayOptimizerList
 exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
     const { gateway_id } = req.params;
-    return console.log({ gateway_id });
+    console.log({ gateway_id });
     try {
+        console.log("line 335");
         // Step 1: Find the gateway based on the provided gateway ID
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
 
@@ -400,6 +401,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         return res.status(200).json(response);
 
     } catch (err) {
+        console.log(" this is catch block ");
         console.error(err.message);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }

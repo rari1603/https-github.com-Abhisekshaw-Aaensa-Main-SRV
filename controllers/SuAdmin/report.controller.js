@@ -67,8 +67,8 @@ exports.AllDeviceData = async (req, res) => {
 
         console.log({ startTimestamp }, "*********************");
 
-        const startIstTimestamp = parseISTDateString(startDate);
-        const endIstTimestamp = parseISTDateString(endDate);
+        const startIstTimestamp = istToTimestamp(startDate) / 1000;
+        const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
         console.log({ startIstTimestamp }, "_____________-----------");
 
@@ -331,8 +331,8 @@ exports.AllMeterData = async (req, res) => {
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
         console.log({ Gatewayid });
 
-        const startIstTimestamp = parseISTDateString(startDate);
-        const endIstTimestamp = parseISTDateString(endDate);
+        const startIstTimestamp = istToTimestamp(startDate) / 1000;
+        const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
@@ -684,7 +684,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
 
         console.log({ endIstTimestamp });
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
-        
+
         // Adjust timestamps for IST
         const startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;

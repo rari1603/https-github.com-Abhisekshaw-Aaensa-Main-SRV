@@ -396,8 +396,14 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
                 isOnline: isOnline
             });
 
-            await optimizer.updateOne({ isOnline: isOnline });
+            try {
+                const result = await optimizer.updateOne({ isOnline: isOnline });
+                console.log(`Update result for optimizer ${optimizer._id}:`, result);
+            } catch (error) {
+                console.error(`Error updating optimizer ${optimizer._id}:`, error);
+            }
         }));
+
 
 
         // Step 4: Prepare response

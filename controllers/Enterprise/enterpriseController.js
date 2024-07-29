@@ -385,7 +385,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
             const latestLog = latestLogMap.get(optimizer._id);
             console.log({
                 offlineThreshold,
-                latestLog
+                optID: optimizer._id
             });
             const isOnline = latestLog ? (latestLog.createdAt >= offlineThreshold && latestLog.OptimizerMode !== "N/A") : false;
             await optimizer.updateOne({ isOnline: isOnline });

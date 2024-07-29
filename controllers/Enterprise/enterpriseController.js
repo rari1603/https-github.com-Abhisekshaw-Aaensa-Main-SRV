@@ -330,7 +330,7 @@ exports.EnterpriseStateLocationGatewayList = async (req, res) => {
 // EnterpriseStateLocationGatewayOptimizerList
 exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
     const { gateway_id } = req.params;
-
+    return gateway_id;
     try {
         // Step 1: Find the gateway based on the provided gateway ID
         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });

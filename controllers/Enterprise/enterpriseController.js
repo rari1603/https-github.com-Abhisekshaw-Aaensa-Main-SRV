@@ -20,7 +20,7 @@ exports.EnterpriseListData = async (req, res) => {
 
     try {
         const AllEnt = await EnterpriseAdminModel.find({});
-      
+
         if (req.params.flag === 'name') {
             return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
         }
@@ -359,8 +359,8 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
         }
 
         // Step 3: Determine offline optimizers
-        const offlineThreshold = new Date(Date.now() - 3 * 60 * 1000); // 5 minutes ago
-
+        const offlineThreshold = new Date(Date.now() - 3 * 60 * 1000); // 3 minutes ago
+        console.log({ offlineThreshold });
         // Retrieve the latest logs for all optimizers
         const optimizerIds = AllEnterpriseStateLocationGatewayOptimizer.map(optimizer => optimizer._id);
         const latestLogs = await OptimizerLogModel.aggregate([
@@ -422,7 +422,7 @@ exports.OptimizerDetails = async (req, res) => {
                 .limit(1);
 
 
-        
+
             const key = await LocationKey(Location.Lat, Location.Long);
             const weather = await Accuweather(key);
 

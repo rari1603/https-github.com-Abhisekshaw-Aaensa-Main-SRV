@@ -147,11 +147,19 @@ exports.Store = async (req, res) => {
 
     console.log({ Body: JSON.stringify(req.body) });
 
-    if (gateway_id == "NGCS2023011029") {
-        console.log({ Body: JSON.stringify(req.body) });
+    if (gateway_id === "860503071565149") {
+        try {
+            if (req.body) {
+                fs.writeFileSync("NewGatewaylog.json", JSON.stringify(req.body, null, 2));
+                console.log("File has been written successfully");
+            } else {
+                console.error("req.body is undefined or null");
+            }
+        } catch (err) {
+            console.error("Error writing file:", err);
+        }
     }
 
- 
 
     // Helper function to handle "nan" values
     const handleNaN = (value) => {
@@ -170,7 +178,7 @@ exports.Store = async (req, res) => {
 
         const OnlineOptimizers = optimizers;
         // console.log({ OnlineOptimizers });
-        
+
 
         const OnlineOptimizerIDs = OnlineOptimizers.map(optimizer => optimizer.OptimizerID.trim());
         // console.log({ OnlineOptimizerIDs });

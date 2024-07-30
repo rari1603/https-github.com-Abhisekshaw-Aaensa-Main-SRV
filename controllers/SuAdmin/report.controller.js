@@ -62,15 +62,12 @@ exports.AllDeviceData = async (req, res) => {
     const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
     try {
-        console.log({ startDate }, "############33333");
         const startTimestamp = parseISTDateString(startDate);
 
-        console.log({ startTimestamp }, "*********************");
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
 
-        console.log({ startIstTimestamp }, "_____________-----------");
 
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
@@ -79,7 +76,6 @@ exports.AllDeviceData = async (req, res) => {
         startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
         const countPoint = startIstTimestamp - istOffsetSeconds;
-        console.log({ startIstTimestampUTC }, "============+++++++");
         // Validate page and pageSize parameters
         let validatedPage = Math.max(1, parseInt(page, 10)) || 1;
         let validatedPageSize;
@@ -93,7 +89,7 @@ exports.AllDeviceData = async (req, res) => {
 
 
         if (page > 1 && INTERVAL_IN_SEC != '--' && req.body.current_interval == Interval) {
-            console.log(validatedPage, "86");
+
             pageWiseTimestamp.interval = Interval; // Assuming Interval is defined elsewhere
             pageWiseTimestamp.page = {};
 
@@ -106,7 +102,6 @@ exports.AllDeviceData = async (req, res) => {
             }
             skip = 0;
         } else if (req.body?.current_interval != Interval && INTERVAL_IN_SEC != '--') {
-            console.log(validatedPage, "99");
 
             validatedPage = 1
             startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
@@ -114,7 +109,6 @@ exports.AllDeviceData = async (req, res) => {
             skip = 0;
         }
         else if (req.body?.current_interval != Interval && INTERVAL_IN_SEC === '--') {
-            console.log(validatedPage, "111");
 
             validatedPage = 1
             startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;

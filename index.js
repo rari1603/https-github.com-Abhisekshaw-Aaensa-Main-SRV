@@ -68,6 +68,13 @@ app.get('/health', (req, res) => {
                 time: (new Date()).toString()
             };
             console.table(message);
+            // setInterval(() => {
+            // }, 10000);
+            const memoryUsage = process.memoryUsage();
+            console.log(`Heap Total: ${memoryUsage.heapTotal / 1024 / 1024} MB`);
+            console.log(`Heap Used: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
+            console.log(`RSS: ${memoryUsage.rss / 1024 / 1024} MB`);
+              
             return res.status(200).json({ response: message });
         } else {
             const message = {

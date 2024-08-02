@@ -307,6 +307,8 @@ exports.Store = async (req, res) => {
             }
         }));
 
+        console.log({ success: true, message: "Logs created successfully", gatewayLog, OptimizerLogModel });
+
         return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {

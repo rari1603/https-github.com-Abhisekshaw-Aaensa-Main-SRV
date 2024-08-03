@@ -145,7 +145,7 @@ exports.Store = async (req, res) => {
     const gateway_id = req.body.GatewayID;
     const optimizers = req.body.OptimizerDetails;
 
-    // console.log({ Body: JSON.stringify(req.body) });
+    console.log({ Body: JSON.stringify(req.body) });
 
     if (gateway_id === "860503071565149") {
         try {

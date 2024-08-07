@@ -149,12 +149,12 @@ exports.Store = async (req, res) => {
     if (gateway_id === "860503071565149") {
         try {
             console.log({ Body: JSON.stringify(req.body) });
-            if (req.body) {
-                fs.writeFileSync("NewGatewaylog.json", JSON.stringify(req.body, null, 2));
-                // console.log("File has been written successfully");
-            } else {
-                console.error("req.body is undefined or null");
-            }
+            // if (req.body) {
+            //     fs.writeFileSync("NewGatewaylog.json", JSON.stringify(req.body, null, 2));
+            //     // console.log("File has been written successfully");
+            // } else {
+            //     console.error("req.body is undefined or null");
+            // }
         } catch (err) {
             console.error("Error writing file:", err);
         }

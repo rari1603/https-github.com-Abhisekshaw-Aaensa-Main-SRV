@@ -13,16 +13,6 @@ app.get('/simulate', (req, res) => {
         "meterID": "540640023664",
         "TimeStamp": Math.floor(new Date().getTime() / 1000),
         "OptimizerDetails": [
-            // {
-            //     "TimeStamp":  Math.floor(new Date().getTime() / 1000),
-            //     "RoomTemperature": chance.floating({ min: 20, max: 30, fixed: 1 }),
-            //     "Humidity": chance.floating({ min: 30, max: 50, fixed: 2 }),
-            //     "CoilTemperature": chance.floating({ min: 10, max: 30, fixed: 1 }),
-            //     "OptimizerID": "NGCSE732B56A90",
-            //     "OptimizerMode": "OPTIMIZATION",
-            //     "CompStatus": "COMPON",
-            //     "Ac_Status":  "OFF"
-            // },
             {
                 "TimeStamp": Math.floor(new Date().getTime() / 1000),
                 "RoomTemperature": chance.floating({ min: 20, max: 30, fixed: 1 }),
@@ -31,7 +21,7 @@ app.get('/simulate', (req, res) => {
                 "OptimizerID": "NGCSEA0A9DB3E8",
                 "OptimizerMode": "NON-OPTIMIZATION",
                 "CompStatus": "COMPON",
-                "Ac_Status":  "ON"
+                "Ac_Status": "ON"
             },
             {
                 "TimeStamp": Math.floor(new Date().getTime() / 1000),
@@ -41,9 +31,8 @@ app.get('/simulate', (req, res) => {
                 "OptimizerID": "NGCSEB146DB9D8",
                 "OptimizerMode": "OPTIMIZATION",
                 "CompStatus": "COMPOFF",
-                "Ac_Status":  "ON"
-            }
-            ,
+                "Ac_Status": "ON"
+            },
             {
                 "TimeStamp": Math.floor(new Date().getTime() / 1000),
                 "RoomTemperature": chance.floating({ min: 20, max: 30, fixed: 1 }),
@@ -52,7 +41,7 @@ app.get('/simulate', (req, res) => {
                 "OptimizerID": "NGCSE732B49530",
                 "OptimizerMode": "OPTIMIZATION",
                 "CompStatus": "COMPOFF+OPT",
-                "Ac_Status":  "ON"
+                "Ac_Status": "ON"
             }
         ],
         "Phases": {
@@ -82,7 +71,8 @@ app.get('/simulate', (req, res) => {
         "KWH": chance.floating({ min: 1000, max: 2000, fixed: 2 }),
         "PF": chance.floating({ min: 0.8, max: 1, fixed: 2 })
     };
-    // return res.send(typeof simulatedData);
+
+    console.log("Simulated data:", simulatedData);
 
     const url = 'http://localhost:8080/api/hardware/gateway/save/data';
     axios.post(url, simulatedData, {
@@ -91,12 +81,17 @@ app.get('/simulate', (req, res) => {
         }
     })
         .then(response => {
-            // console.log('Data posted successfully:', response.data);
-            res.send({ message: 'Data posted successfully:', response: simulatedData });
+            console.log('Data posted successfully:', response.data);
+            res.send({ message: 'Data posted successfully:', response: response.data });
         })
         .catch(error => {
-            // console.error('Error posting data:', error.message);
-            res.send({ message: 'Error posting data' })
+            console.error('Error posting data:', error.message);
+            if (error.response) {
+                console.error('Error response data:', error.response.data);
+                console.error('Error response status:', error.response.status);
+                console.error('Error response headers:', error.response.headers);
+            }
+            res.status(500).send({ message: 'Error posting data', error: error.message });
         });
 });
 

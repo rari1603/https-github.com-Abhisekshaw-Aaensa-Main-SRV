@@ -323,17 +323,17 @@ exports.AllMeterData = async (req, res) => {
 
         }
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
-        console.log({ Gatewayid });
 
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
-
+        console.log({ startIstTimestamp });
         const istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
         // Adjust timestamps for IST
-        let startIstTimestampUTC;
-
-        startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
+        let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
+
+        console.log({startIstTimestampUTC});
+
         const countPoint = startIstTimestamp - istOffsetSeconds;
         // Validate page and pageSize parameters
         let validatedPage = Math.max(1, parseInt(page, 10)) || 1;
@@ -353,7 +353,6 @@ exports.AllMeterData = async (req, res) => {
 
             pageWiseTimestamp.page[page - 1] = FirstRef;
 
-            // console.log("LastRef condi......");
             if (flag == "Prev") {
 
 
@@ -470,10 +469,6 @@ exports.AllMeterData = async (req, res) => {
         });
 
         // At this point, responseData and totalResults are built and can be used further.
-        console.log(responseData);
-        console.log(totalResults);
-
-
 
         if (INTERVAL_IN_SEC != '--') {
             const NewResponseData = await UtilInter.MeterData(INTERVAL_IN_SEC, {
@@ -672,7 +667,7 @@ exports.DownloadMeterDataReport = async (req, res) => {
         // const Interval = "Actual";
         const INTERVAL_IN_SEC = INTERVAL_ARRAY[Interval];
 
-        console.log({endDate});
+        console.log({ endDate });
         const startIstTimestamp = istToTimestamp(startDate) / 1000;
         const endIstTimestamp = istToTimestamp(endDate) / 1000;
 

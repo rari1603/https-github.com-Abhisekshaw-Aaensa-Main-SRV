@@ -147,18 +147,18 @@ exports.Store = async (req, res) => {
 
     console.log({ Body: JSON.stringify(req.body) });
 
-    // if (gateway_id === "860503071565149") {
-    //     try {
-    //         if (req.body) {
-    //             fs.writeFileSync("NewGatewaylog.json", JSON.stringify(req.body, null, 2));
-    //             console.log("File has been written successfully");
-    //         } else {
-    //             console.error("req.body is undefined or null");
-    //         }
-    //     } catch (err) {
-    //         console.error("Error writing file:", err);
-    //     }
-    // }
+    if (gateway_id === "860503071565149") {
+        try {
+            if (req.body) {
+                fs.writeFileSync("NewGatewaylog.json", JSON.stringify(req.body, null, 2));
+                console.log("File has been written successfully");
+            } else {
+                console.error("req.body is undefined or null");
+            }
+        } catch (err) {
+            console.error("Error writing file:", err);
+        }
+    }
 
 
     // Helper function to handle "nan" values
@@ -193,10 +193,19 @@ exports.Store = async (req, res) => {
         );
 
         // Then, mark online optimizers
-        await OptimizerModel.updateMany(
-            { OptimizerID: { $in: OnlineOptimizerIDs } },
-            { $set: { isOnline: true } }
-        );
+        await Promise.all(OnlineOptimizers.map(async optimizer => {
+            const isAssigned = AssignedOptimizerIDs.includes(optimizer.OptimizerID);
+
+            await OptimizerModel.updateOne(
+                { OptimizerID: optimizer.OptimizerID },
+                {
+                    $set: {
+                        isOnline: isAssigned
+                    }
+                },
+                { new: true }
+            );
+        }));
 
 
         const gatewayId = gateway._id;

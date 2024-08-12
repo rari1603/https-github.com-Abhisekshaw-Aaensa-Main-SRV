@@ -1,15 +1,26 @@
 require('dotenv').config();
-
 const mongoose = require('mongoose');
 const OptimizerModel = require('../models/optimizer.model');
 const OptimizerLogModel = require('../models/OptimizerLog.model');
 
+let isConnected = false;
+
 const connectToDatabase = async () => {
+    if (isConnected) {
+        console.log("Already connected to MongoDB.");
+        return;
+    }
+
     console.log("Trying to connect DB...");
     let currentDate = (new Date()).toString();
 
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        isConnected = true;
+
         const dbInfo = {
             status: 'Connected to the database',
             host: mongoose.connection.host,
@@ -26,7 +37,6 @@ const connectToDatabase = async () => {
         console.error("Error connecting to MongoDB:", error.message);
         process.exit(1); // Exit the process on connection failure
     }
-
 };
 
 const createIndexes = async () => {
@@ -38,6 +48,5 @@ const createIndexes = async () => {
         console.error("Error creating indexes:", error);
     }
 };
-
 
 module.exports = { connectToDatabase };

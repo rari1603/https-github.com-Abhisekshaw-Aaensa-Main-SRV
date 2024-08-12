@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Metrics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .table-container {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Real-Time MongoDB Metrics</h1>
+
+    <!-- Connections Table -->
+    <div class="table-container">
+        <h2>Connections</h2>
+        <table id="connections-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Current</td>
+                    <td id="connections-current">0</td>
+                </tr>
+                <tr>
+                    <td>Available</td>
+                    <td id="connections-available">0</td>
+                </tr>
+                <tr>
+                    <td>Total Created</td>
+                    <td id="connections-totalCreated">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Opcounters Table -->
+    <div class="table-container">
+        <h2>Opcounters</h2>
+        <table id="opcounters-table">
+            <thead>
+                <tr>
+                    <th>Operation</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Insert</td>
+                    <td id="opcounters-insert">0</td>
+                </tr>
+                <tr>
+                    <td>Query</td>
+                    <td id="opcounters-query">0</td>
+                </tr>
+                <tr>
+                    <td>Query Rate</td>
+                    <td id="query-rate">0</td>
+                </tr>
+                <tr>
+                    <td>Update</td>
+                    <td id="opcounters-update">0</td>
+                </tr>
+                <tr>
+                    <td>Delete</td>
+                    <td id="opcounters-delete">0</td>
+                </tr>
+                <tr>
+                    <td>Getmore</td>
+                    <td id="opcounters-getmore">0</td>
+                </tr>
+                <tr>
+                    <td>Command</td>
+                    <td id="opcounters-command">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Network Table -->
+    <div class="table-container">
+        <h2>Network</h2>
+        <table id="network-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Bytes In</td>
+                    <td id="network-bytesIn">0</td>
+                </tr>
+                <tr>
+                    <td>Bytes Out</td>
+                    <td id="network-bytesOut">0</td>
+                </tr>
+                <tr>
+                    <td>Number of Requests</td>
+                    <td id="network-numRequests">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Memory Table -->
+    <div class="table-container">
+        <h2>Memory</h2>
+        <table id="memory-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Bits</td>
+                    <td id="memory-bits">0</td>
+                </tr>
+                <tr>
+                    <td>Resident</td>
+                    <td id="memory-resident">0</td>
+                </tr>
+                <tr>
+                    <td>Virtual</td>
+                    <td id="memory-virtual">0</td>
+                </tr>
+                <tr>
+                    <td>Supported</td>
+                    <td id="memory-supported">false</td>
+                </tr>
+                <tr>
+                    <td>Mapped</td>
+                    <td id="memory-mapped">0</td>
+                </tr>
+                <tr>
+                    <td>Mapped with Journal</td>
+                    <td id="memory-mappedWithJournal">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- General Information Table -->
+    <div class="table-container">
+        <h2>General Information</h2>
+        <table id="general-info-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Uptime (seconds)</td>
+                    <td id="uptime">0</td>
+                </tr>
+                <tr>
+                    <td>MongoDB Version</td>
+                    <td id="version">0</td>
+                </tr>
+                <tr>
+                    <td>Local Time</td>
+                    <td id="localTime">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const eventSource = new EventSource('http://localhost:8080/api/metrics/view');
+
+        eventSource.onmessage = function (event) {
+            const metrics = JSON.parse(event.data);
+
+            // Update Connections table
+            document.getElementById('connections-current').textContent = metrics.connections.current;
+            document.getElementById('connections-available').textContent = metrics.connections.available;
+            document.getElementById('connections-totalCreated').textContent = metrics.connections.totalCreated;
+
+            // Update Opcounters table
+            document.getElementById('opcounters-insert').textContent = metrics.opcounters.insert;
+            document.getElementById('opcounters-query').textContent = metrics.opcounters.query;
+            document.getElementById('query-rate').textContent = metrics.queryRate;
+            document.getElementById('opcounters-update').textContent = metrics.opcounters.update;
+            document.getElementById('opcounters-delete').textContent = metrics.opcounters.delete;
+            document.getElementById('opcounters-getmore').textContent = metrics.opcounters.getmore;
+            document.getElementById('opcounters-command').textContent = metrics.opcounters.command;
+
+            // Update Network table
+            document.getElementById('network-bytesIn').textContent = metrics.network.bytesIn;
+            document.getElementById('network-bytesOut').textContent = metrics.network.bytesOut;
+            document.getElementById('network-numRequests').textContent = metrics.network.numRequests;
+
+            // Update Memory table
+            document.getElementById('memory-bits').textContent = metrics.memory.bits;
+            document.getElementById('memory-resident').textContent = metrics.memory.resident;
+            document.getElementById('memory-virtual').textContent = metrics.memory.virtual;
+            document.getElementById('memory-supported').textContent = metrics.memory.supported;
+            document.getElementById('memory-mapped').textContent = metrics.memory.mapped;
+            document.getElementById('memory-mappedWithJournal').textContent = metrics.memory.mappedWithJournal;
+
+            // Update General Information table
+            document.getElementById('uptime').textContent = metrics.uptime;
+            document.getElementById('version').textContent = metrics.version;
+            document.getElementById('localTime').textContent = new Date(metrics.localTime).toLocaleString();
+        };
+
+        eventSource.onerror = function (event) {
+            console.error('Error receiving SSE:', event);
+        };
+    </script>
+</body>
+
+</html>

@@ -737,9 +737,9 @@ exports.DownloadMeterDataReport = async (req, res) => {
                     $or: gatewayLogQueries
                 }
             },
-            // {
-            //     $sort: { TimeStamp: 1 }
-            // }
+            {
+                $sort: { TimeStamp: 1 }
+            }
         ]);
 
 

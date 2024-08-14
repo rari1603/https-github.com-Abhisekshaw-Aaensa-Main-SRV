@@ -28,8 +28,8 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
     try {
         const trimmedLocationName = LocationName.trim();
         const trimmedAddress = Address.trim();
-        const trimmedLat = Lat.trim();
-        const trimmedLong = Long.trim();
+        const trimmedLat = Lat;
+        const trimmedLong = Long;
 
         const NewEntStateLocation = new EnterpriseStateLocationModel({
             Enterprise_ID,

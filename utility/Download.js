@@ -17,7 +17,22 @@ const DeviceDownloadCSV = async (data, Interval) => {
                         // Add data to CSV content
                         const dateString = new Date(parseInt(log.TimeStamp) * 1000).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split(", ");
                         const TimeString = new Date(parseInt(log.TimeStamp) * 1000).toLocaleString().split(", ");
-                        csvContent += `"'${log.Gateway.GatewayID}'","'${log.OptimizerID.OptimizerID}'","${log.OptimizerID.ACTonnage}","${log.OptimizerID.OptimizerName}","${dateString}","${TimeString[1]}","${log.RoomTemperature}","${log.Humidity}","${log.CoilTemperature}","${log.OptimizerMode}"\n`;
+                        
+                        const date = new Date(log.TimeStamp * 1000);
+
+                        // Get the time in IST (UTC+5:30)
+                        const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+                        const istDate = new Date(date.getTime() + istOffset);
+
+                        // Extract the time in 24-hour format
+                        const hours = istDate.getUTCHours().toString().padStart(2, '0');
+                        const minutes = istDate.getUTCMinutes().toString().padStart(2, '0');
+                        const seconds = istDate.getUTCSeconds().toString().padStart(2, '0');
+
+                        // Format the time
+                        const time24hrIST = `${hours}:${minutes}:${seconds}`;
+
+                        csvContent += `"'${log.Gateway.GatewayID}'","'${log.OptimizerID.OptimizerID}'","${log.OptimizerID.ACTonnage}","${log.OptimizerID.OptimizerName}","${dateString}","${time24hrIST}","${log.RoomTemperature}","${log.Humidity}","${log.CoilTemperature}","${log.OptimizerMode}"\n`;
 
                     });
                 });
@@ -50,10 +65,33 @@ const MeterDownloadCSV = async (data, Interval) => {
             state.location.forEach(function (location) {
                 location.gateway.forEach(function (gateway) {
                     gateway.GatewayLogs.forEach(function (meter) {
+                        const dateObject = new Date(parseInt(meter.TimeStamp) * 1000);
 
-                        const dateString = new Date(parseInt(meter.TimeStamp) * 1000).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split(", ");
-                        const TimeString = new Date(parseInt(meter.TimeStamp) * 1000).toLocaleString().split(", ");
-                        csvContent += `"'${gateway.GatewayName}'","${dateString}","${TimeString[1]}","${meter.Phases.Ph1.Voltage}","${meter.Phases.Ph1.Current}","${meter.Phases.Ph1.ActivePower}","${meter.Phases.Ph1.PowerFactor}","${meter.Phases.Ph1.ApparentPower}","${meter.Phases.Ph2.Voltage}","${meter.Phases.Ph2.Current}","${meter.Phases.Ph2.ActivePower}","${meter.Phases.Ph2.PowerFactor}","${meter.Phases.Ph2.ApparentPower}","${meter.Phases.Ph3.Voltage}","${meter.Phases.Ph3.Current}","${meter.Phases.Ph3.ActivePower}","${meter.Phases.Ph3.PowerFactor}","${meter.Phases.Ph3.ApparentPower}","${meter.KVAH}","${meter.KWH}","${meter.PF}"\n`;
+                        const dateString = dateObject.toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+
+
+                        // console.log(typeof TimeString);
+                        // Convert the number to milliseconds
+                        const date = new Date(meter.TimeStamp * 1000);
+
+                        // Get the time in IST (UTC+5:30)
+                        const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+                        const istDate = new Date(date.getTime() + istOffset);
+
+                        // Extract the time in 24-hour format
+                        const hours = istDate.getUTCHours().toString().padStart(2, '0');
+                        const minutes = istDate.getUTCMinutes().toString().padStart(2, '0');
+                        const seconds = istDate.getUTCSeconds().toString().padStart(2, '0');
+
+                        // Format the time
+                        const time24hrIST = `${hours}:${minutes}:${seconds}`;
+                        // console.log(meter.TimeStamp);
+                        // console.log({ time24hrIST });
+                        csvContent += `"'${gateway.GatewayName}'","${dateString}","${time24hrIST}","${meter.Phases.Ph1.Voltage}","${meter.Phases.Ph1.Current}","${meter.Phases.Ph1.ActivePower}","${meter.Phases.Ph1.PowerFactor}","${meter.Phases.Ph1.ApparentPower}","${meter.Phases.Ph2.Voltage}","${meter.Phases.Ph2.Current}","${meter.Phases.Ph2.ActivePower}","${meter.Phases.Ph2.PowerFactor}","${meter.Phases.Ph2.ApparentPower}","${meter.Phases.Ph3.Voltage}","${meter.Phases.Ph3.Current}","${meter.Phases.Ph3.ActivePower}","${meter.Phases.Ph3.PowerFactor}","${meter.Phases.Ph3.ApparentPower}","${meter.KVAH}","${meter.KWH}","${meter.PF}"\n`;
 
                     });
                 });
@@ -72,22 +110,22 @@ const UsageTrendDownload = async (data, Interval) => {
         const seconds = totalSeconds % 60;
         return `${hours} hrs: ${minutes} min: ${seconds} sec`;
     };
-    
+
     const csvData = data.map((item) => {
         const day = new Date(parseInt(item.StartTime) * 1000).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
         const totalCutoffTimeThrm = formatTime(item.totalCutoffTimeThrm);
         const totalCutoffTimeOpt = formatTime(item.totalCutoffTimeOpt);
         const totalRemainingTime = formatTime(item.totalRemainingTime);
         const totalruntime = formatTime(item.totalRemainingTime + item.totalCutoffTimeOpt + item.totalCutoffTimeThrm);
-        
+
         let acOnTimes = '';
         let acOffTimes = '';
-        
+
         if (Interval === "Day") {
             acOnTimes = `"${item.ACCutoffTimes.filter(time => time.ACOnTime).map(time => new Date(time.ACOnTime * 1000).toLocaleTimeString()).join(', ')}"`;
             acOffTimes = `"${item.ACCutoffTimes.filter(time => time.ACOffTime).map(time => new Date(time.ACOffTime * 1000).toLocaleTimeString()).join(', ')}"`;
         }
-        
+
         return {
             'DAY': day,
             'OPTIMIZER ID': item._id,
@@ -95,23 +133,23 @@ const UsageTrendDownload = async (data, Interval) => {
             'DEVICE CUTOFF (HRS)': totalCutoffTimeOpt,
             'REMAINING RUNTIME(HRS)': totalRemainingTime,
             'TOTAL RUNTIME(HRS)': totalruntime,
-            ...(Interval === "Day" && {'AC ON Time': acOnTimes, 'AC OFF TIME': acOffTimes}),
+            ...(Interval === "Day" && { 'AC ON Time': acOnTimes, 'AC OFF TIME': acOffTimes }),
         };
     });
-    
+
     const headers = ['DAY', 'OPTIMIZER ID', 'THERMOSTAT CUTOFF (HRS)', 'DEVICE CUTOFF (HRS)', 'REMAINING RUNTIME(HRS)', 'TOTAL RUNTIME(HRS)'];
-    
+
     if (Interval === "Day") {
         headers.push('AC ON Time', 'AC OFF TIME');
     }
-    
+
     const csvRows = [headers.join(',')];
     csvData.forEach(row => {
         const value = headers.map(header => row[header]);
         csvRows.push(value.join(','));
-        
+
     });
-    
+
     const csvContent = csvRows.join('\n');
     return csvContent;
 };

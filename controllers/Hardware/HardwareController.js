@@ -11,6 +11,7 @@ const EnterpriseStateLocationModel = require('../../models/enterprise_state_loca
 const UpdateSettings = require('../../utility/UpdateSetting');
 const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
 const fs = require('fs');
+const path = require('path');
 
 
 // Device ready to config
@@ -1180,9 +1181,21 @@ const compressor = async (data) => {
         };
 
         if (timeDiffSeconds > 300 && lastLog.ACStatus !== "OFF") {
+
+            if (OptimizerID === "NGCSE732B56B3C") {
+                saveToFileSystem(OptimizerID, offlineData);
+            }
+
             // Add offline data entry
             const offlineLog = new NewApplianceLogModel(offlineData);
+
             await offlineLog.save();
+
+            // Save new data entry to file system
+            if (OptimizerID === "NGCSE732B56B3C") {
+                saveToFileSystem(OptimizerID, newData);
+            }
+
             // Save new data entry
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
@@ -1191,24 +1204,63 @@ const compressor = async (data) => {
 
         // Handle different cases for saving the new data
         if (lastLog.Flag !== "OFFLINE" && Flag === "OFFLINE" && lastLog.ACStatus !== Ac_Status) {
+
+            // Save new data entry to file system
+            if (OptimizerID === "NGCSE732B56B3C") {
+                saveToFileSystem(OptimizerID, newData);
+            }
+
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
             return;
         }
         if ((newData.OptimizationMode !== lastLog.OptimizationMode || newData.CompStatus !== lastLog.CompStatus) && Flag !== "OFFLINE") {
+
+            // Save new data entry to file system
+            if (OptimizerID === "NGCSE732B56B3C") {
+                saveToFileSystem(OptimizerID, newData);
+            }
+
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
         } else if (newData.OptimizationMode === lastLog.OptimizationMode && newData.CompStatus !== lastLog.CompStatus) {
+            // Save new data entry to file system
+            if (OptimizerID === "NGCSE732B56B3C") {
+                saveToFileSystem(OptimizerID, newData);
+            }
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
         } else if (newData.OptimizationMode !== lastLog.OptimizationMode && newData.CompStatus === lastLog.CompStatus) {
             console.log({ success: false, message: "Unable to Save Data", data });
         }
     } else {
+
+        // Save new data entry if there's no previous log
+        if (OptimizerID === "NGCSE732B56B3C") {
+            saveToFileSystem(OptimizerID, newData);
+        }
+
         // Save new data entry if there's no previous log
         const newAllApplianceLog = new NewApplianceLogModel(newData);
         await newAllApplianceLog.save();
     }
 
     // console.log({ success: true, message: "Data Saved Successfully", data: newData });
+};
+
+
+const saveToFileSystem = (OptimizerID, data) => {
+    const filePath = path.join(__dirname, 'logs', `${OptimizerID}.json`);
+
+    // Ensure the logs directory exists
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+    // Append data to the file
+    fs.appendFileSync(filePath, JSON.stringify(data, null, 2) + '\n', (err) => {
+        if (err) {
+            console.error('Failed to write to file', err);
+        } else {
+            console.log('Data successfully saved to file');
+        }
+    });
 };

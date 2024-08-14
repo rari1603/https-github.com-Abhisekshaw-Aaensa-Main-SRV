@@ -74,70 +74,7 @@ exports.EnterpriseListData = async (req, res) => {
 };
 
 
-// exports.EnterpriseListData = async (req, res) => {
 
-
-
-//     try {
-//         const AllEnt = await EnterpriseAdminModel.find({});
-
-//         if (req.params.flag === 'name') {
-//             return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
-//         }
-
-//         if (req.params.flag === 'data') {
-//             const getAllEnterpriseLocation = async (entId) => {
-//                 const data = await EnterpriseStateLocationModel.find({ Enterprise_ID: entId }).exec();
-//                 // console.log("Location=>", data);
-//                 return data;
-//             };
-
-//             const getAllEnterpriseGateway = async (entInfoID) => {
-//                 const data = await GatewayModel.find({ EnterpriseInfo: entInfoID }).exec();
-//                 // console.log("Gateway=>", data);
-//                 return data;
-//             };
-
-//             const getAllEnterpriseOptimizer = async (gatewayID) => {
-//                 const data = await OptimizerModel.find({ GatewayId: gatewayID }).exec();
-//                 // console.log("Optimizer=>", data);
-//                 return data;
-//             };
-
-//             const updatedAllEnt = await Promise.all(AllEnt.map(async (ent) => {
-//                 // Getting all the locations
-//                 const LocationData = await getAllEnterpriseLocation(ent._id);
-
-//                 // Getting all the gateways
-//                 const GatewayData = await Promise.all(LocationData.map(async (location) => {
-//                     return await getAllEnterpriseGateway(location._id);
-//                 }));
-//                 const FlattenedGatewayData = GatewayData.flat(); // Use flat to flatten the array
-
-//                 // Getting all the optimizers
-//                 const OptimizerData = await Promise.all(FlattenedGatewayData.map(async (gateway) => {
-//                     return await getAllEnterpriseOptimizer(gateway._id);
-//                 }));
-//                 const FlattenedOptimizerData = OptimizerData.flat();
-
-
-//                 const data = {
-//                     location: LocationData.length,
-//                     gateway: FlattenedGatewayData.length,
-//                     optimizer: FlattenedOptimizerData.length,
-//                     power_save_unit: Math.round(Math.random() * (300 - 100) + 1),
-//                 };
-
-//                 return { ...ent._doc, data };
-//             }));
-
-//             return res.status(200).json({ success: true, message: "Data fetched successfully", data: updatedAllEnt });
-//         }
-//     } catch (err) {
-//         console.log(err.message);
-//         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
-//     }
-// };
 
 // EnterpriseStateList
 exports.EnterpriseStateList = async (req, res) => {

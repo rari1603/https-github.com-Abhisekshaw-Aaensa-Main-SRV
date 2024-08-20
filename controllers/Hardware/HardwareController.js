@@ -10,6 +10,7 @@ const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
 const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
+const logger = require('../../configs/pino_logger').createLogger(__filename);
 const fs = require('fs');
 const path = require('path');
 
@@ -248,6 +249,20 @@ exports.Store = async (req, res) => {
 
                 await CounterFlag(data);
 
+                // logger.info({
+                //     OptimizerID: optimizer._id,
+                //     GatewayID: gatewayId,
+                //     GatewayLogID: gatewayLog._id,
+                //     DeviceStatus: true, // optimizer.isOnline,
+                //     TimeStamp: TimeStamp,
+                //     RoomTemperature: element.RoomTemperature,
+                //     Humidity: (element.Humidity).toFixed(2),
+                //     CoilTemperature: element.CoilTemperature,
+                //     OptimizerMode: element.OptimizerMode,
+                //     CompStatus: element.CompStatus,
+                //     Ac_Status: element.Ac_Status
+                // });
+
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
                     GatewayID: gatewayId,
@@ -258,6 +273,8 @@ exports.Store = async (req, res) => {
                     Humidity: (element.Humidity).toFixed(2),
                     CoilTemperature: element.CoilTemperature,
                     OptimizerMode: element.OptimizerMode,
+                    CompStatus: element.CompStatus,
+                    Ac_Status: element.Ac_Status,
                 }).save();
             }
         });
@@ -285,6 +302,19 @@ exports.Store = async (req, res) => {
                 }
 
                 await CounterFlag(data);
+                // logger.info({
+                //     OptimizerID: optimizer._id,
+                //     GatewayID: gatewayId,
+                //     GatewayLogID: gatewayLog._id,
+                //     DeviceStatus: false, // optimizer.isOnline,
+                //     TimeStamp: TimeStamp,
+                //     RoomTemperature: 0,
+                //     Humidity: 0,
+                //     CoilTemperature: 0,
+                //     OptimizerMode: "N/A",
+                //     CompStatus: "--",
+                //     Ac_Status: "--",
+                // });
 
                 return OptimizerLogModel({
                     OptimizerID: optimizer._id,
@@ -296,6 +326,8 @@ exports.Store = async (req, res) => {
                     Humidity: 0,
                     CoilTemperature: 0,
                     OptimizerMode: "N/A",
+                    CompStatus: "--",
+                    Ac_Status: "--",
                 }).save();
             }
         }));

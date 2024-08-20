@@ -49,7 +49,7 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 }
-
+  
 
 // Add gateway
 exports.AddGateway = async (req, res) => {

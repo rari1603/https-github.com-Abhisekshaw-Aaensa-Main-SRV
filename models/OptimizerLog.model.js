@@ -24,6 +24,8 @@ const OptimizerLogSchema = new mongoose.Schema({
     },
     DeviceStatus: { type: Boolean, default: false },
     TimeStamp: { type: String, index: true },
+    CompStatus: { type: String, default: "--" },
+    Ac_Status: { type: String, default: "--" },
     RoomTemperature: { type: Number },
     Humidity: { type: Number },
     CoilTemperature: { type: Number },

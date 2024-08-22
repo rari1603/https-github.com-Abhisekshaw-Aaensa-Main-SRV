@@ -10,13 +10,67 @@ const GatewayLogModel = require('../../models/GatewayLog.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const axios = require('axios');
 const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
-
-
+const mongoose = require('mongoose');
+const logger = require('../../configs/pino_logger').createLogger(__filename);
 
 // EnterpriseList
 
 exports.EnterpriseListData = async (req, res) => {
     try {
+
+        // const tt = await mongoose.connection.db.collection('enterprises').aggregate([
+        //     {
+        //         $lookup: {
+        //             from: "enterprisestates",
+        //             localField: "_id",
+        //             foreignField: "Enterprise_ID",
+        //             as: "stateData"
+        //         }
+        //     },
+        //     {
+        //         $unwind: "$stateData"
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "enterprisestatelocations",
+        //             localField: "stateData.State_ID",
+        //             foreignField: "State_ID",
+        //             as: "locationData"
+        //         }
+        //     },
+        //     {
+        //         $unwind: "$locationData"
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "states",
+        //             localField: "stateData.State_ID",
+        //             foreignField: "_id",
+        //             as: "stateInfo"
+        //         }
+        //     },
+        //     {
+        //         $unwind: "$stateInfo"
+        //     },
+        //     {
+        //         $group: {
+        //             _id: {
+        //                 enterpriseId: "$_id",
+        //                 stateId: "$stateData.State_ID"
+        //             },
+        //             enterpriseName: { $first: "$EnterpriseName" },
+        //             stateName: { $first: "$stateInfo.name" },
+        //             locations: { $push: { locationID: "$locationData._id",locationName: "$locationData.LocationName", address: "$locationData.Address" } }
+        //         }
+        //     }
+        // ]).toArray();
+
+        // if (tt) {
+        //     logger.info({ tt });
+        // }
+        // // return;
+        //logger.trace("Trace: test message");
+        // // console.log(tt);
         const AllEnt = await EnterpriseAdminModel.find({});
         console.log(req.params.flag);
         if (req.params.flag === 'name') {
@@ -74,7 +128,19 @@ exports.EnterpriseListData = async (req, res) => {
 };
 
 
+// exports.EnterpriseState = async (req, res) => {
+//     const { enterprise_id } = req.params;
+//     try {
+//         const AllEnterpriseState = await EnterpriseStateModel.find({ Enterprise_ID: enterprise_id })
 
+//         if (AllEnterpriseState === 0) {
+//             return res.status(404).send({ success: false, message: 'No data found for the given enterprise ID' })
+//         }
+
+//     } catch (error) {
+
+//     }
+// }
 
 // EnterpriseStateList
 exports.EnterpriseStateList = async (req, res) => {

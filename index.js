@@ -18,6 +18,7 @@ const cors = require('cors');
 const moment = require('moment-timezone');
 const os = require('os');
 const timeout = require('connect-timeout');
+const scheduleJobs = require('./configs/schedule-job');
 
 // Connect to the database
 connectToDatabase();
@@ -75,7 +76,7 @@ app.get('/health', (req, res) => {
             console.log(`Heap Total: ${memoryUsage.heapTotal / 1024 / 1024} MB`);
             console.log(`Heap Used: ${memoryUsage.heapUsed / 1024 / 1024} MB`);
             console.log(`RSS: ${memoryUsage.rss / 1024 / 1024} MB`);
-              
+
             return res.status(200).json({ response: message });
         } else {
             const message = {
@@ -128,6 +129,9 @@ app.use((req, res, next) => {
     });
     // res.status(404).sendFile(path.join(__dirname, 'pages', '404.html'));
 });
+
+// Start scheduling jobs
+scheduleJobs();
 
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || `http://localhost:${PORT}`;

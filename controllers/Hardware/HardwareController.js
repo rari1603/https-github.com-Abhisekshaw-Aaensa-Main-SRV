@@ -14,6 +14,7 @@ const logger = require('../../configs/pino_logger').createLogger(__filename);
 const fs = require('fs');
 const path = require('path');
 
+// console.log({logger});
 
 // Device ready to config
 exports.DeviceReadyToConfig = async (req, res) => {
@@ -148,19 +149,14 @@ exports.Store = async (req, res) => {
     const optimizers = req.body.OptimizerDetails;
 
     console.log({ Body: JSON.stringify(req.body) });
-
+    
     if (gateway_id === "NGCS2023011022") {
         try {
             const jsonObject = req.body;
-    
-            // Convert JSON object to string
-            const jsonString = JSON.stringify(jsonObject, null, 2); // `null` and `2` are for pretty-printing
-    
-            // Define the file path (you can change this to whatever path you prefer)
-            const filePath = path.join(__dirname, 'data.json');
-    
-            // Write JSON data to the file
-            fs.writeFileSync(filePath, jsonString);
+            // logger.trace(jsonObject); 
+            
+
+          
     
             console.log('JSON file saved successfully.');
         } catch (err) {

@@ -129,9 +129,9 @@ app.use((req, res, next) => {
     });
     // res.status(404).sendFile(path.join(__dirname, 'pages', '404.html'));
 });
+//  require('./configs/Schedule_job');
 
-// Start scheduling jobs
-scheduleJobs();
+
 
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || `http://localhost:${PORT}`;

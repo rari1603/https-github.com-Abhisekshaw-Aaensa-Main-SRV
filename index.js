@@ -18,7 +18,6 @@ const cors = require('cors');
 const moment = require('moment-timezone');
 const os = require('os');
 const timeout = require('connect-timeout');
-const scheduleJobs = require('./configs/schedule-job');
 
 // Connect to the database
 connectToDatabase();
@@ -129,8 +128,8 @@ app.use((req, res, next) => {
     });
     // res.status(404).sendFile(path.join(__dirname, 'pages', '404.html'));
 });
-//  require('./configs/Schedule_job');
 
+ require('./configs/agenda');
 
 
 const PORT = process.env.PORT || 8080;

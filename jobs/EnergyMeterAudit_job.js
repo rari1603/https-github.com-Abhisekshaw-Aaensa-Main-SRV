@@ -1,7 +1,10 @@
 const { Enterprise } = require('../middleware/lib/roles');
 const EnergyMeterAuditModel = require('../models/EnergyMeter_Audit');
 const GatewayLogModel = require('../models/GatewayLog.model');
+const { SendAudit } = require('../controllers/Delloite/action');
 const mongoose = require('mongoose');
+const { ObjectId } = require('mongodb');
+const crypto = require('crypto');
 
 module.exports = function (agenda) {
 
@@ -9,19 +12,54 @@ module.exports = function (agenda) {
     agenda.define('EnergyMeterAudit', async (job) => {
         try {
             const latestRecord = await findLatestRecords(["66d6a8f5b7d83af6a1ba089c", "66d6ae69b7d83af6a1ba09da"]);
-            // const EnterpriseID =
-            // console.log(latestRecord,"--------------------");
-            // const latestRecord = await GatewayLogModel.findOne().sort({ createdAt: -1 });
+            
             if (latestRecord && latestRecord.length > 0) {
-                for (const entry of latestRecord) {
-                    const newRecord = new EnergyMeterAuditModel({
-                        GatewayId: entry.GatewayID,
-                        KWH: entry.KWH,
-                        KVAH: entry.KVAH,
-                        PF: entry.PF,
+                const runId = new ObjectId(); // Single runId for all records
+                // const fake = await generateStaticData();
+                const chunkSize = 20;
+
+                for (let i = 0; i < fake.length; i += chunkSize) {
+                    const batchId = new ObjectId(); // Unique batchId for each chunk
+                    const recordsToInsert = []; // Array to hold all records to insert
+
+                    for (const entry of latestRecord) {
+                        // Create the new record with runId and batchId
+                        const newRecord = {
+                            GatewayId: entry.GatewayID,
+                            TimeStamp: entry.TimeStamp,
+                            KWH: entry.KWH,
+                            KVAH: entry.KVAH,
+                            PF: entry.PF,
+                            runId: runId,
+                            batchId: batchId,
+                        };
+                        recordsToInsert.push(newRecord);
+                    }
+
+                    // Insert all records in one go
+                    const insertedRecords = await EnergyMeterAuditModel.insertMany(recordsToInsert);
+
+                    // Process the inserted records to add groupId
+                    const chunk = insertedRecords.map(record => {
+                        // Create the groupId hash using runId and batchId only
+                        const groupId = crypto.createHash('sha256')
+                            .update(runId.toString() + batchId.toString())
+                            .digest('hex');
+
+                        return {
+                            _id: record._id,       // Include the _id of newRecord
+                            GatewayId: record.GatewayId,
+                            TimeStamp: record.TimeStamp,
+                            KWH: record.KWH,
+                            KVAH: record.KVAH,
+                            PF: record.PF,
+                            groupId: groupId,
+                        };
                     });
-                    await newRecord.save();
-                    // console.log('Record stored in EnergyMeterAuditModel:', newRecord);
+
+                    // Send the chunk with the _id, groupId, and other fields to SendAudit
+                    const SendAuditResp = await SendAudit(chunk); // Assuming SendAudit accepts the chunk with groupId
+                    console.log({ SendAuditResp, batchId });
                 }
             } else {
                 console.log('No records found in ModelA');
@@ -74,4 +112,34 @@ module.exports = function (agenda) {
     }
 
 
+
+
+
+    async function generateStaticData() {
+        const data = [];
+        const baseTimestamp = 1725361073; // Starting timestamp
+
+        for (let i = 0; i < 60; i++) {
+            const record = {
+                _id: new ObjectId(),
+                GatewayID: new ObjectId(),
+                TimeStamp: (baseTimestamp + i).toString(),
+                Phases: {
+                    Ph1: { voltage: 230 + Math.random(), current: 10 + Math.random() },
+                    Ph2: { voltage: 230 + Math.random(), current: 10 + Math.random() },
+                    Ph3: { voltage: 230 + Math.random(), current: 10 + Math.random() },
+                },
+                KVAH: parseFloat((440 + i * 5).toFixed(2)),
+                KWH: parseFloat((433 + i * 5).toFixed(2)),
+                PF: 0.99,
+                isDelete: false,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                __v: 0,
+            };
+            data.push(record);
+        }
+
+        return data;
+    }
 };

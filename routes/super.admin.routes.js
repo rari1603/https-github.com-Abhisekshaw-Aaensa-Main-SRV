@@ -1,5 +1,6 @@
 const express = require('express');
 const ReportController = require('../controllers/SuAdmin/report.controller');
+const ReplicaController = require('../controllers/DataReplica');
 const UserController = require('../controllers/SuAdmin/user.controller');
 const EnterpriseController = require('../controllers/Enterprise/enterpriseController');
 const CommonController = require('../controllers/CommonController');
@@ -126,5 +127,9 @@ router.get('/delete/gateway/:gateway_id', DeviceController.DeleteOptimizer);
 // router.get('/hi', routeAccessMiddleware(), UserController.index);
 
 router.get('/pagination', ReportController.PaginationData);
+
+
+// Data clone API
+router.get('/clone/all/data', ReplicaController.CreateClone);
 
 module.exports = router;

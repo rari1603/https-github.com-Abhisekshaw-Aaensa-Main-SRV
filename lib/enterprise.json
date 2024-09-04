@@ -1,0 +1,58 @@
+[
+  {
+    "ContactInfo": {
+      "Email": "axis@yopmail.com",
+      "Name": "Axis Bank",
+      "Phone": "5551234555"
+    },
+    "_id": "6581306cdd186286653fc290",
+    "EnterpriseName": "Axis",
+    "OnboardingDate": "15-12-2023",
+    "isDelete": false,
+    "createdAt": "2023-12-19T05:55:56.614Z",
+    "updatedAt": "2024-03-21T08:03:10.617Z",
+    "__v": 0
+  },
+  {
+    "ContactInfo": {
+      "Email": "cafécoffeeday@gmail.com",
+      "Name": "CCD",
+      "Phone": "9098765543"
+    },
+    "_id": "65dec445fc5af4893131c2b3",
+    "EnterpriseName": "Café Coffee Day",
+    "OnboardingDate": "2024-02-13",
+    "isDelete": false,
+    "createdAt": "2024-02-28T05:27:33.061Z",
+    "updatedAt": "2024-02-28T05:27:33.061Z",
+    "__v": 0
+  },
+  {
+    "ContactInfo": {
+      "Email": "Testing2@gmail.com",
+      "Name": "Test",
+      "Phone": "1234567890"
+    },
+    "_id": "65fbe069c939e0589f097e0a",
+    "EnterpriseName": "Testing",
+    "OnboardingDate": "2024-03-21",
+    "isDelete": false,
+    "createdAt": "2024-03-21T07:23:21.250Z",
+    "updatedAt": "2024-03-21T07:23:21.250Z",
+    "__v": 0
+  },
+  {
+    "ContactInfo": {
+      "Email": "aaensa@aaensa.com",
+      "Name": "Aaensa Tech",
+      "Phone": "7788994455"
+    },
+    "_id": "66d6a882b7d83af6a1ba0865",
+    "EnterpriseName": "AaensaTesting",
+    "OnboardingDate": "2024-09-03",
+    "isDelete": false,
+    "createdAt": "2024-09-03T06:11:14.461Z",
+    "updatedAt": "2024-09-03T06:11:14.461Z",
+    "__v": 0
+  }
+]

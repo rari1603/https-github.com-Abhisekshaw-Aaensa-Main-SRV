@@ -1,0 +1,888 @@
+[
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "6582f9f91980116c336a10f1",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Axsis Chingrighata Wb",
+    "isDelete": false,
+    "createdAt": "2023-12-20T14:28:09.827Z",
+    "updatedAt": "2024-01-15T06:47:35.105Z",
+    "__v": 0,
+    "Address": "Default Address"
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "_id": "6582fa1b1980116c336a10f4",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a061",
+      "name": "Odisha",
+      "country_code": "IN",
+      "iso2": "OR",
+      "type": "state",
+      "latitude": "20.95166580",
+      "longitude": "85.09852360",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Axsis Rajaloka Od",
+    "isDelete": false,
+    "createdAt": "2023-12-20T14:28:43.207Z",
+    "updatedAt": "2024-03-07T13:54:37.435Z",
+    "__v": 0,
+    "Address": "Default Address",
+    "BypassMode": "ON"
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "6582fa251980116c336a10f7",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a061",
+      "name": "Odisha",
+      "country_code": "IN",
+      "iso2": "OR",
+      "type": "state",
+      "latitude": "20.95166580",
+      "longitude": "85.09852360",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Axsis Baripada Od",
+    "isDelete": false,
+    "createdAt": "2023-12-20T14:28:53.861Z",
+    "updatedAt": "2024-01-15T06:47:35.105Z",
+    "__v": 0,
+    "Address": "Default Address"
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "659fafc5bbd4075b0b2c55c7",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Saltlake Sector V",
+    "isDelete": false,
+    "createdAt": "2024-01-11T09:07:17.081Z",
+    "updatedAt": "2024-02-13T13:03:06.167Z",
+    "__v": 0,
+    "Address": "Ep Block, EP-Y1, EP Block, Sector V, Bidhannagar, Kolkata, West Bengal 700091"
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "65a4d88a564abb68740f7964",
+    "Enterprise_ID": null,
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Saltlake Sector V",
+    "Address": "Ep Block, EP-Y1, EP Block, Sector V, Bidhannagar, Kolkata, West Bengal 700091",
+    "isDelete": false,
+    "createdAt": "2024-01-15T07:02:34.942Z",
+    "updatedAt": "2024-01-15T07:02:34.942Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "65cdedb25296bfed125021d0",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a070",
+      "name": "Kerala",
+      "country_code": "IN",
+      "iso2": "KL",
+      "type": "state",
+      "latitude": "10.85051590",
+      "longitude": "76.27108330",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Kochi",
+    "Address": "Customs Colony",
+    "isDelete": false,
+    "createdAt": "2024-02-15T10:55:46.933Z",
+    "updatedAt": "2024-02-15T10:55:46.933Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "65d47f1acb1e295431c8c755",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a069",
+      "name": "Delhi",
+      "country_code": "IN",
+      "iso2": "DL",
+      "type": "Union territory",
+      "latitude": "28.70405920",
+      "longitude": "77.10249020",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "DelhiLocation2",
+    "Address": "DL2",
+    "isDelete": false,
+    "createdAt": "2024-02-20T10:29:46.248Z",
+    "updatedAt": "2024-02-20T10:29:46.248Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "65d47f73cb1e295431c8c796",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a069",
+      "name": "Delhi",
+      "country_code": "IN",
+      "iso2": "DL",
+      "type": "Union territory",
+      "latitude": "28.70405920",
+      "longitude": "77.10249020",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "DelhiLocation1",
+    "Address": "DL1",
+    "isDelete": false,
+    "createdAt": "2024-02-20T10:31:15.726Z",
+    "updatedAt": "2024-02-20T10:31:15.726Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "BypassMode": "",
+    "_id": "65d6364ff58e9b8f33683a5d",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a06f",
+      "name": "Assam",
+      "country_code": "IN",
+      "iso2": "AS",
+      "type": "state",
+      "latitude": "26.20060430",
+      "longitude": "92.93757390",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "wertyui",
+    "Address": "sdfgh",
+    "isDelete": false,
+    "createdAt": "2024-02-21T17:43:43.387Z",
+    "updatedAt": "2024-02-21T17:43:43.387Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "_id": "65f7ee2918c2994dce115da5",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "cafécoffeeday@gmail.com",
+        "Name": "CCD",
+        "Phone": "9098765543"
+      },
+      "_id": "65dec445fc5af4893131c2b3",
+      "EnterpriseName": "Café Coffee Day",
+      "OnboardingDate": "2024-02-13",
+      "isDelete": false,
+      "createdAt": "2024-02-28T05:27:33.061Z",
+      "updatedAt": "2024-02-28T05:27:33.061Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a067",
+      "name": "Lakshadweep",
+      "country_code": "IN",
+      "iso2": "LD",
+      "type": "Union territory",
+      "latitude": "10.32802650",
+      "longitude": "72.78463360",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "location4",
+    "Address": "8889",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-03-18T07:32:57.452Z",
+    "updatedAt": "2024-03-18T07:32:57.452Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "_id": "65f976475c7ae9f866c9204e",
+    "Enterprise_ID": null,
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "kolkata",
+    "Address": "3rd floor, cc-51, street number 241, kolkata, west bengal",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-03-19T11:25:59.574Z",
+    "updatedAt": "2024-03-19T11:25:59.574Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "_id": "65f9766e5c7ae9f866c92059",
+    "Enterprise_ID": null,
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Durgapur",
+    "Address": "cc-51, street-241",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-03-19T11:26:38.406Z",
+    "updatedAt": "2024-03-19T11:26:38.406Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "_id": "65fbe12fc939e0589f097e74",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "Testing2@gmail.com",
+        "Name": "Test",
+        "Phone": "1234567890"
+      },
+      "_id": "65fbe069c939e0589f097e0a",
+      "EnterpriseName": "Testing",
+      "OnboardingDate": "2024-03-21",
+      "isDelete": false,
+      "createdAt": "2024-03-21T07:23:21.250Z",
+      "updatedAt": "2024-03-21T07:23:21.250Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a073",
+      "name": "Chandigarh",
+      "country_code": "IN",
+      "iso2": "CH",
+      "type": "Union territory",
+      "latitude": "30.73331480",
+      "longitude": "76.77941790",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Dhakoli",
+    "Address": "testing address",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-03-21T07:26:39.266Z",
+    "updatedAt": "2024-03-21T07:26:39.266Z",
+    "__v": 0
+  },
+  {
+    "Lat": "false",
+    "Long": "false",
+    "_id": "65fbe9f8c939e0589f099b30",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a06f",
+      "name": "Assam",
+      "country_code": "IN",
+      "iso2": "AS",
+      "type": "state",
+      "latitude": "26.20060430",
+      "longitude": "92.93757390",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "@@@@",
+    "Address": "@@@@",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-03-21T08:04:08.949Z",
+    "updatedAt": "2024-03-21T08:04:08.949Z",
+    "__v": 0
+  },
+  {
+    "_id": "66191487a485c5942f639525",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Hyderabad",
+    "Address": "Hyderabad, Telangana, IND",
+    "Lat": "17.3949",
+    "Long": "78.47073",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-12T11:01:27.321Z",
+    "updatedAt": "2024-04-12T11:01:27.321Z",
+    "__v": 0
+  },
+  {
+    "_id": "66191c4d593a5a26b669e187",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Delhi",
+    "Address": "Mumbai, Mumbai Suburban, Maharashtra, IND",
+    "Lat": "19.143121737",
+    "Long": "72.88110732",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-12T11:34:37.535Z",
+    "updatedAt": "2024-04-12T11:34:37.535Z",
+    "__v": 0
+  },
+  {
+    "_id": "661ccb6f0ff03e3392d5caad",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a068",
+      "name": "Himachal Pradesh",
+      "country_code": "IN",
+      "iso2": "HP",
+      "type": "state",
+      "latitude": "31.10482940",
+      "longitude": "77.17339010",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "shimla",
+    "Address": "Shimla, Himachal Pradesh, IND",
+    "Lat": "31.10326",
+    "Long": "77.15844",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-15T06:38:39.295Z",
+    "updatedAt": "2024-04-15T06:38:39.295Z",
+    "__v": 0
+  },
+  {
+    "_id": "661cfc380ff03e3392d5d213",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Kolkata",
+    "Address": "New Town, Service Road, Rajarhat, Kolkata, North Twenty Four Parganas, West Bengal, 700136, IND",
+    "Lat": "22.62332",
+    "Long": "88.44122",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-15T10:06:48.629Z",
+    "updatedAt": "2024-04-15T10:06:48.629Z",
+    "__v": 0
+  },
+  {
+    "_id": "661e2ffa199cf2c64eb19bcb",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a061",
+      "name": "Odisha",
+      "country_code": "IN",
+      "iso2": "OR",
+      "type": "state",
+      "latitude": "20.95166580",
+      "longitude": "85.09852360",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Banglore",
+    "Address": "Bang, Nkhotakota, Central Region, MWI",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-16T07:59:54.484Z",
+    "updatedAt": "2024-07-22T09:24:45.638Z",
+    "__v": 0,
+    "Lat": "23.070",
+    "Long": "72.539"
+  },
+  {
+    "_id": "661e747a66faa4efe71e7f85",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Rohtak",
+    "Address": "Rohtak, Haryana, IND",
+    "Lat": "28.8902749",
+    "Long": "76.582572",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-16T12:52:10.870Z",
+    "updatedAt": "2024-04-16T12:52:10.870Z",
+    "__v": 0
+  },
+  {
+    "_id": "662e1e8ea8710d51cf1a1506",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "axis@yopmail.com",
+        "Name": "Axis Bank",
+        "Phone": "5551234555"
+      },
+      "_id": "6581306cdd186286653fc290",
+      "EnterpriseName": "Axis",
+      "OnboardingDate": "15-12-2023",
+      "isDelete": false,
+      "createdAt": "2023-12-19T05:55:56.614Z",
+      "updatedAt": "2024-03-21T08:03:10.617Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a07d",
+      "name": "West Bengal",
+      "country_code": "IN",
+      "iso2": "WB",
+      "type": "state",
+      "latitude": "22.98675690",
+      "longitude": "87.85497550",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "durgapur",
+    "Address": "Durgapur, Barddhamān, Bengal, IND",
+    "Lat": "23.51583",
+    "Long": "87.30801",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-04-28T10:01:50.658Z",
+    "updatedAt": "2024-04-28T10:01:50.658Z",
+    "__v": 0
+  },
+  {
+    "_id": "66449b1b5cf06add66b102ae",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "Testing2@gmail.com",
+        "Name": "Test",
+        "Phone": "1234567890"
+      },
+      "_id": "65fbe069c939e0589f097e0a",
+      "EnterpriseName": "Testing",
+      "OnboardingDate": "2024-03-21",
+      "isDelete": false,
+      "createdAt": "2024-03-21T07:23:21.250Z",
+      "updatedAt": "2024-03-21T07:23:21.250Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a05b",
+      "name": "Haryana",
+      "country_code": "IN",
+      "iso2": "HR",
+      "type": "state",
+      "latitude": "29.05877570",
+      "longitude": "76.08560100",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Rewari",
+    "Address": "Rewari, Haryana, IND",
+    "Lat": "28.2016757",
+    "Long": "76.6115526",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-05-15T11:23:07.983Z",
+    "updatedAt": "2024-05-15T11:23:07.983Z",
+    "__v": 0
+  },
+  {
+    "_id": "666c3dc151e2b1cc6ccb5abe",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "Testing2@gmail.com",
+        "Name": "Test",
+        "Phone": "1234567890"
+      },
+      "_id": "65fbe069c939e0589f097e0a",
+      "EnterpriseName": "Testing",
+      "OnboardingDate": "2024-03-21",
+      "isDelete": false,
+      "createdAt": "2024-03-21T07:23:21.250Z",
+      "updatedAt": "2024-03-21T07:23:21.250Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a05b",
+      "name": "Haryana",
+      "country_code": "IN",
+      "iso2": "HR",
+      "type": "state",
+      "latitude": "29.05877570",
+      "longitude": "76.08560100",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Delhi",
+    "Address": "Sector 48 Road, Tikri Dhani Fazilpur, Gurugram, Haryana, 122101, IND",
+    "Lat": "28.421469018945",
+    "Long": "77.03818486154",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-06-14T12:55:29.120Z",
+    "updatedAt": "2024-06-14T12:55:29.120Z",
+    "__v": 0
+  },
+  {
+    "_id": "6697ad82dcf2f483914980dc",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "cafécoffeeday@gmail.com",
+        "Name": "CCD",
+        "Phone": "9098765543"
+      },
+      "_id": "65dec445fc5af4893131c2b3",
+      "EnterpriseName": "Café Coffee Day",
+      "OnboardingDate": "2024-02-13",
+      "isDelete": false,
+      "createdAt": "2024-02-28T05:27:33.061Z",
+      "updatedAt": "2024-02-28T05:27:33.061Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a05b",
+      "name": "Haryana",
+      "country_code": "IN",
+      "iso2": "HR",
+      "type": "state",
+      "latitude": "29.05877570",
+      "longitude": "76.08560100",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Gurgaon",
+    "Address": "Gurugram, Haryana, IND",
+    "Lat": "28.4665886",
+    "Long": "77.0333116",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-07-17T11:39:46.814Z",
+    "updatedAt": "2024-07-17T11:39:46.814Z",
+    "__v": 0
+  },
+  {
+    "_id": "66d6a8cbb7d83af6a1ba0888",
+    "Enterprise_ID": {
+      "ContactInfo": {
+        "Email": "aaensa@aaensa.com",
+        "Name": "Aaensa Tech",
+        "Phone": "7788994455"
+      },
+      "_id": "66d6a882b7d83af6a1ba0865",
+      "EnterpriseName": "AaensaTesting",
+      "OnboardingDate": "2024-09-03",
+      "isDelete": false,
+      "createdAt": "2024-09-03T06:11:14.461Z",
+      "updatedAt": "2024-09-03T06:11:14.461Z",
+      "__v": 0
+    },
+    "State_ID": {
+      "_id": "658024a27c64bcd8e249a05b",
+      "name": "Haryana",
+      "country_code": "IN",
+      "iso2": "HR",
+      "type": "state",
+      "latitude": "29.05877570",
+      "longitude": "76.08560100",
+      "isDelete": false,
+      "updatedAt": "2023-12-18T10:55:34.839Z"
+    },
+    "LocationName": "Gurgaon",
+    "Address": "Spaze Itech Park, Sector 49, Gurugram, Haryana, 122018, IND",
+    "Lat": "",
+    "Long": "",
+    "isDelete": false,
+    "BypassMode": "",
+    "createdAt": "2024-09-03T06:12:27.641Z",
+    "updatedAt": "2024-09-03T06:12:27.641Z",
+    "__v": 0
+  }
+]

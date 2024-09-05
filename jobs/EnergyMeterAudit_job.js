@@ -2,24 +2,30 @@ const { Enterprise } = require('../middleware/lib/roles');
 const EnergyMeterAuditModel = require('../models/EnergyMeter_Audit');
 const GatewayLogModel = require('../models/GatewayLog.model');
 const { SendAudit } = require('../controllers/Delloite/action');
+const { Data } = require('../Test/RetriveId');
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const crypto = require('crypto');
+
 
 module.exports = function (agenda) {
 
     // Job 1: Find the latest record in ModelA and store it in ModelB
     agenda.define('EnergyMeterAudit', async (job) => {
         try {
-            const latestRecord = await findLatestRecords(["66d6a8f5b7d83af6a1ba089c", "66d6ae69b7d83af6a1ba09da"]);
-            
+            const id = await Data();
+            const latestRecord = await findLatestRecords(id);
+
             if (latestRecord && latestRecord.length > 0) {
-                const runId = new ObjectId(); // Single runId for all records
-                // const fake = await generateStaticData();
+                // Fetch the latest runId from the collection, ensuring it's a valid number
+                const lastRunRecord = await EnergyMeterAuditModel.findOne().sort({ runId: -1 });
+                const runId = lastRunRecord && !isNaN(Number(lastRunRecord.runId)) ? Number(lastRunRecord.runId) + 1 : 1;
+
                 const chunkSize = 20;
 
-                for (let i = 0; i < fake.length; i += chunkSize) {
-                    const batchId = new ObjectId(); // Unique batchId for each chunk
+                for (let i = 0; i < latestRecord.length; i += chunkSize) {
+                    const batchId = i / chunkSize + 1; // BatchId starts from 1 for each new runId
+
                     const recordsToInsert = []; // Array to hold all records to insert
 
                     for (const entry of latestRecord) {
@@ -30,21 +36,19 @@ module.exports = function (agenda) {
                             KWH: entry.KWH,
                             KVAH: entry.KVAH,
                             PF: entry.PF,
-                            runId: runId,
+                            runId: runId,  // Ensure runId is a valid number
                             batchId: batchId,
                         };
                         recordsToInsert.push(newRecord);
                     }
+                    console.log({ runId });
 
                     // Insert all records in one go
                     const insertedRecords = await EnergyMeterAuditModel.insertMany(recordsToInsert);
 
                     // Process the inserted records to add groupId
                     const chunk = insertedRecords.map(record => {
-                        // Create the groupId hash using runId and batchId only
-                        const groupId = crypto.createHash('sha256')
-                            .update(runId.toString() + batchId.toString())
-                            .digest('hex');
+                        const groupId = `${record.runId}-${record.batchId}`;
 
                         return {
                             _id: record._id,       // Include the _id of newRecord
@@ -57,17 +61,19 @@ module.exports = function (agenda) {
                         };
                     });
 
+
                     // Send the chunk with the _id, groupId, and other fields to SendAudit
                     const SendAuditResp = await SendAudit(chunk); // Assuming SendAudit accepts the chunk with groupId
                     console.log({ SendAuditResp, batchId });
                 }
             } else {
-                console.log('No records found in ModelA');
+                console.log('No records found in EnterpriseMeterAudit');
             }
         } catch (err) {
             console.error('Error while storing record:', err);
         }
     });
+
 
     async function findLatestRecords(gatewayIDs) {
         try {

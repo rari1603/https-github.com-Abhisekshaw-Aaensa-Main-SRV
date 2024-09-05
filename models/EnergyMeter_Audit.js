@@ -15,7 +15,9 @@ const EnergyMeterAudit = new mongoose.Schema({
     TimeStamp: { type: Number },
     KWH: { type: Number },
     kVAH: { type: Number },
-    PF: { type: Number }
+    PF: { type: Number },
+    runId: { type: Number },
+    batchId: { type: Number },
 }, { timestamps: true });
 
 const EnergyMeterAuditModel = mongoose.model('EnergyMeterAudit', EnergyMeterAudit);

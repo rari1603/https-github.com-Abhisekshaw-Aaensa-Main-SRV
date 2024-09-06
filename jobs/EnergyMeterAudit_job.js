@@ -14,6 +14,8 @@ module.exports = function (agenda) {
     // Job 1: Find the latest record in ModelA and store it in ModelB
     agenda.define('EnergyMeterAudit', async (job) => {
         try {
+            console.log("######################-nice*log-###############################888888*********");
+            
             const id = await Data();
             const latestRecord = await findLatestRecords(id);
 

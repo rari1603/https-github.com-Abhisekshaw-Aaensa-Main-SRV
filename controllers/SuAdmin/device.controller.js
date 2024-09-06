@@ -3,7 +3,8 @@ const EnterpriseStateLocationModel = require('../../models/enterprise_state_loca
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 const { deleteEnterprise, deleteState, deleteLocation, deleteGateway, deleteOptimizer } = require('../../services/delete.service');
-
+const InfoPassGateway = require('../Delloite/shared').InfoPassGateway;
+const InfoPassOptimizer = require('../Delloite/shared').InfoPassOptimizer;
 
 
 /********** ADD ***********/
@@ -49,12 +50,20 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error", err: error.message });
     }
 }
-  
+
 
 // Add gateway
 exports.AddGateway = async (req, res) => {
     const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
     try {
+        await InfoPassGateway({
+            EnterpriseInfo,
+            OnboardingDate,
+            GatewayID,
+            NetworkSSID,
+            NetworkPassword,
+            EnterpriseUserID,
+        });
         const NewGateway = new GatewayModel({
             EnterpriseInfo,
             OnboardingDate,
@@ -78,6 +87,7 @@ exports.AddOptimizer = async (req, res) => {
     // console.log(req.body);
     const { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy } = req.body;
     try {
+        await InfoPassOptimizer({GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy});
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
         if (GATEWAY) {
             const NewOptimizer = new OptimizerModel({
@@ -239,7 +249,7 @@ exports.UpdateOptimizer = async (req, res) => {
 /********** DELETE ***********/
 // Delete All
 exports.DeleteAll = async (req, res) => {
-    
+
     const { group, id } = req.body;
 
     try {

@@ -20,7 +20,7 @@ EnterpriseAuditMeter_job(agenda);
   await agenda.cancel({ name: 'EnergyMeterAudit' });
 
   // Schedule the jobs
-  await agenda.every('5 seconds', 'EnergyMeterAudit');
+  await agenda.every('5 minutes', 'EnergyMeterAudit');
 
 
 })();

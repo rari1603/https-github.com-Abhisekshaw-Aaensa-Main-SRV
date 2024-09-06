@@ -1,7 +1,9 @@
+
+const logger = require('../../configs/pino_logger').createLogger(__filename);
+
 exports.SendAudit = async (req) => {
     try {
-        // return req;
-        // http call or any other action
+       logger.trace(req); 
         return {
             success: true,
             status: 200,

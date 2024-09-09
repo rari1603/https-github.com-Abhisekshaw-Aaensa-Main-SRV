@@ -9,6 +9,7 @@ const messageSchema = new Schema({
         ACTonnage: { type: Number, default: null }, // Only for Optimizer
         AC_Energy: { type: Number, default: null }, // Only for Optimizer
     },
+    runId: { type: Number },
     Location: { type: String, default: '' }, // Only for Gateway
     State: { type: String, default: '' },    // Only for Gateway
     OnboardingDate: { type: String, default: null }, // Only for Gateway (DD-MM-YYYY)

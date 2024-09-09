@@ -71,7 +71,7 @@ exports.AddGateway = async (req, res) => {
             EnterpriseUserID,
         });
 
-        await NewGateway.save();
+        // await NewGateway.save();
         return res.status(201).json({ success: true, message: "Gateway added successfully." });
 
     } catch (err) {

@@ -26,6 +26,7 @@ const rotatingLogStream = rfs.createStream('app.log', {
 });
 
 var streams = [
+  
   { level: 'trace', stream: pretty({ singleLine: true }) }, // log console with trace level  
   { level: 'trace', stream: rotatingLogStream }, // log to rotating file stream 
 ];

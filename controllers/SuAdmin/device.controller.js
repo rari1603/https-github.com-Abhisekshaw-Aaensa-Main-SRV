@@ -3,7 +3,7 @@ const EnterpriseStateLocationModel = require('../../models/enterprise_state_loca
 const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 const { deleteEnterprise, deleteState, deleteLocation, deleteGateway, deleteOptimizer } = require('../../services/delete.service');
-const InfoPassGateway = require('../Delloite/shared').InfoPassGateway;
+const InfoPassGateway = require('../Delloite/action').InfoPassGateway;
 const InfoPassOptimizer = require('../Delloite/shared').InfoPassOptimizer;
 
 
@@ -60,9 +60,7 @@ exports.AddGateway = async (req, res) => {
             EnterpriseInfo,
             OnboardingDate,
             GatewayID,
-            NetworkSSID,
-            NetworkPassword,
-            EnterpriseUserID,
+            Action: "add"
         });
         const NewGateway = new GatewayModel({
             EnterpriseInfo,

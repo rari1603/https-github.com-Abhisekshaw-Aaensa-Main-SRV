@@ -11,7 +11,8 @@ const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const axios = require('axios');
 const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
 const mongoose = require('mongoose');
-const logger = require('../../configs/pino_logger').createLogger(__filename);
+// const logger = require('../../configs/pino_logger').createLogger(__filename);
+const logger = require('../../configs/pino_logger');
 
 // EnterpriseList
 

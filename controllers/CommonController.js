@@ -6,10 +6,12 @@ const GatewayModel = require('../models/gateway.model');
 const OptimizerModel = require('../models/optimizer.model');
 const EnterpriseUserModel = require('../models/enterprise_user.model');
 const NewApplianceLogModel = require('../models/NewApplianceLog.model');
+// const logger = require('../configs/pino_logger');
 
 exports.getStates = async (req, res) => {
     try {
         const allStatesData = await StateModel.find().sort({ name: 1 }); // Sort by name in ascending order
+        // logger.info("info-read", allStatesData);
         return res.status(200).json({ success: true, message: 'Data fetched successfully', data: allStatesData });
     } catch (error) {
         console.error(error.message);
@@ -61,19 +63,19 @@ exports.DashboardDetails = async (req, res) => {
         //  for (let log of logs) {
         //      // Get the current TimeStamp
         //      let currentTimestamp = log.TimeStamp;
- 
+
         //      // Check if the TimeStamp length is 11
         //      if (currentTimestamp.length === 11) {
         //          // Remove the last digit
         //          let updatedTimestamp = currentTimestamp.slice(0, -1);
- 
+
         //          // Update the document with the new TimeStamp
         //          log.TimeStamp = updatedTimestamp;
         //          await log.save();
         //         console.log('TimeStamps updated successfully');
         //      }
         //  }
- 
+
 
         var EnterpriseQuery = {};
         var EnterpriseStateQuery = {};

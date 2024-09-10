@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const messageSchema = new Schema({
-    MessageId: { type: String, required: true }, // UUID
+   
     OptimizerId: { type: String, default: null }, // UUID, optional for Gateway
     GatewayID: { type: String, required: true }, // UUID
     Details: {
@@ -15,7 +15,7 @@ const messageSchema = new Schema({
     OnboardingDate: { type: String, default: null }, // Only for Gateway (DD-MM-YYYY)
     Switch: { type: Boolean, default: null }, // Only for Gateway
     Time: { type: Date, required: true }, // Time of the event
-    MessageTime: { type: Date, required: true }, // Time the message was generated
+    // MessageTime: { type: Date, required: true }, // Time the message was generated
     Action: { type: String, enum: ['add', 'delete', 'update'], required: true }, // Action type
     Type: { type: String, enum: ['Optimizer', 'Gateway'], required: true } // Type of message
 }, { timestamps: true });

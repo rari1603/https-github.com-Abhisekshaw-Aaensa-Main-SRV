@@ -4,7 +4,7 @@ const GatewayModel = require('../../models/gateway.model');
 const OptimizerModel = require('../../models/optimizer.model');
 const { deleteEnterprise, deleteState, deleteLocation, deleteGateway, deleteOptimizer } = require('../../services/delete.service');
 const InfoPassGateway = require('../Delloite/action').InfoPassGateway;
-const InfoPassOptimizer = require('../Delloite/shared').InfoPassOptimizer;
+const InfoPassOptimizer = require('../Delloite/action').InfoPassOptimizer;
 
 
 /********** ADD ***********/
@@ -88,6 +88,16 @@ exports.AddOptimizer = async (req, res) => {
         await InfoPassOptimizer({GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy});
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
         if (GATEWAY) {
+
+            await InfoPassOptimizer({
+                OptimizerID,
+                GatewayId,
+                ACTonnage,
+                AC_Energy,
+                Action: "add"
+            });
+
+
             const NewOptimizer = new OptimizerModel({
                 GatewayId: GATEWAY._id, // primary _id of that Gateway
                 OptimizerID,
@@ -97,7 +107,7 @@ exports.AddOptimizer = async (req, res) => {
                 AC_Energy
             });
 
-            await NewOptimizer.save();
+            // await NewOptimizer.save();
             return res.status(201).json({ success: true, message: "Optimizer added successfully." });
         } else {
             return res.status(404).json({ success: false, message: "Gateway not found." });
@@ -187,6 +197,14 @@ exports.UpdateGateway = async (req, res) => {
             return res.status(403).json({ success: false, message: "SSID & Password Found Same For The Gateway." });
         } else {
             if (Gateway) {
+
+                await InfoPassGateway({
+                    EnterpriseInfo,
+                    OnboardingDate,
+                    GatewayID,
+                    Action: "update"
+                });
+
                 await GatewayModel.findByIdAndUpdate({ _id: gateway_id },
                     {
                         EnterpriseInfo,
@@ -221,6 +239,14 @@ exports.UpdateOptimizer = async (req, res) => {
         const Optimizer = await OptimizerModel.findOne({ _id: OPTIMIZER._id, GatewayId: GATEWAY._id });
 
         if (Optimizer) {
+
+            await InfoPassOptimizer({
+                OptimizerID,
+                GatewayId,
+                ACTonnage,
+                AC_Energy,
+                Action: "update",
+            });
             await OptimizerModel.findByIdAndUpdate({ _id: OPTIMIZER._id },
                 {
                     GatewayId: GATEWAY._id, // primary _id of that Gateway
@@ -251,6 +277,8 @@ exports.DeleteAll = async (req, res) => {
     const { group, id } = req.body;
 
     try {
+        console.log("+++++++++++++++++++++++++++");
+        
         if (!(group && id)) {
             return res.status(400).json({ success: false, message: "Group and ID are required for deletion." });
         }

@@ -1,5 +1,6 @@
 
-const logger = require('../../configs/pino_logger').createLogger(__filename);
+// const logger = require('../../configs/pino_logger').createLogger(__filename);
+const logger = require('../../configs/pino_logger');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const OGConfigs = require('../../models/OGConfig.model');
 const moment = require('moment-timezone');

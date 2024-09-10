@@ -10,7 +10,8 @@ const EnterpriseModel = require('../../models/enterprise.model');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const UpdateSettings = require('../../utility/UpdateSetting');
 const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
-const logger = require('../../configs/pino_logger').createLogger(__filename);
+// const logger = require('../../configs/pino_logger').createLogger(__filename);
+const logger = require('../../configs/pino_logger');
 const fs = require('fs');
 const path = require('path');
 
@@ -149,15 +150,16 @@ exports.Store = async (req, res) => {
     const optimizers = req.body.OptimizerDetails;
 
     console.log({ Body: JSON.stringify(req.body) });
-    logger.trace(req.body); 
-    
+    // logger.trace(req.body);
+    logger.info("info-write", req.body);
+
     if (gateway_id === "NGCS2023011022") {
         try {
             const jsonObject = req.body;
-            
 
-          
-    
+
+
+
             console.log('JSON file saved successfully.');
         } catch (err) {
             console.error("Error writing file:", err);
@@ -1215,14 +1217,14 @@ const compressor = async (data) => {
 
         if (timeDiffSeconds > 300 && lastLog.ACStatus !== "OFF") {
 
-         
+
 
             // Add offline data entry
             const offlineLog = new NewApplianceLogModel(offlineData);
 
             await offlineLog.save();
 
-         
+
 
             // Save new data entry
             const newAllApplianceLog = new NewApplianceLogModel(newData);
@@ -1233,7 +1235,7 @@ const compressor = async (data) => {
         // Handle different cases for saving the new data
         if (lastLog.Flag !== "OFFLINE" && Flag === "OFFLINE" && lastLog.ACStatus !== Ac_Status) {
 
-           
+
 
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
@@ -1241,12 +1243,12 @@ const compressor = async (data) => {
         }
         if ((newData.OptimizationMode !== lastLog.OptimizationMode || newData.CompStatus !== lastLog.CompStatus) && Flag !== "OFFLINE") {
 
-          
+
 
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
         } else if (newData.OptimizationMode === lastLog.OptimizationMode && newData.CompStatus !== lastLog.CompStatus) {
-         
+
             const newAllApplianceLog = new NewApplianceLogModel(newData);
             await newAllApplianceLog.save();
         } else if (newData.OptimizationMode !== lastLog.OptimizationMode && newData.CompStatus === lastLog.CompStatus) {
@@ -1254,7 +1256,7 @@ const compressor = async (data) => {
         }
     } else {
 
-       
+
 
         // Save new data entry if there's no previous log
         const newAllApplianceLog = new NewApplianceLogModel(newData);

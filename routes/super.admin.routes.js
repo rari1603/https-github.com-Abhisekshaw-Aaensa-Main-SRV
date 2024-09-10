@@ -12,6 +12,7 @@ const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/en
 const { CheckEntState, CheckEntStateLocation, CheckGateway, CheckOptimizer } = require('../middleware/device/device.middleware');
 const { systemInitEmptyCheck } = require('../middleware/systemInt/systemInt.middleware');
 const { duplicateUserCheck, duplicateEnterpriseCheck } = require('../middleware/auth.validation');
+const { logMiddleware } = require('../middleware/log.middleware');  // Import the middleware
 const router = express.Router();
 
 
@@ -21,7 +22,7 @@ router.post('/get/all/device/data', ReportController.AllDeviceData);
 // Meter Data report api
 router.post('/get/all/meter/data', ReportController.AllMeterData);
 // USAGE TRENDS api
-router.post('/get/all/usage/trends',ReportController.UsageTrends)
+router.post('/get/all/usage/trends', ReportController.UsageTrends)
 
 
 // Download device report
@@ -67,7 +68,7 @@ router.post('/add/enterprise/user', [verifyToken, routeAccessMiddleware(), userE
 // add system int
 router.post('/add/system/integrator', [verifyToken, routeAccessMiddleware(), systemInitEmptyCheck, duplicateUserCheck], UserController.addSystemInt);
 // states
-router.get('/get/all/states', CommonController.getStates);
+router.get('/get/all/states', [logMiddleware('info', 'info-read')], CommonController.getStates);
 
 
 /*********** START STATE ADD & UPDATE ***********/

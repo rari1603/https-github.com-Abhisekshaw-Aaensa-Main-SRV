@@ -12,125 +12,116 @@ const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/en
 const { CheckEntState, CheckEntStateLocation, CheckGateway, CheckOptimizer } = require('../middleware/device/device.middleware');
 const { systemInitEmptyCheck } = require('../middleware/systemInt/systemInt.middleware');
 const { duplicateUserCheck, duplicateEnterpriseCheck } = require('../middleware/auth.validation');
+
+// Apply routeCapture middleware to capture route info
 const { logMiddleware } = require('../middleware/log.middleware');  // Import the middleware
 const router = express.Router();
 
-
 /************* START REPORT *************/
 // Device Data report api
-router.post('/get/all/device/data', ReportController.AllDeviceData);
+router.post('/get/all/device/data', [logMiddleware('info', 'info-read-deviceData')], ReportController.AllDeviceData);
 // Meter Data report api
-router.post('/get/all/meter/data', ReportController.AllMeterData);
+router.post('/get/all/meter/data', [logMiddleware('info', 'info-read-meterData')], ReportController.AllMeterData);
 // USAGE TRENDS api
-router.post('/get/all/usage/trends', ReportController.UsageTrends)
-
+router.post('/get/all/usage/trends', [logMiddleware('info', 'info-read-usageTrends')], ReportController.UsageTrends);
 
 // Download device report
-router.post('/download/all/devicedata/report', ReportController.DownloadDeviceDataReport);
+router.post('/download/all/devicedata/report', [logMiddleware('info', 'info-read-deviceDataReport')], ReportController.DownloadDeviceDataReport);
 // Download meter report
-router.post('/download/all/meterdata/report', ReportController.DownloadMeterDataReport);
+router.post('/download/all/meterdata/report', [logMiddleware('info', 'info-read-meterDataReport')], ReportController.DownloadMeterDataReport);
 // Download usageTrend report
-router.post('/download/all/usagetrend/report', ReportController.DownloadUsageTrendsReport);
+router.post('/download/all/usagetrend/report', [logMiddleware('info', 'info-read-usageTrendsReport')], ReportController.DownloadUsageTrendsReport);
 
-
-// router.post('/get/all/device/data', [verifyToken, routeAccessMiddleware()], ReportController.AllDataLog);
-router.get('/get/all/demo/data', ReportController.AllDataLogDemo);
+// Demo data log
+router.get('/get/all/demo/data', [logMiddleware('info', 'info-read-demoData')], ReportController.AllDataLogDemo);
 /************* END REPORT *************/
 
+/*********** ENTERPRISE ROUTES ***********/
+// Enterprise list
+router.get('/get/enterprise/list/:flag', [verifyToken, logMiddleware('info', 'info-read-enterpriseList')], EnterpriseController.EnterpriseListData);
 
-// enterprise list
-router.get('/get/enterprise/list/:flag', [verifyToken], EnterpriseController.EnterpriseListData); // flag should be "data"/"name"
+// Enterprise state list
+router.get('/get/enterprise/state/list/:enterprise_id', [verifyToken, logMiddleware('info', 'info-read-enterpriseStateList')], EnterpriseController.EnterpriseStateList);
 
-// enterprise state list
-router.get('/get/enterprise/state/list/:enterprise_id', [verifyToken], EnterpriseController.EnterpriseStateList);
-// EnterpriseStateLocationList
-router.get('/get/enterprise/state/location/list/:enterprise_id/:state_id', [verifyToken], EnterpriseController.EnterpriseStateLocationList);
-// EnterpriseStateLocationGatewayList
-router.get('/get/enterprise/state/location/gateway/list/:enterpriseInfo_id', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayList);
-// EnterpriseStateLocationGatewayOptimizerList
-router.get('/get/enterprise/state/location/gateway/optimizer/list/:gateway_id', [verifyToken], EnterpriseController.EnterpriseStateLocationGatewayOptimizerList);
-// OptimizerDetails
-router.get('/get/optimizer/details/:optimizer_id', [verifyToken], EnterpriseController.OptimizerDetails);
-// GatewayDetails
-router.get('/get/gateway/details/:gateway_id', [verifyToken], EnterpriseController.GatewayDetails);
+// Enterprise state location list
+router.get('/get/enterprise/state/location/list/:enterprise_id/:state_id', [verifyToken, logMiddleware('info', 'info-read-enterpriseStateLocationList')], EnterpriseController.EnterpriseStateLocationList);
 
+// Enterprise state location gateway list
+router.get('/get/enterprise/state/location/gateway/list/:enterpriseInfo_id', [verifyToken, logMiddleware('info', 'info-read-gatewayList')], EnterpriseController.EnterpriseStateLocationGatewayList);
+
+// Enterprise state location gateway optimizer list
+router.get('/get/enterprise/state/location/gateway/optimizer/list/:gateway_id', [verifyToken, logMiddleware('info', 'info-read-optimizerList')], EnterpriseController.EnterpriseStateLocationGatewayOptimizerList);
+
+// Optimizer details
+router.get('/get/optimizer/details/:optimizer_id', [verifyToken, logMiddleware('info', 'info-read-optimizerDetails')], EnterpriseController.OptimizerDetails);
+
+// Gateway details
+router.get('/get/gateway/details/:gateway_id', [verifyToken, logMiddleware('info', 'info-read-gatewayDetails')], EnterpriseController.GatewayDetails);
+/*********** END ENTERPRISE ROUTES ***********/
 
 /*********** START ENTERPRISE ADD & UPDATE ***********/
-// add enterprise admin
-router.post('/add/enterprise', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, duplicateEnterpriseCheck], UserController.addEnterprise);
-router.post('/update/enterprise/:enterprise_id', [verifyToken, routeAccessMiddleware(), adminEmptyCheck], UserController.UpdateEnterprise);
+// Add enterprise admin
+router.post('/add/enterprise', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, duplicateEnterpriseCheck, logMiddleware('info', 'info-write-addEnterprise')], UserController.addEnterprise);
+
+// Update enterprise admin
+router.post('/update/enterprise/:enterprise_id', [verifyToken, routeAccessMiddleware(), adminEmptyCheck, logMiddleware('info', 'info-write-updateEnterprise')], UserController.UpdateEnterprise);
 /*********** END ENTERPRISE ADD & UPDATE ***********/
 
+/*********** USER ROUTES ***********/
+// Add enterprise user
+router.post('/add/enterprise/user', [verifyToken, routeAccessMiddleware(), userEmptyCheck, duplicateUserCheck, logMiddleware('info', 'info-write-addEnterpriseUser')], UserController.addEnterpriseUser);
 
-// add enterprise user
-router.post('/add/enterprise/user', [verifyToken, routeAccessMiddleware(), userEmptyCheck, duplicateUserCheck], UserController.addEnterpriseUser);
+// Add system integrator
+router.post('/add/system/integrator', [verifyToken, routeAccessMiddleware(), systemInitEmptyCheck, duplicateUserCheck, logMiddleware('info', 'info-write-addSystemIntegrator')], UserController.addSystemInt);
 
-// add system int
-router.post('/add/system/integrator', [verifyToken, routeAccessMiddleware(), systemInitEmptyCheck, duplicateUserCheck], UserController.addSystemInt);
-// states
-router.get('/get/all/states', [logMiddleware('info', 'info-read')], CommonController.getStates);
-
+// Get all enterprise & system integrator user
+router.get('/get/user/data', [verifyToken, logMiddleware('info', 'info-read-enterpriseSystemUsers')], UserController.GetEnterpriseSystemIntUsers);
 
 /*********** START STATE ADD & UPDATE ***********/
-// AddEnterpriseState
-router.post('/add/enterprise/state', [verifyToken, routeAccessMiddleware(), CheckEntState], DeviceController.AddEnterpriseState);
-// UpdateEnterpriseState
-router.post('/update/enterprise/state/:ent_state_id', [verifyToken, routeAccessMiddleware(), CheckEntState], DeviceController.UpdateEnterpriseState);
+// Add enterprise state
+router.post('/add/enterprise/state', [verifyToken, routeAccessMiddleware(), CheckEntState, logMiddleware('info', 'info-write-addEnterpriseState')], DeviceController.AddEnterpriseState);
+
+// Update enterprise state
+router.post('/update/enterprise/state/:ent_state_id', [verifyToken, routeAccessMiddleware(), CheckEntState, logMiddleware('info', 'info-write-updateEnterpriseState')], DeviceController.UpdateEnterpriseState);
 /*********** END STATE ADD & UPDATE ***********/
 
-
-
 /*********** START LOCATION ADD & UPDATE ***********/
-// AddEnterpriseStateLocation
-router.post('/add/enterprise/state/location', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation], DeviceController.AddEnterpriseStateLocation);
-// UpdateEnterpriseStateLocation
-router.post('/update/enterprise/state/location/:location_id', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation], DeviceController.UpdateEnterpriseStateLocation);
+// Add enterprise state location
+router.post('/add/enterprise/state/location', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation, logMiddleware('info', 'info-write-addEnterpriseStateLocation')], DeviceController.AddEnterpriseStateLocation);
+
+// Update enterprise state location
+router.post('/update/enterprise/state/location/:location_id', [verifyToken, routeAccessMiddleware(), CheckEntStateLocation, logMiddleware('info', 'info-write-updateEnterpriseStateLocation')], DeviceController.UpdateEnterpriseStateLocation);
 /*********** END LOCATION ADD & UPDATE ***********/
 
-
 /*********** START GATEWAY ADD & UPDATE ***********/
-// AddGateway
-router.post('/add/gateway', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.AddGateway);
-// UpdateGateway
-router.post('/update/gateway/:gateway_id', [verifyToken, routeAccessMiddleware(), CheckGateway], DeviceController.UpdateGateway);
+// Add gateway
+router.post('/add/gateway', [verifyToken, routeAccessMiddleware(), CheckGateway, logMiddleware('info', 'info-write-addGateway')], DeviceController.AddGateway);
+
+// Update gateway
+router.post('/update/gateway/:gateway_id', [verifyToken, routeAccessMiddleware(), CheckGateway, logMiddleware('info', 'info-write-updateGateway')], DeviceController.UpdateGateway);
 /*********** END GATEWAY ADD & UPDATE ***********/
 
-
 /*********** START OPTIMIZER ADD & UPDATE ***********/
-// AddOptimizer
-router.post('/add/optimizer', [verifyToken, routeAccessMiddleware(), CheckOptimizer], DeviceController.AddOptimizer);
-// UpdateOptimizer
-router.post('/update/optimizer/:optimizer_id', [verifyToken, routeAccessMiddleware(), CheckOptimizer], DeviceController.UpdateOptimizer);
+// Add optimizer
+router.post('/add/optimizer', [verifyToken, routeAccessMiddleware(), CheckOptimizer, logMiddleware('info', 'info-write-addOptimizer')], DeviceController.AddOptimizer);
+
+// Update optimizer
+router.post('/update/optimizer/:optimizer_id', [verifyToken, routeAccessMiddleware(), CheckOptimizer, logMiddleware('info', 'info-write-updateOptimizer')], DeviceController.UpdateOptimizer);
 /*********** END OPTIMIZER ADD & UPDATE ***********/
 
-
 /******* RECURSIVE DELETE FOR ALL *******/
-router.post('/delete/all', [verifyToken, routeAccessMiddleware()], DeviceController.DeleteAll);
+router.post('/delete/all', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-delete-all')], DeviceController.DeleteAll);
 
+/******* DELETE USER *******/
+router.post('/delete/user/:user_id', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-delete-user')], AuthController.DeleteUser);
 
-// Get all enterprise & system integrator user
-router.get('/get/user/data', [verifyToken], UserController.GetEnterpriseSystemIntUsers);
+/******* DELETE GATEWAY *******/
+router.get('/delete/gateway/:gateway_id', [logMiddleware('info', 'info-delete-gateway')], DeviceController.DeleteOptimizer);
 
-// Get all enterprise & system integrator user
-router.get('/get/dashboard/details/data', [verifyToken, routeAccessMiddleware()], CommonController.DashboardDetails);
+/******* CLONE DATA API *******/
+router.get('/clone/all/data', [logMiddleware('info', 'info-clone-allData')], ReplicaController.CreateClone);
 
-
-/**** Delete User ****/
-// Delete user
-router.post('/delete/user/:user_id', [verifyToken, routeAccessMiddleware()], AuthController.DeleteUser);
-
-
-
-
-/**** Test Delete Optimizer ****/
-// TestDeleteGateway
-router.get('/delete/gateway/:gateway_id', DeviceController.DeleteOptimizer);
-// router.get('/hi', routeAccessMiddleware(), UserController.index);
-
-router.get('/pagination', ReportController.PaginationData);
-
-
-// Data clone API
-router.get('/clone/all/data', ReplicaController.CreateClone);
+/******* PAGINATION *******/
+router.get('/pagination', [logMiddleware('info', 'info-read-pagination')], ReportController.PaginationData);
 
 module.exports = router;

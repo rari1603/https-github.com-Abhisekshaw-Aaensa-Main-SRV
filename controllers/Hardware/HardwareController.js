@@ -150,16 +150,11 @@ exports.Store = async (req, res) => {
     const optimizers = req.body.OptimizerDetails;
 
     console.log({ Body: JSON.stringify(req.body) });
-    // logger.trace(req.body);
     logger.info("info-write", req.body);
 
     if (gateway_id === "NGCS2023011022") {
         try {
             const jsonObject = req.body;
-
-
-
-
             console.log('JSON file saved successfully.');
         } catch (err) {
             console.error("Error writing file:", err);

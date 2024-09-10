@@ -8,7 +8,7 @@ const moment = require('moment-timezone');
 
 exports.SendAudit = async (req) => {
     try {
-        logger.trace(req);
+        // logger.info("Delloite-EnergyMeter-Data", req);
         return {
             success: true,
             status: 200,
@@ -39,7 +39,7 @@ exports.InfoPassGateway = async (req) => {
                 select: 'name'    // Only selects the 'name' field from the State document
             })
             .exec();
-        console.log(req.GatewayID);
+        console.log(result);
 
         const newRecord = {
             GatewayID: req.GatewayID,
@@ -59,24 +59,24 @@ exports.InfoPassGateway = async (req) => {
         console.log({ newConfig });
 
         // Log the new config details
-        logger.trace({
-            GroupMsgId: newConfig.runId,
-            Messages: {
-                MessageId: newConfig._id,
-                GatewayID: newConfig.GatewayID,
-                Location: newConfig.Location, // Corrected location usage
-                State: newConfig.State,
-                OnboardingDate: newConfig.OnboardingDate,
-                Switch: newConfig.Switch,
-                Time: newConfig.Time,
-                MessageTime: newConfig.createdAt,
-                Action: newConfig.Action,
-                Type: newConfig.Type
-            }
-        });
+        // logger.info("Delloite-GatewayConfig-Data", {
+        //     GroupMsgId: newConfig.runId,
+        //     Messages: {
+        //         MessageId: newConfig._id,
+        //         GatewayID: newConfig.GatewayID,
+        //         Location: newConfig.Location, // Corrected location usage
+        //         State: newConfig.State,
+        //         OnboardingDate: newConfig.OnboardingDate,
+        //         Switch: newConfig.Switch,
+        //         Time: newConfig.Time,
+        //         MessageTime: newConfig.createdAt,
+        //         Action: newConfig.Action,
+        //         Type: newConfig.Type
+        //     }
+        // });
 
     } catch (err) {
-        logger.error({
+        logger.error("InfoPassGateway",{
             success: false,
             message: "Internal Server Error",
             error: err.message
@@ -105,22 +105,22 @@ exports.InfoPassOptimizer = async (req) => {
         console.log({ newConfig });
 
         // Log the new config details
-        logger.trace({
-            GroupMsgId: newConfig.runId,
-            Messages: {
-                MessageId: newConfig._id,
-                GatewayID: newConfig.GatewayID,
-                OptimizerId: newConfig.OptimizerId,
-                Details: {
-                    ACTonnage: newConfig.Details.ACTonnage,
-                    AC_Energy: newConfig.Details.AC_Energy,
-                },
-                Time: newConfig.Time,
-                MessageTime: newConfig.createdAt,
-                Action: newConfig.Action,
-                Type: newConfig.Type
-            }
-        });
+        // logger.info("Delloite-OptimizerConfig-Data", {
+        //     GroupMsgId: newConfig.runId,
+        //     Messages: {
+        //         MessageId: newConfig._id,
+        //         GatewayID: newConfig.GatewayID,
+        //         OptimizerId: newConfig.OptimizerId,
+        //         Details: {
+        //             ACTonnage: newConfig.Details.ACTonnage,
+        //             AC_Energy: newConfig.Details.AC_Energy,
+        //         },
+        //         Time: newConfig.Time,
+        //         MessageTime: newConfig.createdAt,
+        //         Action: newConfig.Action,
+        //         Type: newConfig.Type
+        //     }
+        // });
 
 
 

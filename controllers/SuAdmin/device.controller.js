@@ -71,7 +71,7 @@ exports.AddGateway = async (req, res) => {
             EnterpriseUserID,
         });
 
-        // await NewGateway.save();
+        await NewGateway.save();
         return res.status(201).json({ success: true, message: "Gateway added successfully." });
 
     } catch (err) {
@@ -107,7 +107,7 @@ exports.AddOptimizer = async (req, res) => {
                 AC_Energy
             });
 
-            // await NewOptimizer.save();
+            await NewOptimizer.save();
             return res.status(201).json({ success: true, message: "Optimizer added successfully." });
         } else {
             return res.status(404).json({ success: false, message: "Gateway not found." });

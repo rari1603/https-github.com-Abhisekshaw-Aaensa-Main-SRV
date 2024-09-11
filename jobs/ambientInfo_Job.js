@@ -179,7 +179,6 @@ module.exports = function (agenda) {
 
         try {
             const response = await axios.request(config);
-            console.log(response.data[0]);
             return response;
         } catch (error) {
             console.log(error);
@@ -224,6 +223,39 @@ module.exports = function (agenda) {
                 },
                 {
                     $replaceRoot: { newRoot: "$latestRecord" } // Replace root with the latest record
+                },
+                {
+                    $lookup:{
+                        from:"optimizers",
+                        localField: "OptimizerID",
+                        foreignField: "_id",
+                        as:"OptimizerIDs"
+                    }
+                },
+                {
+                    $unwind: "$OptimizerIDs" // Converts optimizerData array into an object
+                },
+                {
+                    $lookup:{
+                        from:"gateways",
+                        localField: "GatewayID",
+                        foreignField: "_id",
+                        as:"GatewayIDs"
+                    }
+                },
+                {
+                    $unwind: "$GatewayIDs" // Converts optimizerData array into an object
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        OptimizerID: "$OptimizerIDs.OptimizerID",
+                        OptimizerName: "$OptimizerIDs.OptimizerName",
+                        GatewayID: "$GatewayIDs.GatewayID",
+                        TimeStamp: 1,
+                        RoomTemperature: 1,
+                        Humidity: 1,
+                    }
                 }
             ];
             const latestRecords = await OptimizerLogModel.aggregate(recordPipeline).exec();

@@ -15,67 +15,68 @@ module.exports = function (agenda) {
     agenda.define('ambientInfo_Job', async (job) => {
         try {
 
-            const AllData = await Data();        
+            const AllData = await Data();
             const { data } = AllData;
 
             if (!data || data.length === 0) {
                 console.log("No data found for the specified state.");
                 return;
             }
+            console.log(data,"+++++++++++");
 
-const latLData = data.map((item) => ({
-    stateName: item.stateName,
-    locations: item.locations.map((loc) => ({
-        locationName: loc.locationName,
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        gateways: loc.gateways.map((gw) => ({
-            _id: gw._id, // Extract the _id from each gateway
-            gatewayId: gw.gatewayId,
-            optimizers: gw.optimizers.map((opt) => ({
-                optimizerName: opt.name,
-                optimizerId: opt.id
-            }))
-        }))
-    }))
-}));
+            const latLData = data.map((item) => ({
+                stateName: item.stateName,
+                locations: item.locations.map((loc) => ({
+                    locationName: loc.locationName,
+                    latitude: loc.latitude,
+                    longitude: loc.longitude,
+                    gateways: loc.gateways.map((gw) => ({
+                        _id: gw._id, // Extract the _id from each gateway
+                        gatewayId: gw.gatewayId,
+                        optimizers: gw.optimizers.map((opt) => ({
+                            optimizerName: opt.name,
+                            optimizerId: opt.id
+                        }))
+                    }))
+                }))
+            }));
 
-// Process each state and location
-for (const state of latLData) {
-    for (const location of state.locations) {
-        const { latitude, longitude } = location;
+            // Process each state and location
+            for (const state of latLData) {
+                for (const location of state.locations) {
+                    const { latitude, longitude } = location;
 
-        const key = await LocationKey(latitude, longitude);
-        const weather = await Accuweather(key);
+                    const key = await LocationKey(latitude, longitude);
+                    const weather = await Accuweather(key);
 
-        const temp = weather.data[0].Temperature.Metric.Value; // Temperature in Celsius
-        const humidity = weather.data[0].RelativeHumidity;
-        const gatewayDbIdsArray = [];
+                    const temp = weather.data[0].Temperature.Metric.Value; // Temperature in Celsius
+                    const humidity = weather.data[0].RelativeHumidity;
+                    const gatewayDbIdsArray = [];
 
-        // Log gateways and optimizers
-        location.gateways.forEach(gateway => {
-            console.log(`Gateway ID here which is used: ${gateway.gatewayId}`);
+                    // Log gateways and optimizers
+                    location.gateways.forEach(gateway => {
+                        console.log(`Gateway ID here which is used: ${gateway.gatewayId}`);
 
-            // Push the _id into the array
-            if (gateway._id) {
-                gatewayDbIdsArray.push(gateway._id.toString());
-            }
+                        // Push the _id into the array
+                        if (gateway._id) {
+                            gatewayDbIdsArray.push(gateway._id.toString());
+                        }
 
-            gateway.optimizers.forEach(optimizer => {
-                console.log(`  Optimizer Name: ${optimizer.optimizerName}`);
-                console.log(`  Optimizer ID: ${optimizer.optimizerId}`);
-            });
-        });
+                        gateway.optimizers.forEach(optimizer => {
+                            console.log(`  Optimizer Name: ${optimizer.optimizerName}`);
+                            console.log(`  Optimizer ID: ${optimizer.optimizerId}`);
+                        });
+                    });
 
-        // At this point, gatewayDbIdsArray contains all the gateway IDs (_id) from the database
-        console.log("All Gateway _IDs:", gatewayDbIdsArray);
+                    // At this point, gatewayDbIdsArray contains all the gateway IDs (_id) from the database
+                    console.log("All Gateway _IDs:", gatewayDbIdsArray);
 
-        const latestRecord = await findLatestRecords(gatewayDbIdsArray); // Pass gatewayDbIdsArray here
-        console.log(latestRecord, "latestRecord");
+                    const latestRecord = await findLatestRecords(gatewayDbIdsArray); // Pass gatewayDbIdsArray here
+                    console.log(latestRecord, "latestRecord");
 
-                // const latestRecord = await findLatestRecords(gatewayIdsArray); // Pass gatewayIds here
-                // console.log(latestRecord,"latestRecord");
-                
+                    // const latestRecord = await findLatestRecords(gatewayIdsArray); // Pass gatewayIds here
+                    // console.log(latestRecord,"latestRecord");
+
                     if (latestRecord && latestRecord.length > 0) {
                         // Fetch the latest runId from the collection, ensuring it's a valid number
                         const lastRunRecord = await AmbientModel.findOne().sort({ RunID: -1 });
@@ -188,12 +189,12 @@ for (const state of latLData) {
     }
 
     async function findLatestRecords(gatewayDbIdsArray) {
-      // console.log(gatewayDbIdsArray,"gatewayIdsArray");
-        
+        // console.log(gatewayDbIdsArray,"gatewayIdsArray");
+
         try {
-        const objectIdArray = gatewayDbIdsArray.map(id => new mongoose.Types.ObjectId(id));
-        //console.log(objectIdArray,"objectIdArray");
-        
+            const objectIdArray = gatewayDbIdsArray.map(id => new mongoose.Types.ObjectId(id));
+            //console.log(objectIdArray,"objectIdArray");
+
             // Get the current Unix timestamp and 5 minutes back
             const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
             const fiveMinutesAgo = currentTime - (25 * 60); // 5 minutes ago in seconds
@@ -201,9 +202,9 @@ for (const state of latLData) {
             const recordPipeline = [
                 {
                     $match: {
-                        
-                         GatewayID: { $in: objectIdArray },
-                       // GatewayID: { $in: gatewayDbIdsArray }, // Use IDs directly
+
+                        GatewayID: { $in: objectIdArray },
+                        // GatewayID: { $in: gatewayDbIdsArray }, // Use IDs directly
                         TimeStamp: {
                             $gte: fiveMinutesAgo.toString(), // Greater than or equal to 5 minutes ago
                             $lte: currentTime.toString() // Less than or equal to the current time

@@ -37,6 +37,9 @@ module.exports = function (agenda) {
                             optimizerName: opt.name,
                             optimizerId: opt.id
                         }))
+
+
+                        
                     }))
                 }))
             }));

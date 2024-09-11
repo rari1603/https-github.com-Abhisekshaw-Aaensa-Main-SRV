@@ -14,9 +14,14 @@ module.exports = function (agenda) {
     // Job 1: Find the latest record in ModelA and store it in ModelB
     agenda.define('EnergyMeterAudit', async (job) => {
         try {
-            
             const id = await Data();
-            const latestRecord = await findLatestRecords(id);
+            const { gatewayIds } = id;
+            //console.log(gatewayIds,"gatways id here ");
+            
+            const latestRecord = await findLatestRecords(gatewayIds);
+            
+            // const id = await Data();
+            // const latestRecord = await findLatestRecords(id);
 
             if (latestRecord && latestRecord.length > 0) {
                 // Fetch the latest runId from the collection, ensuring it's a valid number

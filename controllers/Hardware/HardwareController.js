@@ -14,6 +14,7 @@ const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
 const logger = require('../../configs/pino_logger');
 const fs = require('fs');
 const path = require('path');
+const DeviceStatusModel = require('../../models/deviceStatusModel')
 
 // console.log({logger});
 
@@ -1277,3 +1278,37 @@ const compressor = async (data) => {
 //         }
 //     });
 // };
+
+
+exports.deviceStatus = async (req, res) => {
+    const data = req.body;
+    const { HardwareID, DeviceStatus, Type, TimeStamp } = data;
+
+    try {
+        // Create a new instance of DeviceStatusModel
+        const newDeviceStatus = new DeviceStatusModel({
+            HardwareID,
+            DeviceStatus,
+            Type,
+            TimeStamp
+        });
+
+        // Save the instance to the database
+        await newDeviceStatus.save();
+        console.log(newDeviceStatus.createdAt); // Log createdAt in UTC
+
+        // Convert createdAt (UTC) to IST
+        const dateInUTC = new Date(newDeviceStatus.createdAt);
+        const unixTimestampIST = dateInUTC.getTime() + (5.5 * 60 * 60 * 1000); // Add IST offset
+        const unixTimestampInSecondsIST = Math.floor(unixTimestampIST / 1000); // Convert to seconds
+
+        // Send a success response
+        res.status(200).send({
+            success: true,
+            message: `Device status saved successfully set at ${unixTimestampInSecondsIST}`
+        });
+    } catch (error) {
+        console.error({ StoreError: error.message });
+        res.status(404).send({ success: false, message: error.message });
+    }
+};

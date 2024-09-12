@@ -57,10 +57,10 @@
     }
   },
   {
-    $unwind:  {
-    path: "$optimizerInfo",
-    preserveNullAndEmptyArrays: true  // Ensures gateways with no optimizers are still included
-  }
+    $unwind: {
+      path: "$optimizerInfo",
+      preserveNullAndEmptyArrays: true  // Ensures gateways with no optimizers are still included
+    }
   },
   {
     $group: {
@@ -164,6 +164,144 @@
       stateName: "$stateName",
       stateId: "$_id.stateId",
       locations: "$locations"
+    }
+  }
+],
+
+
+
+[
+  {
+    $match: {
+      createdAt: {
+        $gt: ISODate("2024-07-10T00:00:00.000Z")
+      }
+    }
+  },
+  {
+    $sort: {
+      TimeStamp: 1
+    }
+  },
+  {
+    $group: {
+      _id: {
+        optimizerId: "$OptimizerID",
+        gatewayId: "$GatewayID"
+      },
+      activities: {
+        $push: {
+          compStatus: "$CompStatus",
+          optmode: "$OptimizerMode",
+          time: {
+            $convert: {
+              input: "$TimeStamp",
+              to: "double",
+              onError: null,
+              onNull: null
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      name: "$_id",
+      timeDiffs: {
+        $reduce: {
+          input: {
+            $map: {
+              input: {
+                $range: [
+                  1,
+                  {
+                    $size: "$activities"
+                  }
+                ]
+              },
+              as: "idx",
+              in: {
+                current: {
+                  $arrayElemAt: [
+                    "$activities",
+                    "$$idx"
+                  ]
+                },
+                previous: {
+                  $arrayElemAt: [
+                    "$activities",
+                    {
+                      $subtract: ["$$idx", 1]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          initialValue: [],
+          in: {
+            $concatArrays: [
+              "$$value",
+              [
+                {
+                  activity:
+                    "$$this.previous.compStatus",
+                  status:
+                    "$$this.previous.optmode",
+                  timeDiff: {
+                    $subtract: [
+                      "$$this.current.time",
+                      "$$this.previous.time"
+                    ]
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    $unwind: "$timeDiffs"
+  },
+  {
+    $group: {
+      _id: {
+        name: "$name",
+        activity: "$timeDiffs.activity",
+        status: "$timeDiffs.status"
+      },
+      totalTime: {
+        $sum: "$timeDiffs.timeDiff"
+      },
+      mc: {
+        $sum: 1
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      name: "$_id.name",
+      activity: "$_id.activity",
+      status: "$_id.status",
+      totalTime: "$totalTime",
+      mc: "$mc"
+    }
+  },
+  {
+    $group: {
+      _id: "$name",
+      values: {
+        $addToSet: {
+          activity: "$activity",
+          status: "$status",
+          totalTime: "$totalTime",
+          msgcount: "$mc"
+        }
+      }
     }
   }
 ]

@@ -16,7 +16,6 @@ module.exports = function (agenda) {
         try {
             const id = await Data();
             const { gatewayIds } = id;
-            //console.log(gatewayIds,"gatways id here ");
             
             const latestRecord = await findLatestRecords(gatewayIds);
             
@@ -54,7 +53,6 @@ module.exports = function (agenda) {
 
                     // Insert all records in one go
                     const insertedRecords = await EnergyMeterAuditModel.insertMany(recordsToInsert);
-                    console.log(insertedRecords,);
 
                     // Generate a single groupId for the entire chunk
                     const groupId = `${insertedRecords[0].runId}-${insertedRecords[0].batchId}`;
@@ -82,7 +80,6 @@ module.exports = function (agenda) {
 
                     // Send the chunk with the _id, groupId, and other fields to SendAudit
                     const SendAuditResp = await SendAudit(chunk); // Assuming SendAudit accepts the chunk with groupId
-                    console.log({ SendAuditResp, batchId });
                 }
             } else {
                 console.log('No records found in EnterpriseMeterAudit');
@@ -151,8 +148,6 @@ module.exports = function (agenda) {
             ];
 
             const latestRecords = await GatewayLogModel.aggregate(pipeline).exec();
-            // console.log(latestRecords,"$$$$$$$$$$$$$$$$$$$");
-            // return 
 
             return latestRecords;
         } catch (error) {

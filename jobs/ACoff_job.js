@@ -1,54 +1,43 @@
 
 const OptimizerLogModel = require('../models/OptimizerLog.model');
 const OptimizerAgg = require('../models/Optimizersagg');
-
 const moment = require('moment');
 
 module.exports = function (agenda) {
     agenda.define('acon_off_Job', async (job) => {
         try {
             const latestRecord = await findonoffRecord();
-            console.log(latestRecord,"CCCCCCCCCCCCCCCCCC");
             const optimizerRecords = [];
-            // Loop through each optimizer in the latestRecord array
-            for (const optimizers of latestRecord) {
-                
-                // Check if optimizer has a list array
-                console.log(optimizers,"1111111111111111");
-                if (optimizers.list && Array.isArray(optimizers.list)) {
-                    console.log(optimizers.list,"1111111555555555111111111");
-                    // Loop through each object in the list array
-                    for (const c of optimizers.list) {
-                        console.log(c,"ccccccccccc666666666690876565434cccccccccccc");
-                        // Push the document data to the array
-                        optimizerRecords.push({
-                            oid: item.oid,
-                            gid: item.gid,
-                            compStatus: item.compStatus,
-                            optmode: item.optmode,
-                            acstatus: item.acstatus,
-                            rtempfrom: item.rtempfrom,
-                            rtempto: item.rtempto,
-                            ctempfrom: item.ctempfrom,
-                            ctempto: item.ctempto,
-                            humfrom: item.humfrom,
-                            humto: item.humto,
-                            from: item.from,
-                            to: item.to,
-                            counts: item.counts
-                        });
-                    }
-                }
-            }
-
+            latestRecord.map(entry => {
+                entry.optimizers.list.map(item=>{
+                    optimizerRecords.push({
+                        oid: item.oid,
+                        gid: item.gid,
+                        compStatus: item.compStatus,
+                        optmode: item.optmode,
+                        acstatus: item.acstatus,
+                        rtempfrom: item.rtempfrom,
+                        rtempto: item.rtempto,
+                        ctempfrom: item.ctempfrom,
+                        ctempto: item.ctempto,
+                        humfrom: item.humfrom,
+                        humto: item.humto,
+                        from: item.from,
+                        to: item.to,
+                        counts: item.counts
+                    });
+                    
+                })
+            })
             // Insert all records at once using insertMany
             if (optimizerRecords.length > 0) {
-                await OptimizerAgg.insertMany(optimizerRecords);
+                // await OptimizerAgg.insertMany(optimizerRecords);
                 console.log("All optimizer data inserted successfully!");
             } else {
                 console.log("No optimizer data to insert.");
             }
         } catch (error) {
+            console.log(error);
 
         }
 
@@ -381,9 +370,6 @@ module.exports = function (agenda) {
                 }
             ];
             const latestRecords = await OptimizerLogModel.aggregate(pipeline).exec();
-            // console.log({ latestRecords });
-
-
             return latestRecords;
         } catch (error) {
             console.log({ error });

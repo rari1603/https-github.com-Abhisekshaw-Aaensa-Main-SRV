@@ -9,7 +9,7 @@ function logMiddleware(logLevel, fileName) {
         // const routeName = req.routeName || 'unknown-route'; // Use route info from req
 
         // Log the request information with route name
-        logger[logLevel](fileName, `Route: ${url} | Request - Method: ${method}, URL: ${url}, Params: ${JSON.stringify(params)}, Query: ${JSON.stringify(query)}, Body: ${JSON.stringify(body)}`);
+        // logger[logLevel](fileName, `Route: ${url} | Request - Method: ${method}, URL: ${url}, Params: ${JSON.stringify(params)}, Query: ${JSON.stringify(query)}, Body: ${JSON.stringify(body)}`);
 
         // Capture the original `res.send` function
         const originalSend = res.send;
@@ -20,7 +20,7 @@ function logMiddleware(logLevel, fileName) {
             const responseString = typeof responseBody === 'object' ? JSON.stringify(responseBody) : responseBody;
 
             // Log the response body with route name
-            logger[logLevel](fileName, `Route: ${url} | Response - Status: ${res.statusCode}, Body: ${responseString}`);
+            // logger[logLevel](fileName, `Route: ${url} | Response - Status: ${res.statusCode}, Body: ${responseString}`);
 
             // Call the original `send` function with the response
             originalSend.call(this, responseBody);

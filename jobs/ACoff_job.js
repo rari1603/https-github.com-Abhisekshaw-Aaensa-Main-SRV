@@ -1,22 +1,53 @@
-const { Enterprise } = require('../middleware/lib/roles');
+
 const OptimizerLogModel = require('../models/OptimizerLog.model');
-const { SendAudit } = require('../controllers/Delloite/action');
-const { Data } = require('../Test/RetriveId');
-const mongoose = require('mongoose');
-const { ObjectId } = require('mongodb');
-const crypto = require('crypto');
+const OptimizerAgg = require('../models/Optimizersagg');
+
 const moment = require('moment');
 
 module.exports = function (agenda) {
-    agenda.define('acon/off_Job', async (job) => {
+    agenda.define('acon_off_Job', async (job) => {
         try {
-            const id = await Data();
-            const { gatewayIds } = id;
-            console.log(gatewayIds);
-            const latestRecord = await findonoffRecord(gatewayIds);
-            console.log({latestRecord},"++++++++++++");
-            
+            const latestRecord = await findonoffRecord();
+            console.log(latestRecord,"CCCCCCCCCCCCCCCCCC");
+            const optimizerRecords = [];
+            // Loop through each optimizer in the latestRecord array
+            for (const optimizers of latestRecord) {
+                
+                // Check if optimizer has a list array
+                console.log(optimizers,"1111111111111111");
+                if (optimizers.list && Array.isArray(optimizers.list)) {
+                    console.log(optimizers.list,"1111111555555555111111111");
+                    // Loop through each object in the list array
+                    for (const c of optimizers.list) {
+                        console.log(c,"ccccccccccc666666666690876565434cccccccccccc");
+                        // Push the document data to the array
+                        optimizerRecords.push({
+                            oid: item.oid,
+                            gid: item.gid,
+                            compStatus: item.compStatus,
+                            optmode: item.optmode,
+                            acstatus: item.acstatus,
+                            rtempfrom: item.rtempfrom,
+                            rtempto: item.rtempto,
+                            ctempfrom: item.ctempfrom,
+                            ctempto: item.ctempto,
+                            humfrom: item.humfrom,
+                            humto: item.humto,
+                            from: item.from,
+                            to: item.to,
+                            counts: item.counts
+                        });
+                    }
+                }
+            }
 
+            // Insert all records at once using insertMany
+            if (optimizerRecords.length > 0) {
+                await OptimizerAgg.insertMany(optimizerRecords);
+                console.log("All optimizer data inserted successfully!");
+            } else {
+                console.log("No optimizer data to insert.");
+            }
         } catch (error) {
 
         }
@@ -24,148 +55,340 @@ module.exports = function (agenda) {
     })
 
 
-    async function findonoffRecord(gatewayIds) {
-        const pipeline = [
-            {
-                $match: {
-                    TimeStamp: {
-                        $gt: "1725167702"
-                    },
-                    GatewayID: { $in: gatewayIds },
-                }
-            },
-            {
-                $sort: {
-                    TimeStamp: 1
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        optimizerId: "$OptimizerID",
-                        gatewayId: "$GatewayID"
-                    },
-                    activities: {
-                        $push: {
-                            compStatus: "$CompStatus",
-                            optmode: "$OptimizerMode",
-                            time: {
-                                $convert: {
-                                    input: "$TimeStamp",
-                                    to: "double",
-                                    onError: null,
-                                    onNull: null
-                                }
+    async function findonoffRecord() {
+        try {
+            const threeHoursAgo = new Date(new Date().getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
+            const currentTime = new Date(); // Current time
+            const pipeline = [
+                {
+                    $match: {
+                        createdAt: {
+
+                            $gt: threeHoursAgo,
+                            $lt: currentTime
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        TimeStamp: 1
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            oid: "$OptimizerID",
+                            gid: "$GatewayID"
+                        },
+                        activities: {
+                            $push: {
+                                oid: "$OptimizerID",
+                                gid: "$GatewayID",
+                                compStatus: {
+                                    $ifNull: ["$CompStatus", "--"]
+                                },
+                                rtemp: "$RoomTemperature",
+                                ctemp: "$CoilTemperature",
+                                hum: "$Humidity",
+                                optmode: "$OptimizerMode",
+                                acstatus: "$DeviceStatus",
+                                time: "$TimeStamp"
+
                             }
                         }
                     }
-                }
-            },
-            {
-                $project: {
-                    name: "$_id",
-                    timeDiffs: {
-                        $reduce: {
-                            input: {
-                                $map: {
-                                    input: {
-                                        $range: [
-                                            1,
-                                            {
-                                                $size: "$activities"
-                                            }
-                                        ]
-                                    },
-                                    as: "idx",
-                                    in: {
-                                        current: {
-                                            $arrayElemAt: [
-                                                "$activities",
-                                                "$$idx"
-                                            ]
-                                        },
-                                        previous: {
-                                            $arrayElemAt: [
-                                                "$activities",
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        firstOccurrences: {
+                            $reduce: {
+                                input: {
+                                    $map: {
+                                        input: {
+                                            $range: [
+                                                0,
                                                 {
-                                                    $subtract: ["$$idx", 1]
+                                                    $size: "$activities"
                                                 }
                                             ]
+                                        },
+                                        as: "idx",
+                                        in: {
+                                            current: {
+                                                $arrayElemAt: [
+                                                    "$activities",
+                                                    "$$idx"
+                                                ]
+                                            },
+                                            previous: {
+                                                $cond: {
+                                                    if: {
+                                                        $eq: ["$$idx", 0]
+                                                    },
+                                                    then: null,
+                                                    else: {
+                                                        $arrayElemAt: [
+                                                            "$activities",
+                                                            {
+                                                                $subtract: ["$$idx", 1]
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            index: "$$idx"
+                                        }
+                                    }
+                                },
+                                initialValue: [],
+                                in: {
+                                    $let: {
+                                        vars: {
+                                            isFirstInSequence: {
+                                                $or: [
+                                                    {
+                                                        $eq: [
+                                                            "$$this.previous",
+                                                            null
+                                                        ]
+                                                    },
+                                                    {
+                                                        $or: [
+                                                            {
+                                                                $ne: [
+                                                                    "$$this.current.compStatus",
+                                                                    "$$this.previous.compStatus"
+                                                                ]
+                                                            },
+                                                            {
+                                                                $ne: [
+                                                                    "$$this.current.optmode",
+                                                                    "$$this.previous.optmode"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            isLast: {
+                                                $cond: {
+                                                    if: {
+                                                        $eq: [
+                                                            "$$this.index",
+                                                            {
+                                                                $subtract: [
+                                                                    {
+                                                                        $size: "$activities"
+                                                                    },
+                                                                    1
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    then: true,
+                                                    else: false
+                                                }
+                                            }
+                                        },
+                                        in: {
+                                            $cond: {
+                                                if: "$$isFirstInSequence",
+                                                then: {
+                                                    $concatArrays: [
+                                                        "$$value",
+                                                        [
+                                                            {
+                                                                compStatus:
+                                                                    "$$this.previous.compStatus",
+                                                                optmode:
+                                                                    "$$this.previous.optmode",
+                                                                acstatus:
+                                                                    "$$this.previous.acstatus",
+                                                                time: "$$this.previous.time",
+                                                                rtemp:
+                                                                    "$$this.previous.rtemp",
+                                                                ctemp:
+                                                                    "$$this.previous.ctemp",
+                                                                hum: "$$this.previous.hum",
+                                                                oid: "$_id.oid",
+                                                                gid: "$_id.gid",
+                                                                index: "$$this.index"
+                                                            },
+                                                            {
+                                                                compStatus:
+                                                                    "$$this.current.compStatus",
+                                                                optmode:
+                                                                    "$$this.current.optmode",
+                                                                acstatus:
+                                                                    "$$this.current.acstatus",
+                                                                time: "$$this.current.time",
+                                                                rtemp:
+                                                                    "$$this.current.rtemp",
+                                                                ctemp:
+                                                                    "$$this.current.rtemp",
+                                                                hum: "$$this.current.hum",
+                                                                oid: "$_id.oid",
+                                                                gid: "$_id.gid",
+                                                                index: "$$this.index"
+                                                            }
+                                                        ]
+                                                    ]
+                                                },
+                                                else: {
+                                                    $cond: {
+                                                        if: "$$isLast",
+                                                        then: {
+                                                            $concatArrays: [
+                                                                "$$value",
+                                                                [
+                                                                    {
+                                                                        compStatus:
+                                                                            "$$this.current.compStatus",
+                                                                        optmode:
+                                                                            "$$this.current.optmode",
+                                                                        acstatus:
+                                                                            "$$this.current.acstatus",
+                                                                        time: "$$this.current.time",
+                                                                        rtemp:
+                                                                            "$$this.current.rtemp",
+                                                                        ctemp:
+                                                                            "$$this.current.rtemp",
+                                                                        hum: "$$this.current.hum",
+                                                                        oid: "$_id.oid",
+                                                                        gid: "$_id.gid",
+                                                                        index:
+                                                                            "$$this.index"
+                                                                    }
+                                                                ]
+                                                            ]
+                                                        },
+                                                        else: "$$value"
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            },
-                            // -------------------------
-                            initialValue: [],
-                            in: {
-                                $concatArrays: [
-                                    "$$value",
-                                    [
-                                        {
-                                            activity:
-                                                "$$this.previous.compStatus",
-                                            status:
-                                                "$$this.previous.optmode",
-                                            timeDiff: {
-                                                $subtract: [
-                                                    "$$this.current.time",
-                                                    "$$this.previous.time"
-                                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        name: 1,
+                        optimizers: {
+                            $reduce: {
+                                input: "$firstOccurrences",
+                                initialValue: {
+                                    list: [],
+                                    previous: null,
+                                    index: -1
+                                },
+                                in: {
+                                    $let: {
+                                        vars: {
+                                            current: "$$this",
+                                            previousRow: "$$value.previous",
+                                            currentIndex: {
+                                                $add: ["$$value.index", 1]
                                             }
+                                        },
+                                        in: {
+                                            list: {
+                                                $cond: {
+                                                    if: {
+                                                        $and: [
+                                                            {
+                                                                $gt: [
+                                                                    "$$currentIndex",
+                                                                    1
+                                                                ]
+                                                            },
+                                                            {
+                                                                $eq: [
+                                                                    "$$previousRow.compStatus",
+                                                                    "$$current.compStatus"
+                                                                ]
+                                                            },
+                                                            {
+                                                                $eq: [
+                                                                    "$$previousRow.optmode",
+                                                                    "$$current.optmode"
+                                                                ]
+                                                            },
+                                                            {
+                                                                $eq: [
+                                                                    "$$previousRow.acstatus",
+                                                                    "$$current.acstatus"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    then: {
+                                                        $concatArrays: [
+                                                            "$$value.list",
+                                                            [
+                                                                {
+                                                                    oid: "$$previousRow.oid",
+                                                                    gid: "$$previousRow.gid",
+                                                                    compStatus:
+                                                                        "$$previousRow.compStatus",
+                                                                    optmode:
+                                                                        "$$previousRow.optmode",
+                                                                    acstatus:
+                                                                        "$$previousRow.acstatus",
+                                                                    rtempfrom:
+                                                                        "$$previousRow.rtemp",
+                                                                    rtempto:
+                                                                        "$$current.rtemp",
+                                                                    ctempfrom:
+                                                                        "$$previousRow.ctemp",
+                                                                    ctempto:
+                                                                        "$$current.ctemp",
+                                                                    humfrom:
+                                                                        "$$previousRow.hum",
+                                                                    humto:
+                                                                        "$$current.hum",
+                                                                    from: "$$previousRow.time",
+                                                                    to: {
+                                                                        $ifNull: [
+                                                                            "$$current.time",
+                                                                            0
+                                                                        ]
+                                                                    },
+                                                                    counts: {
+                                                                        $subtract: [
+                                                                            "$$current.index",
+                                                                            "$$previousRow.index"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ]
+                                                        ]
+                                                    },
+                                                    else: "$$value.list"
+                                                }
+                                            },
+                                            previous: "$$current",
+                                            index: "$$currentIndex"
                                         }
-                                    ]
-                                ]
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            },
-            {
-                $unwind: "$timeDiffs"
-            },
-            {
-                $group: {
-                    _id: {
-                        name: "$name",
-                        activity: "$timeDiffs.activity",
-                        status: "$timeDiffs.status"
-                    },
-                    totalTime: {
-                        $sum: "$timeDiffs.timeDiff"
-                    },
-                    mc: {
-                        $sum: 1
-                    }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    name: "$_id.name",
-                    activity: "$_id.activity",
-                    status: "$_id.status",
-                    totalTime: "$totalTime",
-                    mc: "$mc"
-                }
-            },
-            {
-                $group: {
-                    _id: "$name",
-                    values: {
-                        $addToSet: {
-                            activity: "$activity",
-                            status: "$status",
-                            totalTime: "$totalTime",
-                            msgcount: "$mc"
-                        }
-                    }
-                }
-            }
-        ]
-        const latestRecords = await OptimizerLogModel.aggregate(pipeline).exec();
-        // console.log({latestRecords});
-        
+            ];
+            const latestRecords = await OptimizerLogModel.aggregate(pipeline).exec();
+            // console.log({ latestRecords });
 
-        return latestRecords;
+
+            return latestRecords;
+        } catch (error) {
+            console.log({ error });
+
+
+        }
     }
 }

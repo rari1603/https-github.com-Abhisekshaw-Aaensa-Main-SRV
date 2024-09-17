@@ -56,12 +56,12 @@ exports.AddEnterpriseStateLocation = async (req, res) => {
 exports.AddGateway = async (req, res) => {
     const { EnterpriseInfo, OnboardingDate, GatewayID, NetworkSSID, NetworkPassword, EnterpriseUserID } = req.body;
     try {
-        // await InfoPassGateway({
-        //     EnterpriseInfo,
-        //     OnboardingDate,
-        //     GatewayID,
-        //     Action: "add"
-        // });
+        await InfoPassGateway({
+            EnterpriseInfo,
+            OnboardingDate,
+            GatewayID,
+            Action: "add"
+        });
         const NewGateway = new GatewayModel({
             EnterpriseInfo,
             OnboardingDate,
@@ -89,13 +89,13 @@ exports.AddOptimizer = async (req, res) => {
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
         if (GATEWAY) {
 
-            // await InfoPassOptimizer({
-            //     OptimizerID,
-            //     GatewayId,
-            //     ACTonnage,
-            //     AC_Energy,
-            //     Action: "add"
-            // });
+            await InfoPassOptimizer({
+                OptimizerID,
+                GatewayId,
+                ACTonnage,
+                AC_Energy,
+                Action: "add"
+            });
 
 
             const NewOptimizer = new OptimizerModel({
@@ -198,12 +198,12 @@ exports.UpdateGateway = async (req, res) => {
         } else {
             if (Gateway) {
 
-                // await InfoPassGateway({
-                //     EnterpriseInfo,
-                //     OnboardingDate,
-                //     GatewayID,
-                //     Action: "update"
-                // });
+                await InfoPassGateway({
+                    EnterpriseInfo,
+                    OnboardingDate,
+                    GatewayID,
+                    Action: "update"
+                });
 
                 await GatewayModel.findByIdAndUpdate({ _id: gateway_id },
                     {
@@ -240,13 +240,13 @@ exports.UpdateOptimizer = async (req, res) => {
 
         if (Optimizer) {
 
-            // await InfoPassOptimizer({
-            //     OptimizerID,
-            //     GatewayId,
-            //     ACTonnage,
-            //     AC_Energy,
-            //     Action: "update",
-            // });
+            await InfoPassOptimizer({
+                OptimizerID,
+                GatewayId,
+                ACTonnage,
+                AC_Energy,
+                Action: "update",
+            });
             await OptimizerModel.findByIdAndUpdate({ _id: OPTIMIZER._id },
                 {
                     GatewayId: GATEWAY._id, // primary _id of that Gateway

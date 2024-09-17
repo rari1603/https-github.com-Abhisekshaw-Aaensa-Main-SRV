@@ -11,8 +11,8 @@ const agenda = new Agenda({
 });
 
 // Initialize all the job definitions
-// EnterpriseAuditMeter_job(agenda);
-// AmbientAudit_Job(agenda);
+EnterpriseAuditMeter_job(agenda);
+AmbientAudit_Job(agenda);
 AC_on_off_Job(agenda);
 
 // Start the Agenda process and re-schedule the jobs
@@ -22,14 +22,14 @@ AC_on_off_Job(agenda);
 
 
   // Clear any existing jobs to prevent duplication
-  // await agenda.cancel({ name: 'EnergyMeterAudit' });
-  // await agenda.cancel({ name: 'ambientInfo_Job' });
-   await agenda.cancel({ name: 'acon/off_Job' });
+  await agenda.cancel({ name: 'EnergyMeterAudit' });
+  await agenda.cancel({ name: 'ambientInfo_Job' });
+   await agenda.cancel({ name: 'acon_off_Job' });
 
   // Schedule the jobs
-  // await agenda.every('5 minutes', 'EnergyMeterAudit');
-  // await agenda.every('5 minutes', 'ambientInfo_Job');
-  await agenda.every('5 minutes', 'acon/off_Job');
+  await agenda.every('5 minutes', 'EnergyMeterAudit');
+  await agenda.every('5 minutes', 'ambientInfo_Job');
+  await agenda.every('5 minutes', 'acon_off_Job');
 
 
 })();

@@ -85,10 +85,8 @@ exports.AddOptimizer = async (req, res) => {
     // console.log(req.body);
     const { GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy } = req.body;
     try {
-        await InfoPassOptimizer({GatewayId, OptimizerID, OptimizerName, ACTonnage, Fan_consumption, AC_Energy});
         const GATEWAY = await GatewayModel.findOne({ GatewayID: GatewayId });
         if (GATEWAY) {
-
             await InfoPassOptimizer({
                 OptimizerID,
                 GatewayId,
@@ -277,7 +275,7 @@ exports.DeleteAll = async (req, res) => {
     const { group, id } = req.body;
 
     try {
-        
+
         if (!(group && id)) {
             return res.status(400).json({ success: false, message: "Group and ID are required for deletion." });
         }

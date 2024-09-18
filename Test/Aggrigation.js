@@ -606,4 +606,262 @@
       }
     }
   }
-}]
+}],
+
+// db of optimizerAgg-----------------------------------------
+
+[
+  {
+    $match: {
+      createdAt: {
+        $gt: ISODate("2024-09-11T14:00:00.000Z"),
+        $lt: ISODate("2024-09-18T20:00:00.000Z")
+      }
+    }
+  },
+
+  { $sort: { to: 1 } },
+  {
+    $group: {
+      _id: {
+        oid: "$OptimizerID",
+        gid: "$GatewayID"
+      },
+      activities: {
+        $push: {
+          oid: "oid",
+          gid: "gid",
+          compStatus: {
+            $ifNull: ["$compStatus", "--"]
+          },
+          optmode: "$optmode",
+          acstatus: "$acstatus",
+          time: "$to"
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      firstOccurrences: {
+        $reduce: {
+          input: {
+            $map: {
+              input: {
+                $range: [
+                  0,
+                  { $size: "$activities" }
+                ]
+              },
+              as: "idx",
+              in: {
+                current: {
+                  $arrayElemAt: [
+                    "$activities",
+                    "$$idx"
+                  ]
+                },
+                previous: {
+                  $cond: {
+                    if: { $eq: ["$$idx", 0] },
+                    then: null,
+                    else: {
+                      $arrayElemAt: [
+                        "$activities",
+                        {
+                          $subtract: ["$$idx", 1]
+                        }
+                      ]
+                    }
+                  }
+                },
+                index: "$$idx"
+              }
+            }
+          },
+          initialValue: [],
+          in: {
+            $let: {
+              vars: {
+                isFirstInSequence: {
+                  $or: [
+                    {
+                      $eq: [
+                        "$$this.previous",
+                        null
+                      ]
+                    },
+                    {
+                      $or: [
+                        {
+                          $ne: [
+                            "$$this.current.compStatus",
+                            "$$this.previous.compStatus"
+                          ]
+                        },
+                        {
+                          $ne: [
+                            "$$this.current.optmode",
+                            "$$this.previous.optmode"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                isLast: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$this.index",
+                        {
+                          $subtract: [
+                            {
+                              $size: "$activities"
+                            },
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    then: true,
+                    else: false
+                  }
+                }
+              },
+              in: {
+                $cond: {
+                  if: "$$isFirstInSequence",
+                  then: {
+                    $concatArrays: [
+                      "$$value",
+                      [
+                        {
+                          compStatus:
+                            "$$this.current.compStatus",
+                          optmode:
+                            "$$this.current.optmode",
+                          acstatus:
+                            "$$this.current.acstatus",
+                          time: "$$this.current.time",
+                          oid: "$_id.oid",
+                          gid: "$_id.gid"
+                        }
+                      ]
+                    ]
+                  },
+                  else: {
+                    $cond: {
+                      if: "$$isLast",
+                      then: {
+                        $concatArrays: [
+                          "$$value",
+                          [
+                            {
+                              compStatus:
+                                "$$this.current.compStatus",
+                              optmode:
+                                "$$this.current.optmode",
+                              acstatus:
+                                "$$this.current.acstatus",
+                              time: "$$this.current.time",
+                              oid: "$_id.oid",
+                              gid: "$_id.gid"
+                            }
+                          ]
+                        ]
+                      },
+                      else: "$$value"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      name: 1,
+      optimizers: {
+        $reduce: {
+          input: "$firstOccurrences",
+          initialValue: {
+            list: [],
+            previous: null,
+            index: -1
+          },
+          in: {
+            $let: {
+              vars: {
+                current: "$$this",
+                previousRow: "$$value.previous",
+                currentIndex: {
+                  $add: ["$$value.index", 1]
+                }
+              },
+              in: {
+                list: {
+                  $cond: {
+                    if: {
+                      $ne: ["$$currentIndex", 0]
+                    },
+                    then: {
+                      $concatArrays: [
+                        "$$value.list",
+                        [
+                          {
+                            oid: "$$previousRow.oid",
+                            gid: "$$previousRow.gid",
+                            compStatus:
+                              "$$previousRow.compStatus",
+                            optmode:
+                              "$$previousRow.optmode",
+                            acstatus:
+                              "$$previousRow.acstatus",
+                            nextcompStatus: {
+                              $ifNull: [
+                                "$$current.compStatus",
+                                "N/A"
+                              ]
+                            },
+                            nextoptmode: {
+                              $ifNull: [
+                                "$$current.optmode",
+                                "N/A"
+                              ]
+                            },
+                            nextacstatus: {
+                              $ifNull: [
+                                "$$current.acstatus",
+                                "N/A"
+                              ]
+                            },
+                            from: "$$previousRow.time",
+                            to: {
+                              $ifNull: [
+                                "$$current.time",
+                                0
+                              ]
+                            },
+                            index: "$$value.index"
+                          }
+                        ]
+                      ]
+                    },
+                    else: "$$value.list"
+                  }
+                },
+                previous: "$$current",
+                index: "$$currentIndex"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

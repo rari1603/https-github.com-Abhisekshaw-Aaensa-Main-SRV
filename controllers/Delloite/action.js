@@ -48,7 +48,6 @@ exports.SendAmbientAudit = async (req) => {
 };
 exports.InfoPassGateway = async (req) => {
     try {
-        console.log(req, "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 
         const lastRunRecord = await OGConfigs.findOne().sort({ runId: -1 });
         const runId = lastRunRecord && !isNaN(Number(lastRunRecord.runId)) ? Number(lastRunRecord.runId) + 1 : 1;
@@ -63,7 +62,6 @@ exports.InfoPassGateway = async (req) => {
                 select: 'name'    // Only selects the 'name' field from the State document
             })
             .exec();
-        console.log(result, "+++++++++++");
 
         const newRecord = {
             GatewayID: req.GatewayID,
@@ -83,11 +81,14 @@ exports.InfoPassGateway = async (req) => {
         const newConfig = new OGConfigs(newRecord);
         // await newConfig.save();
         console.log({ newConfig });
+
+        const humanReadableTime = moment(newConfig.Time).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
+
         const humanReadableCreatedAt = moment(newConfig.createdAt).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
         // Log the new config details
         logger.info("Delloite-GatewayConfig-Data", {
             GroupMsgId: newConfig.runId,
-            Messages: {
+            Messages: [{
                 MessageId: newConfig._id,
                 GatewayID: newConfig.GatewayID,
                 Location: newConfig.Location, // Corrected location usage
@@ -96,11 +97,11 @@ exports.InfoPassGateway = async (req) => {
                 State: newConfig.State,
                 OnboardingDate: newConfig.OnboardingDate,
                 Switch: newConfig.Switch,
-                Time: newConfig.Time,
+                Time: humanReadableTime,
                 MessageTime: humanReadableCreatedAt,
                 Action: newConfig.Action,
                 Type: newConfig.Type
-            }
+            }]
         });
 
     } catch (err) {
@@ -129,12 +130,14 @@ exports.InfoPassOptimizer = async (req) => {
         }
         const newConfig = new OGConfigs(newRecord);
         // await newConfig.save();
-        console.log({ newConfig });
+        // console.log({ newConfig });
+        const humanReadableTime = moment(newConfig.Time).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
+
         const humanReadableCreatedAt = moment(newConfig.createdAt).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
         // Log the new config details
         logger.info("Delloite-OptimizerConfig-Data", {
             GroupMsgId: newConfig.runId,
-            Messages: {
+            Messages: [{
                 MessageId: newConfig._id,
                 GatewayID: newConfig.GatewayID,
                 OptimizerId: newConfig.OptimizerId,
@@ -142,11 +145,11 @@ exports.InfoPassOptimizer = async (req) => {
                     ACTonnage: newConfig.Details.ACTonnage,
                     AC_Energy: newConfig.Details.AC_Energy,
                 },
-                Time: newConfig.Time,
+                Time: humanReadableTime,
                 MessageTime: humanReadableCreatedAt,
                 Action: newConfig.Action,
                 Type: newConfig.Type
-            }
+            }]
         });
     } catch (err) {
         console.error(err.message); // More appropriate error logging

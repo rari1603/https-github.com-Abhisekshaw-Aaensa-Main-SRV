@@ -1,14 +1,14 @@
-
-// const logger = require('../../configs/pino_logger').createLogger(__filename);
 const { Gateway } = require('../../fake/controller/testController');
 const logger = require('../../configs/pino_logger');
 const EnterpriseStateLocationModel = require('../../models/enterprise_state_location.model');
 const OGConfigs = require('../../models/OGConfig.model');
 const moment = require('moment-timezone');
+const mongoose = require('mongoose');
+
 
 exports.SendAudit = async (req) => {
     try {
-        // logger.info("Delloite-EnergyMeter-Data", req);
+        logger.info("Delloite-EnergyMeter-Data", req);
         return {
             success: true,
             status: 200,
@@ -26,25 +26,51 @@ exports.SendAudit = async (req) => {
         }
     }
 };
-
+exports.SendAmbientAudit = async (req) => {
+    try {
+        logger.info("Delloite-Ambient-Info", req);
+        return {
+            success: true,
+            status: 200,
+            message: "Audit sent successfully",
+            data: { /* any additional data you want to include */ }
+        };
+    } catch (err) {
+        console.log(err.message);
+        // Assuming `req` has a `res` object, otherwise remove `res` handling
+        if (req) {
+            return req.res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+        } else {
+            // If there's no `res`, just throw the error
+            throw err;
+        }
+    }
+};
 exports.InfoPassGateway = async (req) => {
     try {
+        console.log(req, "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
         const lastRunRecord = await OGConfigs.findOne().sort({ runId: -1 });
         const runId = lastRunRecord && !isNaN(Number(lastRunRecord.runId)) ? Number(lastRunRecord.runId) + 1 : 1;
 
+        // Convert the string to ObjectId
+        const enterpriseId = new mongoose.Types.ObjectId(req.EnterpriseInfo);
+
         // Perform the HTTP call or any other action here
-        const result = await EnterpriseStateLocationModel.findOne({ Enterprise_ID: req.EnterpriseInfo })
+        const result = await EnterpriseStateLocationModel.findOne({ _id: enterpriseId })
             .populate({
                 path: 'State_ID', // Populates the State_ID field
                 select: 'name'    // Only selects the 'name' field from the State document
             })
             .exec();
-        console.log(result);
+        console.log(result, "+++++++++++");
 
         const newRecord = {
             GatewayID: req.GatewayID,
             runId: runId,  // Add the calculated runId      
             Location: result.LocationName, // Fixed field usage for location
+            Lat: result.Lat,
+            Long: result.Long,
             State: result.State_ID.name, // Use populated 'name' field from State_ID
             OnboardingDate: req.OnboardingDate,
             Switch: false,
@@ -55,9 +81,9 @@ exports.InfoPassGateway = async (req) => {
 
         // Create and save the new record in OGConfigs model
         const newConfig = new OGConfigs(newRecord);
-        await newConfig.save();
+        // await newConfig.save();
         console.log({ newConfig });
-
+        const humanReadableCreatedAt = moment(newConfig.createdAt).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
         // Log the new config details
         logger.info("Delloite-GatewayConfig-Data", {
             GroupMsgId: newConfig.runId,
@@ -65,11 +91,13 @@ exports.InfoPassGateway = async (req) => {
                 MessageId: newConfig._id,
                 GatewayID: newConfig.GatewayID,
                 Location: newConfig.Location, // Corrected location usage
+                Lat: newConfig.Lat,
+                Long: newConfig.Long,
                 State: newConfig.State,
                 OnboardingDate: newConfig.OnboardingDate,
                 Switch: newConfig.Switch,
                 Time: newConfig.Time,
-                MessageTime: newConfig.createdAt,
+                MessageTime: humanReadableCreatedAt,
                 Action: newConfig.Action,
                 Type: newConfig.Type
             }
@@ -83,7 +111,6 @@ exports.InfoPassGateway = async (req) => {
         });
     }
 };
-
 exports.InfoPassOptimizer = async (req) => {
     try {
         const lastRunRecord = await OGConfigs.findOne().sort({ runId: -1 });
@@ -101,9 +128,9 @@ exports.InfoPassOptimizer = async (req) => {
             Type: "Optimizer"
         }
         const newConfig = new OGConfigs(newRecord);
-        await newConfig.save();
+        // await newConfig.save();
         console.log({ newConfig });
-
+        const humanReadableCreatedAt = moment(newConfig.createdAt).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
         // Log the new config details
         logger.info("Delloite-OptimizerConfig-Data", {
             GroupMsgId: newConfig.runId,
@@ -116,7 +143,7 @@ exports.InfoPassOptimizer = async (req) => {
                     AC_Energy: newConfig.Details.AC_Energy,
                 },
                 Time: newConfig.Time,
-                MessageTime: newConfig.createdAt,
+                MessageTime: humanReadableCreatedAt,
                 Action: newConfig.Action,
                 Type: newConfig.Type
             }

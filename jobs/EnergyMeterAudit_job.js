@@ -16,9 +16,9 @@ module.exports = function (agenda) {
         try {
             const id = await Data();
             const { gatewayIds } = id;
-            
+
             const latestRecord = await findLatestRecords(gatewayIds);
-            
+
             // const id = await Data();
             // const latestRecord = await findLatestRecords(id);
 
@@ -59,11 +59,13 @@ module.exports = function (agenda) {
 
                     // Map over the records to create the `Message` array
                     const chunk = {
-                        groupId: groupId, // Same groupId for all records in this chunk
-                        Message: insertedRecords.map(record => {
+                        GroupMsgId: groupId, // Same groupId for all records in this chunk
+                        Messages: insertedRecords.map(record => {
                             // Convert Unix timestamp to human-readable format using moment.js
                             const humanReadableTimeStamp = moment.unix(record.TimeStamp).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
-                          
+                            // Convert createdAt to human-readable format
+                            const humanReadableCreatedAt = moment(record.createdAt).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
+
                             return {
                                 MessageId: record._id.toString(),       // Include the _id of newRecord
                                 GatewayId: record.GatewayId,
@@ -71,7 +73,7 @@ module.exports = function (agenda) {
                                 KVAH: record.KVAH,
                                 PF: record.PF,
                                 Time: humanReadableTimeStamp, // Human-readable timestamp
-                                MessageTime: record.createdAt,
+                                MessageTime: humanReadableCreatedAt,
                                 Type: record.Type
                             };
                         })

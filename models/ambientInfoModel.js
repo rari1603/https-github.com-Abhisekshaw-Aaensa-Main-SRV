@@ -14,10 +14,10 @@ const AmbientInfo = new mongoose.Schema({
         required: true
     },
     TimeStamp: { type: Number },
-    TempUT: { type: Number },
+    TempUT: { type: String },
     AmbTemp: { type: Number },
     AmbHum: { type: Number },
-    HumUT: { type: Number },
+    HumUT: { type: String },
     RunID: { type: Number },
     BatchID: { type: Number },
     Type: { type: String },

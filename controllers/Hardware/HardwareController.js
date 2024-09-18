@@ -143,7 +143,9 @@ exports.ConfigureableData = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
-
+const dataSet = new Map();
+const lastMessageTimeStamp = new Map();
+const errorCounts = new Map();
 // Store Gateway & Optimizer Log data 
 exports.Store = async (req, res) => {
     const data = req.body;
@@ -331,9 +333,47 @@ exports.Store = async (req, res) => {
             }
         }));
 
-        console.log({ success: true, message: "Logs created successfully", gatewayLog, OptimizerLogModel });
+      console.log({ success: true, message: "Logs created successfully", gatewayLog, OptimizerLogModel });
 
-        return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
+      //----------system reboot code start---------------------
+      const currentMTime = gatewayLog.createdAt;
+        const currentMessageTime = Math.floor(new Date(currentMTime).getTime() / 1000);
+        const currentMessageTimeStamp = TimeStamp;
+
+        const lastMessageTime = dataSet.get(gateway_id) ? dataSet.get(gateway_id) : "0";
+        const previousMessageTimeStamp = lastMessageTimeStamp.get(gateway_id) ? lastMessageTimeStamp.get(gateway_id) : "0";
+
+        const gatewayTimeDiff = (currentMessageTimeStamp - previousMessageTimeStamp);
+        const messageTimeDiff = (currentMessageTime - lastMessageTime);
+
+        if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
+
+            dataSet.set(gateway_id, currentMessageTime);
+            lastMessageTimeStamp.set(gateway_id, currentMessageTimeStamp);
+            errorCounts.set(gateway_id, 0);
+
+            return res.status(500).json({
+                status: "success",
+                errorcode: "G-003",
+                message: "System reboot triggered",
+                timestamp: "1726661760"
+            });
+        } else {
+
+            dataSet.set(gateway_id, currentMessageTime);
+            lastMessageTimeStamp.set(gateway_id, currentMessageTimeStamp);
+            errorCounts.set(gateway_id, 0);            
+            // Return success response
+            return res.status(200).send({
+                success: true,
+                message: "Logs created successfully",
+                status: "success",
+                errorcode: "", 
+                timestamp: ""
+            });
+        }
+
+        //return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
         console.error({ StoreError: error.message });

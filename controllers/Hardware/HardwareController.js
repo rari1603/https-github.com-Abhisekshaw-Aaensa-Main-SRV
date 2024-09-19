@@ -140,7 +140,7 @@ exports.ConfigureableData = async (req, res) => {
 
     } catch (error) {
         console.log({ ConfigureableDataError: error.message });
-        return res.status(500).json({ success: false, message: error.message });
+         return res.status(500).json({ success: false, message: error.message });
     }
 };
 const dataSet = new Map();
@@ -351,7 +351,7 @@ exports.Store = async (req, res) => {
             dataSet.set(gateway_id, currentMessageTime);
             lastMessageTimeStamp.set(gateway_id, currentMessageTimeStamp);
             errorCounts.set(gateway_id, 0);
-
+            
             return res.status(500).json({
                 status: "success",
                 errorcode: "G-003",
@@ -1351,4 +1351,4 @@ exports.deviceStatus = async (req, res) => {
         console.error({ StoreError: error.message });
         res.status(404).send({ success: false, message: error.message });
     }
-};
+}; 

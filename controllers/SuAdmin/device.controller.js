@@ -308,10 +308,6 @@ exports.DeleteAll = async (req, res) => {
     }
 };
 
-
-
-
-
 //************* Test Delete **************//
 // Delete gateway
 exports.DeleteOptimizer = async (req, res) => {

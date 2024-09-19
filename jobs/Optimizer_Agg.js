@@ -4,7 +4,7 @@ const OptimizerAgg = require('../models/Optimizersagg');
 const moment = require('moment');
 
 module.exports = function (agenda) {
-    agenda.define('acon_off_Job', async (job) => {
+    agenda.define('Optimizer_Agg_job', async (job) => {
         try {
             const latestRecord = await findonoffRecord();
             const optimizerRecords = [];
@@ -32,6 +32,7 @@ module.exports = function (agenda) {
             // Insert all records at once using insertMany
             if (optimizerRecords.length > 0) {
                 // await OptimizerAgg.insertMany(optimizerRecords);
+                
                 console.log("All optimizer data inserted successfully!");
             } else {
                 console.log("No optimizer data to insert.");
@@ -369,6 +370,16 @@ module.exports = function (agenda) {
                     }
                 }
             ];
+
+
+
+
+
+
+
+
+
+
             const latestRecords = await OptimizerLogModel.aggregate(pipeline).exec();
             return latestRecords;
         } catch (error) {

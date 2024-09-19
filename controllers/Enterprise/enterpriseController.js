@@ -436,7 +436,7 @@ exports.EnterpriseStateLocationGatewayOptimizerList = async (req, res) => {
                     latestLog: { $first: "$$ROOT" }
                 }
             }
-        ]);
+        ],{allowDiskUse:true});
         // -------------------------------------------------------
 
         // -------------------------------------------------------

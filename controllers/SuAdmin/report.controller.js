@@ -10,6 +10,7 @@ const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
 const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 const moment = require('moment-timezone');
+const OptimizerOnOffModel = require('../../models/OptimizerOnOff');
 
 
 
@@ -332,7 +333,7 @@ exports.AllMeterData = async (req, res) => {
         let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
-        console.log({startIstTimestampUTC});
+        console.log({ startIstTimestampUTC });
 
         const countPoint = startIstTimestamp - istOffsetSeconds;
         // Validate page and pageSize parameters
@@ -1684,7 +1685,6 @@ exports.UsageTrends = async (req, res) => {
             let endIstTimestampUTC = endIstTimestampInterval - istOffsetSeconds;
             // Step 1: Fetch the initial previous value
 
-
             for (let i = 0; i < optimizerIds.length; i++) {
 
 
@@ -2053,19 +2053,20 @@ exports.UsageTrends = async (req, res) => {
 
 
                 const PD = await PipelineData(pipeline);
-
-
+                
+                
                 if (PD.length !== 0) {
                     const Optimizer = await OptimizerModel.findOne({ OptimizerID: Optimizerid });
-
+                    
                     if (Optimizer) {
                         PD.forEach(entry => {
                             entry.OptimizerName = Optimizer.OptimizerName;
                             entry.ACTonnage = Optimizer.ACTonnage;
                         });
                         if (Interval === "Day") {
-
-
+                      
+                            
+                            
                             var Twelve = await TwelveHour(startIstTimestampUTC);
                             let startIstTimestampsUTC;
                             if (!Twelve) {
@@ -2073,6 +2074,7 @@ exports.UsageTrends = async (req, res) => {
                             } else {
                                 startIstTimestampsUTC = startIstTimestampUTC;
                             }
+                           
                             const newPipeline = [
                                 {
                                     $match: {
@@ -2208,10 +2210,24 @@ exports.UsageTrends = async (req, res) => {
                                     }
                                 }
                             ];
-
-
-
                             const newPD = await PipelineData(newPipeline);
+
+                            
+                            
+                            // const newPipeline = [{
+                            //     optimizerId: optimizers[i]._id,
+                            //     starttime: { $gte: startIstTimestampsUTC },
+                            //     $or: [
+                            //         { endtime: { $lte: endIstTimestampUTC } },
+                            //         { endtime: null }
+                            //     ]
+                            // }]
+
+                            // const newPD = await OptimizerOnOffModel.aggregate(newPipeline);
+
+                            //  console.log(newPD, "+++++++++++++++++++");
+
+
                             PD.forEach(entry => {
                                 const newEntry = newPD.find(item => item._id === entry._id);
                                 if (newEntry) {

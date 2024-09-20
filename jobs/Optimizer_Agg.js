@@ -41,9 +41,7 @@ module.exports = function (agenda) {
             }
         } catch (error) {
             console.log(error);
-
         }
-
     })
 
 
@@ -51,9 +49,7 @@ module.exports = function (agenda) {
         try {
             const threeHoursAgo = new Date(new Date().getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
             const currentTime = new Date(); // Current time
-            // console.log(currentTime,"++++++**************$$$$$$$$$$");
-            console.log(threeHoursAgo,"++++++**************$$$$$$$$$$");
-            
+                        
             const pipeline = [
                 {
                     $match: {

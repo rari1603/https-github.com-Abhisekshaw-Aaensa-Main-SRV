@@ -355,8 +355,8 @@ exports.Store = async (req, res) => {
             return res.status(500).json({
                 status: "RESTART",
                 errorcode: "G-003",
-                message: "System reboot triggered",
-                timestamp: currentMTime
+                timestamp: currentMessageTime,
+                gatewayLog
             });
         } else {
 
@@ -365,7 +365,7 @@ exports.Store = async (req, res) => {
             errorCounts.set(gateway_id, 0);            
             // Return success response
             return res.status(200).send({
-                success: true, message: "Logs created successfully", gatewayLog 
+                success: true, status: "OK" ,timestamp:currentMessageTime, gatewayLog
             });
         }
 

@@ -1321,6 +1321,7 @@ const compressor = async (data) => {
 
 
 exports.deviceStatus = async (req, res) => {
+   
     const data = req.body;
     const { HardwareID, DeviceStatus, Type, TimeStamp } = data;
 

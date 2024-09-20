@@ -10,6 +10,8 @@ const router = express.Router();
 // Store gateway and optimizer data.
 router.post('/gateway/save/data', [logMiddleware('info', 'info-write-gateway-save-data')], HardwareController.Store);
 
+//device status -----
+router.post('/device/status',HardwareController.deviceStatus);
 
 // Optimizer switch bypass
 router.post('/bypass/optimizers', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')], HardwareController.BypassOptimizers);

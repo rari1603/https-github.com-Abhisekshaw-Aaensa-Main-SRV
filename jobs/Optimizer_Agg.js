@@ -7,6 +7,8 @@ module.exports = function (agenda) {
     agenda.define('Optimizer_Agg_job', async (job) => {
         try {
             const latestRecord = await findonoffRecord();
+            console.log(latestRecord,"++++++++++++");
+            
             const optimizerRecords = [];
             latestRecord.map(entry => {
                 entry.optimizers.list.map(item=>{
@@ -49,6 +51,9 @@ module.exports = function (agenda) {
         try {
             const threeHoursAgo = new Date(new Date().getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
             const currentTime = new Date(); // Current time
+            // console.log(currentTime,"++++++**************$$$$$$$$$$");
+            console.log(threeHoursAgo,"++++++**************$$$$$$$$$$");
+            
             const pipeline = [
                 {
                     $match: {

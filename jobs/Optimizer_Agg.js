@@ -31,7 +31,7 @@ module.exports = function (agenda) {
             })
             // Insert all records at once using insertMany
             if (optimizerRecords.length > 0) {
-                // await OptimizerAgg.insertMany(optimizerRecords);
+                await OptimizerAgg.insertMany(optimizerRecords);
                 
                 console.log("All optimizer data inserted successfully!");
             } else {
@@ -370,15 +370,6 @@ module.exports = function (agenda) {
                     }
                 }
             ];
-
-
-
-
-
-
-
-
-
 
             const latestRecords = await OptimizerLogModel.aggregate(pipeline).exec();
             return latestRecords;

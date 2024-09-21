@@ -12,7 +12,7 @@ module.exports = function (agenda) {
             // Function to get the last record for the given `oid` (optimizerId)
             const getLastRecordForOptimizer = async (optimizerId) => {
                 return await OptimizerOnOff.findOne({ optimizerId })
-                    .sort({ endtime: -1 }) // Sort by endtime in descending order to get the most recent record
+                    .sort({ createdAt: -1 }) // Sort by createdAt in descending order to get the most recent record
                     .exec();
             };
 
@@ -47,7 +47,7 @@ module.exports = function (agenda) {
                             { _id: lastRecord._id }, // Find the specific last record by its ID
                             { $set: { lastmsgtime: occurance.from } } // Update lastmsgtime field
                         );
-                        console.log(`Lastmsgtime updated for optimizer ${optimizerId}`);
+                        console.log(`Lastmsgtime updated for optimizer ${optimizerId} line50`);
                     } else {
                         if ((newacstatus === 'OFF' || newacstatus === 'ON') && lastRecord.acstatus === "ON") {
                             if (occurance.from - lastRecord.starttime <= 1200) {

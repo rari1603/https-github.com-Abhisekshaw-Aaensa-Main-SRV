@@ -15,6 +15,7 @@ const logger = require('../../configs/pino_logger');
 const fs = require('fs');
 const path = require('path');
 const DeviceStatusModel = require('../../models/deviceStatusModel')
+const DeviceRebootStatusModel = require('../../models/deviceRebootModel');
 
 // console.log({logger});
 
@@ -351,6 +352,13 @@ exports.Store = async (req, res) => {
             dataSet.set(gateway_id, currentMessageTime);
             lastMessageTimeStamp.set(gateway_id, currentMessageTimeStamp);
             errorCounts.set(gateway_id, 0);
+            const deviceStatus = new DeviceRebootStatusModel({
+                GatewayID: gateway_id,
+                storeTime: currentMTime,  // Set storeTime as the currentMTime
+                receivedTime: TimeStamp  // Set receivedTime as the TimeStamp
+            });
+             // Save the document to the database
+                 await deviceStatus.save()   
             
             return res.status(500).json({
                 status: "RESTART",

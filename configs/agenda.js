@@ -18,16 +18,16 @@ const agenda = new Agenda({
 // AmbientAudit_Job(agenda);
 //Optimizer_Agg_job(agenda);
 //AC_ON_OFF_JOB(agenda);
-// Optimizer_Hist_job(agenda);
-Gateway_Hist_job(agenda);
+Optimizer_Hist_job(agenda);
+// Gateway_Hist_job(agenda);
 
 // Start the Agenda process and re-schedule the jobs
 (async function () {
   
   await agenda.start();
   console.log("Agenda Started");
-  // await agenda.schedule("in 2 minutes", 'Optimizer_Hist_job');
-  await agenda.schedule("in 3 minutes", 'Gateway_Hist_job');
+  await agenda.schedule("in 3 minutes", 'Optimizer_Hist_job');
+  // await agenda.schedule("in 3 minutes", 'Gateway_Hist_job');
   const cmdlineargs = process.argv.slice(2);
   if(cmdlineargs.length > 0 && cmdlineargs[0] == "cron"){
   await agenda.start();

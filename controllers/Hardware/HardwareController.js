@@ -361,10 +361,11 @@ exports.Store = async (req, res) => {
                  await deviceStatus.save()   
             
             return res.status(500).json({
-                status: "RESTART",
+                status: "TMS",
                 errorcode: "G-003",
                 timestamp: currentMessageTime,
-                gatewayLog
+                gatewayLog,
+
             });
         } else {
 

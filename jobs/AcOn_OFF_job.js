@@ -22,8 +22,12 @@ module.exports = function (agenda) {
             };
 
             for (let entry of latestRecord) {
+              // console.log({entry},"*********************");
+              
                 const { firstOccurrences } = entry;
                 for (let occurance of firstOccurrences) {
+                  console.log({occurance});
+                  
                     const optimizerId = occurance.oid;
                     const lastRecord = await getLastRecordForOptimizer(optimizerId);
                     console.log({lastRecord});
@@ -33,7 +37,7 @@ module.exports = function (agenda) {
 
                     if (!lastRecord) {
 
-                        console.log({ newacstatus }, "???????????????????????????");
+                        // console.log({ newacstatus }, "???????????????????????????");
 
                         // Construct new record data from `occurrence`
                         const newRecord = {
@@ -395,6 +399,8 @@ module.exports = function (agenda) {
                 }
               ]
             const latestRecords = await OptimizerAgg.aggregate(pipeline).exec();
+            // console.log({latestRecords});
+            
             return latestRecords;
         } catch (error) {
             console.log({ error });

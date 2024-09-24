@@ -43,15 +43,7 @@ AC_ON_OFF_JOB(agenda);
       // await agenda.cancel({ name: 'AC_ON_OFF_JOB' });
     
 
-    
-    // Check when the next execution time is for a specific job
-    const nextRunOptAggJob = await agenda.jobs({ name: 'Optimizer_Agg_job' }, { nextRunAt: 1 });
-    if (nextRunOptAggJob.length > 0) {
-      console.log(`Next 'Optimizer_Agg_job' job will run at: ${nextRunOptAggJob[0].attrs.nextRunAt}`);
-    } else {
-      console.log("No job scheduled, 'scheduling Optimizer_Agg_job' now.");
-      await agenda.every('3 hours', 'Optimizer_Agg_job');
-    }
+
 
     // Check when the next execution time is for a specific job
     const nextRunAcOnOffJob = await agenda.jobs({ name: 'AC_ON_OFF_JOB' }, { nextRunAt: 1 });
@@ -59,7 +51,7 @@ AC_ON_OFF_JOB(agenda);
         console.log(`Next 'AC_ON_OFF_JOB' job will run at: ${nextRunAcOnOffJob[0].attrs.nextRunAt}`);
       } else {
           console.log("No job scheduled, scheduling 'AC_ON_OFF_JOB' now.");
-      await agenda.every('3 hours', 'AC_ON_OFF_JOB');
+      await agenda.every('5 */3 * * *', 'AC_ON_OFF_JOB');
     }
 
     // Check when the next execution time is for a specific job
@@ -68,7 +60,7 @@ AC_ON_OFF_JOB(agenda);
         console.log(`Next 'EnergyMeterAudit' job will run at: ${nextRunEnterpriseAuditMeter_job[0].attrs.nextRunAt}`);
       } else {
           console.log("No job scheduled, scheduling 'EnergyMeterAudit' now.");
-      await agenda.every('5 minutes', 'EnergyMeterAudit');
+      await agenda.every('*/5 * * * *', 'EnergyMeterAudit');
     }
     // Check when the next execution time is for a specific job
     const nextRunAmbientAudit_Job = await agenda.jobs({ name: 'ambientInfo_Job' }, { nextRunAt: 1 });
@@ -76,8 +68,16 @@ AC_ON_OFF_JOB(agenda);
         console.log(`Next 'ambientInfo_Job' job will run at: ${nextRunAmbientAudit_Job[0].attrs.nextRunAt}`);
       } else {
           console.log("No job scheduled, scheduling 'ambientInfo_Job' now.");
-      await agenda.every('1 hours', 'ambientInfo_Job');
+      await agenda.every('0 */1 * * *', 'ambientInfo_Job');
     }
+      // Check when the next execution time is for a specific job
+      const nextRunOptAggJob = await agenda.jobs({ name: 'Optimizer_Agg_job' }, { nextRunAt: 1 });
+      if (nextRunOptAggJob.length > 0) {
+        console.log(`Next 'Optimizer_Agg_job' job will run at: ${nextRunOptAggJob[0].attrs.nextRunAt}`);
+      } else {
+        console.log("No job scheduled, 'scheduling Optimizer_Agg_job' now.");
+        await agenda.every('0 */3 * * *', 'Optimizer_Agg_job');
+      }
   } else {
     console.log("Cron jobs not enabled. args:" + cmdlineargs);
   }

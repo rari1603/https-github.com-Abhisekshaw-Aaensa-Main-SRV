@@ -11,7 +11,7 @@ module.exports = function (agenda) {
       // Check when the next execution time is for a specific job
       const nextRunOptAggJob = await agenda.jobs({ name: 'Optimizer_Agg_job' }, { nextRunAt: 1 });
       console.log(nextRunOptAggJob[0].attrs.nextRunAt);
-      
+
       const latestRecord = await findonoffRecord(nextRunOptAggJob);
 
       // Function to get the last record for the given `oid` (optimizerId)
@@ -42,8 +42,6 @@ module.exports = function (agenda) {
 
           if (!lastRecord) {
 
-            // console.log({ newacstatus }, "???????????????????????????");
-
             // Construct new record data from `occurrence`
             const newRecord = {
               optimizerId,
@@ -55,7 +53,7 @@ module.exports = function (agenda) {
             // Insert the new record into the database
             await OptimizerOnOff.create(newRecord);
             console.log(`New record inserted for optimizer ${optimizerId}:`, newRecord);
-          } else if (lastRecord.acstatus === newacstatus) {
+          } else if (lastRecord.acstatus === newacstatus && (occurance.from > lastRecord.starttime)) {
 
             await OptimizerOnOff.updateOne(
               { _id: lastRecord._id }, // Find the specific last record by its ID
@@ -63,7 +61,7 @@ module.exports = function (agenda) {
             );
             console.log(`Lastmsgtime updated for optimizer ${optimizerId} line50`);
           } else {
-            if ((newacstatus === 'OFF' || newacstatus === 'ON') && lastRecord.acstatus === "ON") {
+            if ((newacstatus === 'OFF' || newacstatus === 'ON') && lastRecord.acstatus === "ON" && (occurance.from > lastRecord.starttime)) {
               if (occurance.from - lastRecord.starttime <= 1200) {
                 await OptimizerOnOff.updateOne(
                   { _id: lastRecord._id }, // Find the specific last record by its ID
@@ -71,7 +69,7 @@ module.exports = function (agenda) {
                 );
                 // Skip to the next iteration
                 continue;
-              } else if (occurance.from - lastRecord.starttime > 1200) {
+              } else if ((occurance.from - lastRecord.starttime) > 1200) {
                 await OptimizerOnOff.updateOne(
                   { _id: lastRecord._id }, // Find the specific last record by its ID
                   { $set: { endtime: (occurance.from - 1200) } } // Update endtime field
@@ -90,7 +88,7 @@ module.exports = function (agenda) {
                 console.log(`New record inserted for optimizer ${optimizerId}:`, newRecord);
 
               }
-            } else if (newacstatus === 'ON' && (lastRecord.acstatus === "--" || lastRecord.acstatus === "OFF")) {
+            } else if (newacstatus === 'ON' && (lastRecord.acstatus === "--" || lastRecord.acstatus === "OFF") && (occurance.from > lastRecord.starttime)) {
               await OptimizerOnOff.updateOne(
                 { _id: lastRecord._id }, // Find the specific last record by its ID
                 { $set: { endtime: (occurance.from - 180) } } // Update endtime field
@@ -405,16 +403,11 @@ module.exports = function (agenda) {
           }
         }
       ]
-      // console.log(JSON.stringify(pipeline));
-      
-      const latestRecords = await OptimizerAgg.aggregate(pipeline).exec();
-      // console.log({latestRecords});
 
+      const latestRecords = await OptimizerAgg.aggregate(pipeline).exec();
       return latestRecords;
     } catch (error) {
       console.log({ error });
-
-
     }
   }
 }

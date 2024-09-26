@@ -886,3 +886,89 @@
     }
   }
 ]
+
+// this is the data of ludhiana for mahendra ji for optimizerlogs collection aggredation
+
+[
+  {
+    $match: {
+      GatewayID: new ObjectId(
+        "66d6fd6b45f6f6ca63851bad"
+      ),
+      createdAt: {
+        $gte: ISODate("2024-09-04T00:00:00Z"), // Start of 4th September 2024
+        $lte: ISODate("2024-09-25T23:59:59Z") // End of 25th September 2024
+      },
+      TimeStamp: {
+        $gt: "1725388200"
+      }
+    }
+  },
+  {
+    $sort: {
+      TimeStamp: 1
+    }
+  },
+  {
+    $lookup: {
+      from: "optimizers",
+      localField: "OptimizerID",
+      foreignField: "_id",
+      as: "optimizerData"
+    }
+  },
+  {
+    $lookup: {
+      from: "gateways",
+      localField: "GatewayID",
+      foreignField: "_id",
+      as: "gatewayData"
+    }
+  },
+  {
+    $unwind: {
+      path: "$optimizerData",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $unwind: {
+      path: "$gatewayData",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $addFields: {
+      OptimizerID: "$optimizerData.OptimizerID",
+      GatewayID: "$gatewayData.GatewayID",
+      TimestampIST: {
+        $dateToString: {
+          format: "%Y-%m-%d %H:%M:%S",
+          date: {
+            $toDate: {
+              $multiply: [
+                { $toLong: "$TimeStamp" },
+                1000
+              ]
+            }
+          },
+          timezone: "+05:30"
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      optimizerData: 0,
+      GatewayLogID: 0,
+      DeviceStatus: 0,
+      gatewayData: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      TimeStamp: 0,
+      isDelete: 0,
+      _id: 0,
+      __v: 0
+    }
+  }
+]

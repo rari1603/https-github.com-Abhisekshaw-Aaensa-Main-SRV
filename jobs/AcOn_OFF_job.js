@@ -8,6 +8,7 @@ const { json } = require('express');
 module.exports = function (agenda) {
   agenda.define('AC_ON_OFF_JOB', async (job) => {
     try {
+      // await runAggregationInIntervals();
       // Check when the next execution time is for a specific job
       const nextRunOptAggJob = await agenda.jobs({ name: 'Optimizer_Agg_job' }, { nextRunAt: 1 });
       console.log(nextRunOptAggJob[0].attrs.nextRunAt);
@@ -27,7 +28,6 @@ module.exports = function (agenda) {
       };
 
       for (let entry of latestRecord) {
-        // console.log({entry},"*********************");
 
         const { firstOccurrences } = entry;
         for (let occurance of firstOccurrences) {
@@ -91,8 +91,14 @@ module.exports = function (agenda) {
             } else if (newacstatus === 'ON' && (lastRecord.acstatus === "--" || lastRecord.acstatus === "OFF") && (occurance.from > lastRecord.starttime)) {
               await OptimizerOnOff.updateOne(
                 { _id: lastRecord._id }, // Find the specific last record by its ID
-                { $set: { endtime: (occurance.from - 180) } } // Update endtime field
+                {
+                  $set: {
+                    endtime: occurance.from - 180, // Update endtime field
+                    // lastmsgtime: occurance.from    // Update lastmsgtime field
+                  }
+                }
               );
+
               console.log(`endtime updated for optimizer ${optimizerId}`);
 
               const newRecord = {
@@ -116,9 +122,120 @@ module.exports = function (agenda) {
     }
   })
 
+
+//   const runAggregationInIntervals = async () => {
+//     try {
+//       // Get the next run time of a specific job
+//       const nextRunOptAggJob = await agenda.jobs({ name: 'Optimizer_Agg_job' }, { nextRunAt: 1 });
+//       console.log(nextRunOptAggJob[0].attrs.nextRunAt);
+  
+//       const date = '2024-09-18'; // Specify the target date
+  
+//       const intervals = [
+//         { start: '00:00:00', end: '03:00:00' },
+//         { start: '03:00:00', end: '06:00:00' },
+//         { start: '06:00:00', end: '09:00:00' },
+//         { start: '09:00:00', end: '12:00:00' },
+//         { start: '12:00:00', end: '15:00:00' },
+//         { start: '15:00:00', end: '18:00:00' },
+//         { start: '18:00:00', end: '21:00:00' },
+//         { start: '21:00:00', end: '23:59:59' }
+//       ];
+  
+//       for (const interval of intervals) {
+//         const startTime = `${date}T${interval.start}.000Z`;
+//         const endTime = `${date}T${interval.end}.999Z`;
+  
+//         const latestRecord = await findonoffRecord(startTime, endTime);
+//         console.log(`Results for interval ${interval.start} to ${interval.end}:`, latestRecord);
+  
+//         for (let entry of latestRecord) {
+//           const { firstOccurrences } = entry;
+//           for (let occurance of firstOccurrences) {
+//             const optimizerId = occurance.oid;
+//             const lastRecord = await getLastRecordForOptimizer(optimizerId);
+//             const newacstatus = determineAcStatus(occurance.compstatus);
+  
+//             if (!lastRecord) {
+//               // Insert new record if there is no last record
+//               const newRecord = {
+//                 optimizerId,
+//                 starttime: occurance.from,
+//                 endtime: null,
+//                 acstatus: newacstatus,
+//                 lastmsgtime: occurance.from
+//               };
+//               await OptimizerOnOff.create(newRecord);
+//               console.log(`New record inserted for optimizer ${optimizerId}:`, newRecord);
+//             } else if (lastRecord.acstatus === newacstatus && (occurance.from > lastRecord.starttime)) {
+//               // Update lastmsgtime if the status hasn't changed
+//               await OptimizerOnOff.updateOne(
+//                 { _id: lastRecord._id },
+//                 { $set: { lastmsgtime: occurance.from } }
+//               );
+//               console.log(`Lastmsgtime updated for optimizer ${optimizerId}`);
+//             } else {
+//               // Additional logic for handling status changes
+//               // Your existing logic goes here
+//               if ((newacstatus === 'OFF' || newacstatus === 'ON') && lastRecord.acstatus === "ON" && (occurance.from > lastRecord.starttime)) {
+//                 if (occurance.from - lastRecord.starttime <= 1200) {
+//                   await OptimizerOnOff.updateOne(
+//                     { _id: lastRecord._id },
+//                     { $set: { lastmsgtime: occurance.from } }
+//                   );
+//                   continue;
+//                 } else if ((occurance.from - lastRecord.starttime) > 1200) {
+//                   await OptimizerOnOff.updateOne(
+//                     { _id: lastRecord._id },
+//                     { $set: { endtime: (occurance.from - 1200) } }
+//                   );
+//                   console.log(`endtime updated for optimizer ${optimizerId}`);
+  
+//                   const newRecord = {
+//                     optimizerId,
+//                     starttime: (occurance.from - 1200),
+//                     endtime: null,
+//                     acstatus: newacstatus,
+//                     lastmsgtime: occurance.from
+//                   };
+//                   await OptimizerOnOff.create(newRecord);
+//                   console.log(`New record inserted for optimizer ${optimizerId}:`, newRecord);
+//                 }
+//               } else if (newacstatus === 'ON' && (lastRecord.acstatus === "--" || lastRecord.acstatus === "OFF") && (occurance.from > lastRecord.starttime)) {
+//                 await OptimizerOnOff.updateOne(
+//                   { _id: lastRecord._id },
+//                   {
+//                     $set: {
+//                       endtime: occurance.from - 180,
+//                     }
+//                   }
+//                 );
+//                 console.log(`endtime updated for optimizer ${optimizerId}`);
+  
+//                 const newRecord = {
+//                   optimizerId,
+//                   starttime: (occurance.from - 180),
+//                   endtime: null,
+//                   acstatus: newacstatus,
+//                   lastmsgtime: occurance.from
+//                 };
+//                 await OptimizerOnOff.create(newRecord);
+//                 console.log(`New record inserted for optimizer ${optimizerId}:`, newRecord);
+//               }
+//             }
+//           }
+//         }
+//       }
+//     } catch (error) {
+//       console.log(error);
+//     }
+// };
+
+
+
+
   async function findonoffRecord(nextRunOptAggJob) {
     try {
-
       const threeHoursAgo = nextRunOptAggJob[0].attrs.lastRunAt; // 3 hours ago
       const currentTime = nextRunOptAggJob[0].attrs.nextRunAt; // Current time
       const pipeline = [
@@ -127,7 +244,7 @@ module.exports = function (agenda) {
             createdAt: {
               $gt: threeHoursAgo,
               $lt: currentTime
-              // $lt: ISODate("2024-09-18T20:00:00.000Z")
+             
             }
           }
         },

@@ -14,10 +14,10 @@ const agenda = new Agenda({
 });
 
 // Initialize all the job definitions
-EnterpriseAuditMeter_job(agenda);
-AmbientAudit_Job(agenda);
+// EnterpriseAuditMeter_job(agenda);
+// AmbientAudit_Job(agenda);
 Optimizer_Agg_job(agenda);
-AC_ON_OFF_JOB(agenda);
+// AC_ON_OFF_JOB(agenda);
 // Optimizer_Hist_job(agenda);
 // Gateway_Hist_job(agenda);
 
@@ -39,7 +39,7 @@ AC_ON_OFF_JOB(agenda);
        // Clear any existing jobs to prevent duplication
       // await agenda.cancel({ name: 'EnergyMeterAudit' });
       // await agenda.cancel({ name: 'ambientInfo_Job' });
-      // await agenda.cancel({ name: 'Optimizer_Agg_job' });
+      await agenda.cancel({ name: 'Optimizer_Agg_job' });
       // await agenda.cancel({ name: 'AC_ON_OFF_JOB' });
     
 
@@ -51,9 +51,9 @@ AC_ON_OFF_JOB(agenda);
         console.log(`Next 'AC_ON_OFF_JOB' job will run at: ${nextRunAcOnOffJob[0].attrs.nextRunAt}`);
       } else {
           console.log("No job scheduled, scheduling 'AC_ON_OFF_JOB' now.");
-      await agenda.every('5 */3 * * *', 'AC_ON_OFF_JOB');
+      await agenda.every('3 minute', 'AC_ON_OFF_JOB');
     }
-
+// '5 */3 * * *'
     // Check when the next execution time is for a specific job
     const nextRunEnterpriseAuditMeter_job = await agenda.jobs({ name: 'EnergyMeterAudit' }, { nextRunAt: 1 });
     if (nextRunEnterpriseAuditMeter_job.length > 0) {
@@ -76,7 +76,8 @@ AC_ON_OFF_JOB(agenda);
         console.log(`Next 'Optimizer_Agg_job' job will run at: ${nextRunOptAggJob[0].attrs.nextRunAt}`);
       } else {
         console.log("No job scheduled, 'scheduling Optimizer_Agg_job' now.");
-        await agenda.every('0 */3 * * *', 'Optimizer_Agg_job');
+        await agenda.every('5 minute', 'Optimizer_Agg_job');
+        // '0 */3 * * *'
       }
   } else {
     console.log("Cron jobs not enabled. args:" + cmdlineargs);

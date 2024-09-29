@@ -59,10 +59,10 @@ router.get('/get/optimizer/details/:optimizer_id', [verifyToken, logMiddleware('
 router.get('/get/gateway/details/:gateway_id', [verifyToken, logMiddleware('info', 'info-read-gatewayDetails')], EnterpriseController.GatewayDetails);
 
 // single call for all details (enterprise, state, location, gateway, optimizer)
-router.get('/get/enterprise/:enterprise_id', [verifyToken], EnterpriseController.SingleEnterpriseData);
+router.get('/get/enterprise/:enterprise_id', [verifyToken, logMiddleware('info', 'info-read-enterpriseDetail')],  EnterpriseController.SingleEnterpriseData);
 
 // single call for all details (enterprise, state, location, gateway, optimizer)
-router.get('/get/enterprise', [verifyToken], EnterpriseController.AllEnterpriseData);
+router.get('/get/enterprise', [verifyToken, logMiddleware('info', 'info-read-enterprisesDetails')], EnterpriseController.AllEnterpriseData);
 
 /*********** END ENTERPRISE ROUTES ***********/
 

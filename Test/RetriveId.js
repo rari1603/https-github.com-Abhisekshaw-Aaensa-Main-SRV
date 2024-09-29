@@ -3,7 +3,7 @@ const GatewayModel = require('../models/gateway.model');
 const Enterprise = require('../models/enterprise.model')
 const { ObjectId } = require('mongodb');
 
-const EnterpriseID = new mongoose.Types.ObjectId("66d6a882b7d83af6a1ba0865"); // Correctly use new keyword
+const EnterpriseID = new mongoose.Types.ObjectId("6667e8ce9c543a305014e397"); // Correctly use new keyword
 
 exports.Data = async () => {
     try {
@@ -12,7 +12,7 @@ exports.Data = async () => {
             {
               $match: {
                 //_id: mongoose.Types.ObjectId("66d6a882b7d83af6a1ba0865")
-                _id: new mongoose.Types.ObjectId("66d6a882b7d83af6a1ba0865")
+                _id: new mongoose.Types.ObjectId("6667e8ce9c543a305014e397")
               }
             },
             {

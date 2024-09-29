@@ -19,36 +19,54 @@ module.exports = function (agenda) {
             const optimizerRecords = [];
             // Iterate through latest records
             for (const entry of latestRecord) {
-                const lastRecord = await getLastRecordForOptimizer(entry.optimizers.list[0].oid);
-                if (lastRecord.from >= entry.optimizers.list[0].from) {
-                    return;
-                }
+                if (entry.optimizers && entry.optimizers.list && entry.optimizers.list.length > 0) {
+                    const firstItem = entry.optimizers.list[0];
 
-                // Process each optimizer's list
-                for (const item of entry.optimizers.list) {
-                    // Check if the first record's 'from' time is greater than the last record's 'from' time
+                    // Ensure the item has 'from' property
+                    if (firstItem && firstItem.from) {
 
-                    optimizerRecords.push({
-                        oid: item.oid,
-                        gid: item.gid,
-                        compStatus: item.compStatus,
-                        optmode: item.optmode,
-                        acstatus: item.acstatus,
-                        rtempfrom: item.rtempfrom,
-                        rtempto: item.rtempto,
-                        ctempfrom: item.ctempfrom,
-                        ctempto: item.ctempto,
-                        humfrom: item.humfrom,
-                        humto: item.humto,
-                        from: item.from,
-                        to: item.to,
-                        counts: item.counts
-                    });
+                        const lastRecord = await getLastRecordForOptimizer(firstItem.oid);
+                        console.log({ from: firstItem.from }, "First 'from' value of optimizer list:");
+                        // console.log(lastRecord.from, "Last record 'from' value:");
+
+                        // If lastRecord exists and its 'from' time is greater or equal to the current 'from' time, skip the entire entry
+                        if (lastRecord && lastRecord.from >= firstItem.from) {
+                            console.log(`Skipping entry as it is a duplicate or older data. Entry 'from': ${firstItem.from}, Last record 'from': ${lastRecord.from}`);
+                            break; // Exit the loop for this entry, continue to the next one
+                        }
+                        // Process each optimizer's list
+                        for (const item of entry.optimizers.list) {
+                            if (item && item.from) {
+                                optimizerRecords.push({
+                                    oid: item.oid,
+                                    gid: item.gid,
+                                    compStatus: item.compStatus,
+                                    optmode: item.optmode,
+                                    acstatus: item.acstatus,
+                                    rtempfrom: item.rtempfrom,
+                                    rtempto: item.rtempto,
+                                    ctempfrom: item.ctempfrom,
+                                    ctempto: item.ctempto,
+                                    humfrom: item.humfrom,
+                                    humto: item.humto,
+                                    from: item.from,
+                                    to: item.to,
+                                    counts: item.counts
+                                });
+                            }
+                        }
+                    } else {
+                        console.error("Missing 'from' property in entry.optimizers.list[0]", entry.optimizers.list[0]);
+                    }
+                } else {
+                    console.error("Missing optimizers or list in entry: ", entry);
                 }
             }
             // Insert all records at once using insertMany
             if (optimizerRecords.length > 0) {
-                // await OptimizerAgg.insertMany(optimizerRecords);
+                // console.log(optimizerRecords);
+                
+                await OptimizerAgg.insertMany(optimizerRecords);
 
                 console.log("All optimizer data inserted successfully!");
             } else {

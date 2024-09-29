@@ -25,6 +25,9 @@ router.post('/get/all/meter/data', [logMiddleware('info', 'info-read-meterData')
 // USAGE TRENDS api
 router.post('/get/all/usage/trends', [logMiddleware('info', 'info-read-usageTrends')], ReportController.UsageTrends);
 
+// AC ON OFF api
+router.post('/get/all/acon/off', [logMiddleware('info', 'info-read-aconoff')], ReportController.AcOnOff);
+
 // Download device report
 router.post('/download/all/devicedata/report', [logMiddleware('info', 'info-read-deviceDataReport')], ReportController.DownloadDeviceDataReport);
 // Download meter report

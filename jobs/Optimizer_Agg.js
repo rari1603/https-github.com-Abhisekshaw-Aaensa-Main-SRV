@@ -7,148 +7,148 @@ const moment = require('moment');
 module.exports = function (agenda) {
     agenda.define('Optimizer_Agg_job', async (job) => {
         try {
-            await runAggregationInIntervals(); // Run the aggregation and handle inserts
-            // const latestRecord = await findonoffRecord();
+            // await runAggregationInIntervals(); // Run the aggregation and handle inserts
+            const latestRecord = await findonoffRecord();
 
-            // const getLastRecordForOptimizer = async (optimizerId) => {
-            //     return await OptimizerAgg.findOne({ optimizerId })
-            //         .sort({ createdAt: -1 }) // Sort by createdAt in descending order to get the most recent record
-            //         .exec();
-            // };
+            const getLastRecordForOptimizer = async (optimizerId) => {
+                return await OptimizerAgg.findOne({ optimizerId })
+                    .sort({ createdAt: -1 }) // Sort by createdAt in descending order to get the most recent record
+                    .exec();
+            };
 
-            // const optimizerRecords = [];
-            // // Iterate through latest records
-            // for (const entry of latestRecord) {
-            //     const lastRecord = await getLastRecordForOptimizer(entry.optimizers.list[0].oid);
-            //     if (lastRecord.from >= entry.optimizers.list[0].from) {
-            //         return;
-            //     }
+            const optimizerRecords = [];
+            // Iterate through latest records
+            for (const entry of latestRecord) {
+                const lastRecord = await getLastRecordForOptimizer(entry.optimizers.list[0].oid);
+                if (lastRecord.from >= entry.optimizers.list[0].from) {
+                    return;
+                }
 
-            //     // Process each optimizer's list
-            //     for (const item of entry.optimizers.list) {
-            //         // Check if the first record's 'from' time is greater than the last record's 'from' time
+                // Process each optimizer's list
+                for (const item of entry.optimizers.list) {
+                    // Check if the first record's 'from' time is greater than the last record's 'from' time
 
-            //         optimizerRecords.push({
-            //             oid: item.oid,
-            //             gid: item.gid,
-            //             compStatus: item.compStatus,
-            //             optmode: item.optmode,
-            //             acstatus: item.acstatus,
-            //             rtempfrom: item.rtempfrom,
-            //             rtempto: item.rtempto,
-            //             ctempfrom: item.ctempfrom,
-            //             ctempto: item.ctempto,
-            //             humfrom: item.humfrom,
-            //             humto: item.humto,
-            //             from: item.from,
-            //             to: item.to,
-            //             counts: item.counts
-            //         });
-            //     }
-            // }
-            // // Insert all records at once using insertMany
-            // if (optimizerRecords.length > 0) {
-            //     // await OptimizerAgg.insertMany(optimizerRecords);
+                    optimizerRecords.push({
+                        oid: item.oid,
+                        gid: item.gid,
+                        compStatus: item.compStatus,
+                        optmode: item.optmode,
+                        acstatus: item.acstatus,
+                        rtempfrom: item.rtempfrom,
+                        rtempto: item.rtempto,
+                        ctempfrom: item.ctempfrom,
+                        ctempto: item.ctempto,
+                        humfrom: item.humfrom,
+                        humto: item.humto,
+                        from: item.from,
+                        to: item.to,
+                        counts: item.counts
+                    });
+                }
+            }
+            // Insert all records at once using insertMany
+            if (optimizerRecords.length > 0) {
+                // await OptimizerAgg.insertMany(optimizerRecords);
 
-            //     console.log("All optimizer data inserted successfully!");
-            // } else {
-            //     console.log("No optimizer data to insert.");
-            // }
+                console.log("All optimizer data inserted successfully!");
+            } else {
+                console.log("No optimizer data to insert.");
+            }
         } catch (error) {
             console.log(error);
         }
     })
 
 
-    const runAggregationInIntervals = async () => {
-        const date = '2024-09-18'; // Specify the target date
+    // const runAggregationInIntervals = async () => {
+    //     const date = '2024-09-27'; // Specify the target date
 
-        const intervals = [
-            { start: '00:00:00', end: '03:00:00' },
-            { start: '03:00:00', end: '06:00:00' },
-            { start: '06:00:00', end: '09:00:00' },
-            { start: '09:00:00', end: '12:00:00' },
-            { start: '12:00:00', end: '15:00:00' },
-            { start: '15:00:00', end: '18:00:00' },
-            { start: '18:00:00', end: '21:00:00' },
-            { start: '21:00:00', end: '23:59:59' }
-        ];
+    //     const intervals = [
+    //         { start: '00:00:00', end: '03:00:00' },
+    //         { start: '03:00:00', end: '06:00:00' },
+    //         { start: '06:00:00', end: '09:00:00' },
+    //         { start: '09:00:00', end: '12:00:00' },
+    //         { start: '12:00:00', end: '15:00:00' },
+    //         { start: '15:00:00', end: '18:00:00' },
+    //         { start: '18:00:00', end: '21:00:00' },
+    //         { start: '21:00:00', end: '23:59:59' }
+    //     ];
 
-        for (const interval of intervals) {
-            const startTime = `${date}T${interval.start}.000Z`;
-            const endTime = `${date}T${interval.end}.999Z`;
+    //     for (const interval of intervals) {
+    //         const startTime = `${date}T${interval.start}.000Z`;
+    //         const endTime = `${date}T${interval.end}.999Z`;
 
-            try {
-                const results = await findonoffRecord(startTime, endTime);
-                console.log(`Results for interval ${interval.start} to ${interval.end}:`, results);
+    //         try {
+    //             const results = await findonoffRecord(startTime, endTime);
+    //             console.log(`Results for interval ${interval.start} to ${interval.end}:`, results);
 
-                if (results.length > 0) {
-                    const getLastRecordForOptimizer = async (optimizerId) => {
-                        return await OptimizerAgg.findOne({ oid:optimizerId })
-                            .sort({ createdAt: -1 }) // Sort by createdAt in descending order to get the most recent record
-                            .exec();
-                    };
+    //             if (results.length > 0) {
+    //                 const getLastRecordForOptimizer = async (optimizerId) => {
+    //                     return await OptimizerAgg.findOne({ oid:optimizerId })
+    //                         .sort({ createdAt: -1 }) // Sort by createdAt in descending order to get the most recent record
+    //                         .exec();
+    //                 };
 
-                    const optimizerRecords = [];
+    //                 const optimizerRecords = [];
 
-                    for (const entry of results) {
-                        if (entry.optimizers && entry.optimizers.list && entry.optimizers.list.length > 0) {
-                            const firstItem = entry.optimizers.list[0];
+    //                 for (const entry of results) {
+    //                     if (entry.optimizers && entry.optimizers.list && entry.optimizers.list.length > 0) {
+    //                         const firstItem = entry.optimizers.list[0];
 
-                            // Ensure the item has 'from' property
-                            if (firstItem && firstItem.from) {
+    //                         // Ensure the item has 'from' property
+    //                         if (firstItem && firstItem.from) {
 
-                                const lastRecord = await getLastRecordForOptimizer(firstItem.oid);
-                                console.log({ from: firstItem.from }, "First 'from' value of optimizer list:");
-                                // console.log(lastRecord.from, "Last record 'from' value:");
+    //                             const lastRecord = await getLastRecordForOptimizer(firstItem.oid);
+    //                             console.log({ from: firstItem.from }, "First 'from' value of optimizer list:");
+    //                             // console.log(lastRecord.from, "Last record 'from' value:");
 
-                                // If lastRecord exists and its 'from' time is greater or equal to the current 'from' time, skip the entire entry
-                                if (lastRecord && lastRecord.from >= firstItem.from) {
-                                    console.log(`Skipping entry as it is a duplicate or older data. Entry 'from': ${firstItem.from}, Last record 'from': ${lastRecord.from}`);
-                                    break; // Exit the loop for this entry, continue to the next one
-                                }
-                                // Process each optimizer's list
-                                for (const item of entry.optimizers.list) {
-                                    if (item && item.from) {
-                                        optimizerRecords.push({
-                                            oid: item.oid,
-                                            gid: item.gid,
-                                            compStatus: item.compStatus,
-                                            optmode: item.optmode,
-                                            acstatus: item.acstatus,
-                                            rtempfrom: item.rtempfrom,
-                                            rtempto: item.rtempto,
-                                            ctempfrom: item.ctempfrom,
-                                            ctempto: item.ctempto,
-                                            humfrom: item.humfrom,
-                                            humto: item.humto,
-                                            from: item.from,
-                                            to: item.to,
-                                            counts: item.counts
-                                        });
-                                    }
-                                }
-                            } else {
-                                console.error("Missing 'from' property in entry.optimizers.list[0]", entry.optimizers.list[0]);
-                            }
-                        } else {
-                            console.error("Missing optimizers or list in entry: ", entry);
-                        }
-                    }
+    //                             // If lastRecord exists and its 'from' time is greater or equal to the current 'from' time, skip the entire entry
+    //                             if (lastRecord && lastRecord.from >= firstItem.from) {
+    //                                 console.log(`Skipping entry as it is a duplicate or older data. Entry 'from': ${firstItem.from}, Last record 'from': ${lastRecord.from}`);
+    //                                 break; // Exit the loop for this entry, continue to the next one
+    //                             }
+    //                             // Process each optimizer's list
+    //                             for (const item of entry.optimizers.list) {
+    //                                 if (item && item.from) {
+    //                                     optimizerRecords.push({
+    //                                         oid: item.oid,
+    //                                         gid: item.gid,
+    //                                         compStatus: item.compStatus,
+    //                                         optmode: item.optmode,
+    //                                         acstatus: item.acstatus,
+    //                                         rtempfrom: item.rtempfrom,
+    //                                         rtempto: item.rtempto,
+    //                                         ctempfrom: item.ctempfrom,
+    //                                         ctempto: item.ctempto,
+    //                                         humfrom: item.humfrom,
+    //                                         humto: item.humto,
+    //                                         from: item.from,
+    //                                         to: item.to,
+    //                                         counts: item.counts
+    //                                     });
+    //                                 }
+    //                             }
+    //                         } else {
+    //                             console.error("Missing 'from' property in entry.optimizers.list[0]", entry.optimizers.list[0]);
+    //                         }
+    //                     } else {
+    //                         console.error("Missing optimizers or list in entry: ", entry);
+    //                     }
+    //                 }
 
-                    // Insert records in bulk for each interval
-                    if (optimizerRecords.length > 0) {
-                        await OptimizerAgg.insertMany(optimizerRecords);
-                        console.log(`Optimizer data for ${interval.start} to ${interval.end} inserted successfully!`);
-                    } else {
-                        console.log(`No optimizer data to insert for ${interval.start} to ${interval.end}.`);
-                    }
-                }
-            } catch (error) {
-                console.error(`Error processing interval ${interval.start} to ${interval.end}:`, error);
-            }
-        }
-    };
+    //                 // Insert records in bulk for each interval
+    //                 if (optimizerRecords.length > 0) {
+    //                     await OptimizerAgg.insertMany(optimizerRecords);
+    //                     console.log(`Optimizer data for ${interval.start} to ${interval.end} inserted successfully!`);
+    //                 } else {
+    //                     console.log(`No optimizer data to insert for ${interval.start} to ${interval.end}.`);
+    //                 }
+    //             }
+    //         } catch (error) {
+    //             console.error(`Error processing interval ${interval.start} to ${interval.end}:`, error);
+    //         }
+    //     }
+    // };
 
 
 
@@ -156,11 +156,11 @@ module.exports = function (agenda) {
         try {
 
 
-            // const threeHoursAgo = new Date(new Date().getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
-            // const currentTime = new Date(); // Current time
+            const threeHoursAgo = new Date(new Date().getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
+            const currentTime = new Date(); // Current time
             // Convert string inputs to Date objects (if they are strings)
-            const startDate = new Date(startTime);
-            const endDate = new Date(endTime);
+            // const startDate = new Date(startTime);
+            // const endDate = new Date(endTime);
 
             // const ObjectId = mongoose.Types.ObjectId;
             const pipeline = [
@@ -168,16 +168,16 @@ module.exports = function (agenda) {
                     $match: {
                         // OptimizerID: new ObjectId("6697d070dcf2f4839149aef2"),
                         // GatewayID: new ObjectId("66ed1e8f14c36cb6547a410d"),
-                        createdAt: {
-
-                            $gt: startDate,
-                            $lt: endDate
-                        }
                         // createdAt: {
 
-                        //     $gt: threeHoursAgo,
-                        //     $lt: currentTime
+                        //     $gt: startDate,
+                        //     $lt: endDate
                         // }
+                        createdAt: {
+
+                            $gt: threeHoursAgo,
+                            $lt: currentTime
+                        }
                     }
                 },
                 {

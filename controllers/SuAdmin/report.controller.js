@@ -12,7 +12,7 @@ const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 const moment = require('moment-timezone');
 const OptimizerOnOffModel = require('../../models/OptimizerOnOff');
-
+const mongoose = require('mongoose');
 
 
 
@@ -1552,739 +1552,8 @@ const TREND_INTERVAL_ARRAY = {
 };
 
 
+
 exports.UsageTrends = async (req, res) => {
-    const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
-    const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
-    try {
-        let optimizerIds = [];
-
-        if (Optimizerid) {
-            // If Optimizerid is provided, use it directly
-            optimizerIds = [Optimizerid];
-        } else if (gateway_id) {
-            // If gateway_id is provided but Optimizerid is not, fetch optimizer IDs from the GatewayModel
-            const optids = await GatewayModel.aggregate([
-                {
-                    $match: {
-                        GatewayID: gateway_id
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "optimizers",
-                        localField: "_id",
-                        foreignField: "GatewayId",
-                        as: "optimizerInfo"
-                    }
-                },
-                {
-                    $unwind: "$optimizerInfo"
-                },
-                {
-                    $group: {
-                        _id: "$GatewayID",
-                        optimizerIds: {
-                            $addToSet: "$optimizerInfo._id"
-                        }
-                    }
-                }
-            ]).exec();
-
-            if (!optids.length) {
-                return res.status(404).json({ message: "No optimizer IDs found for the given Gateway ID" });
-            }
-
-            optimizerIds = optids[0].optimizerIds;
-        } else {
-            // If neither gateway_id nor Optimizerid is provided, return an error
-            return res.status(400).json({ message: "Either gateway_id or Optimizerid must be provided" });
-        }
-
-        const startIstTimestamp = parseISTDateString(startDate);
-        const endIstTimestamp = parseISTDateString(endDate);
-
-        let istOffsetSeconds = 5.5 * 60 * 60; // Offset for IST in seconds
-
-        let currentStart = new Date(startIstTimestamp * 1000);
-        let currentEnd;
-
-        // let endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
-        // let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
-        // console.log(startIstTimestampUTC, "---", endIstTimestampUTC, "--", Optimizerid);
-        let data = [];
-        var count = 0;
-
-        while (currentStart.getTime() / 1000 <= endIstTimestamp) {
-            switch (Interval) {
-                case "Day":
-                    currentEnd = new Date(currentStart);
-                    currentEnd.setUTCHours(23, 59, 59, 999);
-                    break;
-                case "Week":
-                    currentEnd = new Date(currentStart);
-                    currentEnd.setUTCDate(currentStart.getUTCDate() + 6);
-                    currentEnd.setUTCHours(23, 59, 59, 999);
-                    break;
-                case "Month":
-                    currentEnd = new Date(currentStart);
-                    currentEnd.setUTCMonth(currentStart.getUTCMonth() + 1);
-                    currentEnd.setUTCDate(0); // Set to the last day of the previous month
-                    currentEnd.setUTCHours(23, 59, 59, 999);
-                    break;
-                case "Year":
-                    currentEnd = new Date(currentStart);
-                    currentEnd.setUTCFullYear(currentStart.getUTCFullYear() + 1);
-                    currentEnd.setUTCDate(0); // Set to the last day of the previous year
-                    currentEnd.setUTCHours(23, 59, 59, 999);
-                    break;
-            }
-
-            let startIstTimestampInterval = Math.floor(currentStart.getTime() / 1000);
-            let endIstTimestampInterval = Math.floor(currentEnd.getTime() / 1000);
-
-            if (endIstTimestampInterval > endIstTimestamp) {
-                endIstTimestampInterval = endIstTimestamp;
-            }
-
-            let startIstTimestampUTC = startIstTimestampInterval - istOffsetSeconds;
-            let endIstTimestampUTC = endIstTimestampInterval - istOffsetSeconds;
-            // Step 1: Fetch the initial previous value
-
-            for (let i = 0; i < optimizerIds.length; i++) {
-
-
-                const Optimizerid = optimizerIds[i];
-                const initialPrevious = await NewApplianceLogModel.aggregate([
-                    {
-                        $match: {
-                            OptimizerID: Optimizerid,
-                            TimeStamp: { $lt: startIstTimestampUTC.toString() }
-                        },
-                    },
-                    {
-                        $sort: { TimeStamp: -1 }
-                    },
-                    {
-                        $limit: 1
-                    }
-                ]).exec();
-
-
-                const pipeline = [
-                    {
-                        $match: {
-                            OptimizerID: Optimizerid,
-                            TimeStamp: { $gte: startIstTimestampUTC.toString(), $lte: endIstTimestampUTC.toString() }
-                        }
-                    },
-                    { $sort: { TimeStamp: 1 } },
-                    {
-                        $addFields: {
-                            TimeStamp: { $toLong: '$TimeStamp' }
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: Optimizerid,
-                            entries: { $push: '$$ROOT' }
-                        }
-                    },
-                    {
-                        $project: {
-                            ThermostatCutoffTimes: {
-                                $reduce: {
-                                    input: '$entries',
-                                    initialValue: { previous: null, result: [] },
-                                    in: {
-                                        previous: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }] }
-                                                    ]
-                                                },
-                                                '$$this',
-                                                {
-                                                    $cond: [
-                                                        {
-                                                            $and: [
-                                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
-                                                                { $ne: ['$$value.previous', null] }
-                                                            ]
-                                                        },
-                                                        null,
-                                                        '$$value.previous'
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        result: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }] },
-                                                        { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
-                                                        { $ne: ['$$value.previous', null] }
-                                                    ]
-                                                },
-                                                {
-                                                    $concatArrays: [
-                                                        '$$value.result',
-                                                        [{
-                                                            cutoffTimeThrm: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
-                                                            timestamp: '$$this.TimeStamp'
-                                                        }]
-                                                    ]
-                                                },
-                                                '$$value.result'
-                                            ]
-                                        }
-                                    }
-                                }
-                            },
-                            DeviceCutoffTimes: {
-                                $reduce: {
-                                    input: '$entries',
-                                    initialValue: { previous: null, result: [] },
-                                    in: {
-                                        previous: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] },
-                                                        { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }
-                                                    ]
-                                                },
-                                                '$$this',
-                                                {
-                                                    $cond: [
-                                                        {
-                                                            $and: [
-                                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                                { $ne: ['$$value.previous', null] }
-                                                            ]
-                                                        },
-                                                        null,
-                                                        '$$value.previous'
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        result: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
-                                                        { $ne: ['$$value.previous', null] }
-                                                    ]
-                                                },
-                                                {
-                                                    $concatArrays: [
-                                                        '$$value.result',
-                                                        [{
-                                                            cutoffTimeOpt: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
-                                                            timestamp: '$$this.TimeStamp'
-                                                        }]
-                                                    ]
-                                                },
-                                                '$$value.result'
-                                            ]
-                                        }
-                                    }
-                                }
-                            },
-                            RemainingRunTimes: {
-                                $reduce: {
-                                    input: '$entries',
-                                    initialValue: { previous: null, result: [] },
-                                    in: {
-                                        previous: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $eq: ['$$this.CompStatus', 'COMPON'] },
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPON'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] }
-                                                    ]
-                                                },
-                                                '$$this',
-                                                {
-                                                    $cond: [
-                                                        {
-                                                            $and: [
-                                                                { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                                { $ne: ['$$value.previous', null] }
-                                                            ]
-                                                        },
-                                                        null,
-                                                        '$$value.previous'
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        result: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$this.CompStatus', 'COMPOFF'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+OPT'] }, { $eq: ['$$this.CompStatus', '--'] }, { $eq: ['$$this.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $or: [{ $eq: ['$$this.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', 'OPTIMIZATION'] }, { $eq: ['$$this.OptimizationMode', '--'] }] },
-                                                        { $ne: ['$$value.previous', null] }
-                                                    ]
-                                                },
-                                                {
-                                                    $concatArrays: [
-                                                        '$$value.result',
-                                                        [{
-                                                            RemainingTime: { $subtract: ['$$this.TimeStamp', '$$value.previous.TimeStamp'] },
-                                                            timestamp: '$$this.TimeStamp'
-                                                        }]
-                                                    ]
-                                                },
-                                                '$$value.result'
-                                            ]
-                                        }
-                                    }
-                                }
-                            },
-                            LastEdgeCases: {
-                                $reduce: {
-                                    input: '$entries',
-                                    initialValue: { previous: { $arrayElemAt: ['$entries', -1] }, result: [] },
-                                    in: {
-
-                                        result: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$value.previous.CompStatus', 'COMPOFF'] }, { $eq: ['$$value.previous.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $or: [{ $eq: ['$$value.previous.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$value.previous.OptimizationMode', 'OPTIMIZATION'] }] },
-                                                    ]
-                                                },
-                                                {
-                                                    $concatArrays: [
-                                                        '$$value.result',
-                                                        [{
-                                                            cutoffTimeThrm: { $subtract: [endIstTimestampUTC, '$$value.previous.TimeStamp'] },
-                                                            timestamp: endIstTimestampUTC
-                                                        }]
-                                                    ]
-                                                },
-                                                {
-                                                    $cond: [
-                                                        {
-                                                            $and: [
-                                                                { $eq: ['$$value.previous.CompStatus', 'COMPOFF+OPT'] },
-                                                                { $eq: ['$$value.previous.OptimizationMode', 'OPTIMIZATION'] },
-                                                            ]
-                                                        },
-                                                        {
-                                                            $concatArrays: [
-                                                                '$$value.result',
-                                                                [{
-                                                                    cutoffTimeOpt: { $subtract: [endIstTimestampUTC, '$$value.previous.TimeStamp'] },
-                                                                    timestamp: endIstTimestampUTC
-                                                                }]
-                                                            ]
-                                                        },
-                                                        {
-                                                            $cond: [
-                                                                {
-                                                                    $and: [
-                                                                        { $eq: ['$$value.previous.CompStatus', 'COMPON'] },
-                                                                        { $or: [{ $eq: ['$$value.previous.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$value.previous.OptimizationMode', 'OPTIMIZATION'] }] }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    $concatArrays: [
-                                                                        '$$value.result',
-                                                                        [{
-                                                                            RemainingTime: { $subtract: [endIstTimestampUTC, '$$value.previous.TimeStamp'] },
-                                                                            timestamp: endIstTimestampUTC
-                                                                        }]
-                                                                    ]
-                                                                },
-                                                                '$$value.result'
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-
-                                        }
-                                    }
-                                }
-                            },
-                            FirstEdgeCases: {
-                                $reduce: {
-                                    input: '$entries',
-                                    initialValue: { lastprevious: initialPrevious[0], result: [], previous: { $arrayElemAt: ['$entries', 0] } },
-                                    in: {
-
-                                        result: {
-                                            $cond: [
-                                                {
-                                                    $and: [
-                                                        { $or: [{ $eq: ['$$value.lastprevious.CompStatus', 'COMPOFF'] }, { $eq: ['$$value.lastprevious.CompStatus', 'COMPOFF+THRMO'] }] },
-                                                        { $or: [{ $eq: ['$$value.lastprevious.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$value.lastprevious.OptimizationMode', 'OPTIMIZATION'] }] },
-                                                    ]
-                                                },
-                                                {
-                                                    $concatArrays: [
-                                                        '$$value.result',
-                                                        [{
-                                                            cutoffTimeThrm: { $subtract: ['$$value.previous.TimeStamp', startIstTimestampUTC] },
-                                                            timestamp: '$$value.previous.TimeStamp'
-                                                        }]
-                                                    ]
-                                                },
-                                                {
-                                                    $cond: [
-                                                        {
-                                                            $and: [
-                                                                { $eq: ['$$value.lastprevious.CompStatus', 'COMPOFF+OPT'] },
-                                                                { $eq: ['$$value.lastprevious.OptimizationMode', 'OPTIMIZATION'] },
-                                                            ]
-                                                        },
-                                                        {
-                                                            $concatArrays: [
-                                                                '$$value.result',
-                                                                [{
-                                                                    cutoffTimeOpt: { $subtract: ['$$value.previous.TimeStamp', startIstTimestampUTC] },
-                                                                    timestamp: '$$value.previous.TimeStamp'
-                                                                }]
-                                                            ]
-                                                        },
-                                                        {
-                                                            $cond: [
-                                                                {
-                                                                    $and: [
-                                                                        { $eq: ['$$value.lastprevious.CompStatus', 'COMPON'] },
-                                                                        { $or: [{ $eq: ['$$value.lastprevious.OptimizationMode', 'NON-OPTIMIZATION'] }, { $eq: ['$$value.lastprevious.OptimizationMode', 'OPTIMIZATION'] }] }
-                                                                    ]
-                                                                },
-                                                                {
-                                                                    $concatArrays: [
-                                                                        '$$value.result',
-                                                                        [{
-                                                                            RemainingTime: { $subtract: ['$$value.previous.TimeStamp', startIstTimestampUTC] },
-                                                                            timestamp: '$$value.previous.TimeStamp'
-                                                                        }]
-                                                                    ]
-                                                                },
-                                                                '$$value.result'
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-
-                                        }
-                                    }
-                                }
-                            },
-                        }
-                    },
-                    {
-                        $project: {
-                            // FirstEdgeCase: '$FirstEdgeCases.result',
-                            // lastedge: '$LastEdgeCases.result',
-                            StartTime: startIstTimestampUTC.toString(),
-                            EndTime: endIstTimestampUTC.toString(),
-                            totalCutoffTimeThrm: {
-                                $sum: [
-                                    { $sum: '$ThermostatCutoffTimes.result.cutoffTimeThrm' },
-                                    { $cond: [{ $gt: [{ $size: '$LastEdgeCases.result' }, 0] }, { $arrayElemAt: ['$LastEdgeCases.result.cutoffTimeThrm', 0] }, 0] },
-                                    { $cond: [{ $gt: [{ $size: '$FirstEdgeCases.result' }, 0] }, { $arrayElemAt: ['$FirstEdgeCases.result.cutoffTimeThrm', 0] }, 0] }
-                                ]
-                            },
-                            totalCutoffTimeOpt: {
-                                $sum: [
-                                    { $sum: '$DeviceCutoffTimes.result.cutoffTimeOpt' },
-                                    { $cond: [{ $gt: [{ $size: '$LastEdgeCases.result' }, 0] }, { $arrayElemAt: ['$LastEdgeCases.result.cutoffTimeOpt', 0] }, 0] },
-                                    { $cond: [{ $gt: [{ $size: '$FirstEdgeCases.result' }, 0] }, { $arrayElemAt: ['$FirstEdgeCases.result.cutoffTimeOpt', 0] }, 0] }
-                                ]
-                            },
-                            totalRemainingTime: {
-                                $sum: [
-                                    { $sum: '$RemainingRunTimes.result.RemainingTime' },
-                                    { $cond: [{ $gt: [{ $size: '$LastEdgeCases.result' }, 0] }, { $arrayElemAt: ['$LastEdgeCases.result.RemainingTime', 0] }, 0] },
-                                    { $cond: [{ $gt: [{ $size: '$FirstEdgeCases.result' }, 0] }, { $arrayElemAt: ['$FirstEdgeCases.result.RemainingTime', 0] }, 0] }
-                                ]
-                            }
-                        }
-                    }
-                ];
-
-
-                const PD = await PipelineData(pipeline);
-
-
-                if (PD.length !== 0) {
-                    const Optimizer = await OptimizerModel.findOne({ OptimizerID: Optimizerid });
-
-                    if (Optimizer) {
-                        PD.forEach(entry => {
-                            entry.OptimizerName = Optimizer.OptimizerName;
-                            entry.ACTonnage = Optimizer.ACTonnage;
-                        });
-                        if (Interval === "Day") {
-
-
-
-                            var Twelve = await TwelveHour(startIstTimestampUTC);
-                            let startIstTimestampsUTC;
-                            if (!Twelve) {
-                                startIstTimestampsUTC = setToMidnight(startIstTimestampUTC);
-                            } else {
-                                startIstTimestampsUTC = startIstTimestampUTC;
-                            }
-
-                            const newPipeline = [
-                                {
-                                    $match: {
-                                        OptimizerID: Optimizerid,
-                                        TimeStamp: { $gte: startIstTimestampsUTC.toString(), $lte: endIstTimestampUTC.toString() }
-                                    }
-                                },
-                                { $sort: { TimeStamp: 1 } },
-                                {
-                                    $addFields: {
-                                        TimeStamp: { $toLong: '$TimeStamp' }
-                                    }
-                                },
-                                {
-                                    $group: {
-                                        _id: Optimizerid,
-                                        entries: { $push: '$$ROOT' }
-                                    }
-                                },
-                                {
-                                    $project: {
-                                        ACCutoffTimes: {
-                                            $reduce: {
-                                                input: '$entries',
-                                                initialValue: { previous: null, result: [], expectingNextOn: true },
-                                                in: {
-                                                    previous: {
-                                                        $cond: [
-                                                            {
-                                                                $and: [
-                                                                    { $eq: ['$$this.ACStatus', 'ON'] },
-                                                                    '$$value.expectingNextOn',
-                                                                    { $eq: ['$$value.previous', null] }
-                                                                ]
-                                                            },
-                                                            '$$this',
-                                                            {
-                                                                $cond: [
-                                                                    { $eq: ['$$this.ACStatus', 'OFF'] },
-                                                                    '$$this',
-                                                                    {
-                                                                        $cond: [
-                                                                            {
-                                                                                $and: [
-                                                                                    { $eq: ['$$this.ACStatus', 'ON'] },
-                                                                                    '$$value.expectingNextOn',
-                                                                                    { $eq: ['$$value.previous.ACStatus', 'OFF'] }
-                                                                                ]
-                                                                            },
-                                                                            '$$this',
-                                                                            '$$value.previous'
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    },
-                                                    expectingNextOn: {
-                                                        $cond: [
-                                                            { $eq: ['$$this.ACStatus', 'OFF'] },
-                                                            true,
-                                                            { $cond: [{ $eq: ['$$this.ACStatus', 'ON'] }, false, '$$value.expectingNextOn'] }
-                                                        ]
-                                                    },
-                                                    result: {
-                                                        $cond: [
-                                                            {
-                                                                $and: [
-                                                                    { $eq: ['$$this.ACStatus', 'OFF'] },
-                                                                    { $ne: ['$$value.previous', null] },
-                                                                    { $eq: ['$$value.previous.ACStatus', 'ON'] }
-                                                                ]
-                                                            },
-                                                            {
-                                                                $concatArrays: [
-                                                                    '$$value.result',
-                                                                    [{
-
-                                                                        ACOffTime: '$$this.TimeStamp'
-                                                                    }]
-                                                                ]
-                                                            },
-                                                            {
-                                                                $cond: [
-                                                                    {
-                                                                        $and: [
-                                                                            { $eq: ['$$this.ACStatus', 'ON'] },
-                                                                            { $ne: ['$$value.previous', null] },
-                                                                            { $eq: ['$$value.previous.ACStatus', 'OFF'] }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        $concatArrays: [
-                                                                            '$$value.result',
-                                                                            [{
-                                                                                // ACOnTime: '$$value.previous.TimeStamp',
-                                                                                ACOnTime: '$$this.TimeStamp',
-                                                                            }]
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        $cond: [
-                                                                            {
-                                                                                $and: [
-                                                                                    { $eq: ['$$this.ACStatus', 'ON'] },
-                                                                                    { $eq: ['$$value.previous', null] },
-
-                                                                                ]
-                                                                            },
-                                                                            {
-                                                                                $concatArrays: [
-                                                                                    '$$value.result',
-                                                                                    [{
-                                                                                        ACOnTime: '$$this.TimeStamp'
-                                                                                    }]
-                                                                                ]
-                                                                            },
-                                                                            '$$value.result'
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                {
-                                    $project: {
-                                        ACCutoffTimes: '$ACCutoffTimes.result'
-                                    }
-                                }
-                            ];
-                            const newPD = await PipelineData(newPipeline);
-
-
-
-                            // const newPipeline = [{
-                            //     optimizerId: optimizers[i]._id,
-                            //     starttime: { $gte: startIstTimestampsUTC },
-                            //     $or: [
-                            //         { endtime: { $lte: endIstTimestampUTC } },
-                            //         { endtime: null }
-                            //     ]
-                            // }]
-
-                            // const newPD = await OptimizerOnOffModel.aggregate(newPipeline);
-
-                            //  console.log(newPD, "+++++++++++++++++++");
-
-
-                            PD.forEach(entry => {
-                                const newEntry = newPD.find(item => item._id === entry._id);
-                                if (newEntry) {
-                                    entry.ACCutoffTimes = newEntry.ACCutoffTimes;
-                                }
-                            });
-
-                            data.push(...PD);
-                        } else {
-                            data.push(...PD);
-                        }
-                    }
-                }
-
-            }
-
-            switch (Interval) {
-                case "Day":
-                    currentStart.setUTCDate(currentStart.getUTCDate() + 1);
-                    currentStart.setUTCHours(0, 0, 0, 0);
-                    break;
-                case "Week":
-                    currentStart.setUTCDate(currentStart.getUTCDate() + 7);
-                    currentStart.setUTCHours(0, 0, 0, 0);
-                    break;
-                case "Month":
-                    currentStart.setUTCMonth(currentStart.getUTCMonth() + 1);
-                    currentStart.setUTCDate(1);
-                    currentStart.setUTCHours(0, 0, 0, 0);
-                    break;
-                case "Year":
-                    currentStart.setUTCFullYear(currentStart.getUTCFullYear() + 1);
-                    currentStart.setUTCDate(1);
-                    currentStart.setUTCMonth(0);
-                    currentStart.setUTCHours(0, 0, 0, 0);
-                    break;
-            }
-        }
-
-        if (Interval === "Day") {
-            const rearrangeACCutoffTimes = (data) => {
-                data.forEach(item => {
-                    const newCutoffTimes = [];
-                    let currentCutoff = {};
-
-                    item.ACCutoffTimes.forEach(time => {
-                        if (time.hasOwnProperty('ACOnTime')) {
-                            if (Object.keys(currentCutoff).length > 0) {
-                                newCutoffTimes.push(currentCutoff);
-                                currentCutoff = {};
-                            }
-                            currentCutoff.ACOnTime = time.ACOnTime;
-                        } else if (time.hasOwnProperty('ACOffTime')) {
-                            currentCutoff.ACOffTime = time.ACOffTime;
-                            newCutoffTimes.push(currentCutoff);
-                            currentCutoff = {};
-                        }
-                    });
-
-                    if (Object.keys(currentCutoff).length > 0) {
-                        newCutoffTimes.push(currentCutoff);
-                    }
-
-                    item.ACCutoffTimes = newCutoffTimes;
-                });
-            };
-
-            rearrangeACCutoffTimes(data);
-            return res.status(200).json({
-                success: true,
-                data: data
-            });
-
-        }
-
-
-
-        return res.status(200).json({
-            success: true,
-            data: data
-        });
-    } catch (error) {
-        // Handle errors appropriately
-        res.status(500).json({
-            success: false,
-            message: 'An error occurred while fetching data',
-            error: error.message
-        });
-    }
-
-};
-exports.UsageTrendsCopy = async (req, res) => {
     const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
     const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
     try {
@@ -2360,7 +1629,7 @@ exports.UsageTrendsCopy = async (req, res) => {
         }
 
 
-        
+
         const optimizerIds = optimizers.map(optimizer => optimizer.OptimizerID);
 
         const startIstTimestamp = parseISTDateString(startDate);
@@ -3049,21 +2318,17 @@ exports.UsageTrendsCopy = async (req, res) => {
 };
 
 
-exports.UsageTrends = async (req, res) => {
+exports.AcOnOff = async (req, res) => {
     try {
-        const { gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
-        const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
+        const { gateway_id, Optimizerid, startDate, endDate } = req.body;
 
         const startIstTimestamp = parseISTDateString(startDate);
         const endIstTimestamp = parseISTDateString(endDate);
 
-       
+
         let optimizerIds = [];
 
-        if (Optimizerid) {
-            // If Optimizerid is provided, use it directly
-            optimizerIds = [Optimizerid];
-        } else if (gateway_id) {
+        if (!Optimizerid) {
             // If gateway_id is provided but Optimizerid is not, fetch optimizer IDs from the GatewayModel
             const optids = await GatewayModel.aggregate([
                 {
@@ -3098,8 +2363,7 @@ exports.UsageTrends = async (req, res) => {
 
             optimizerIds = optids[0].optimizerIds;
         } else {
-            // If neither gateway_id nor Optimizerid is provided, return an error
-            return res.status(400).json({ message: "Either gateway_id or Optimizerid must be provided" });
+            optimizerIds = [new mongoose.Types.ObjectId(Optimizerid)];
         }
 
         const data = await OptimizerOnOff.aggregate([
@@ -3111,16 +2375,106 @@ exports.UsageTrends = async (req, res) => {
                 }
             },
         ]);
-
         if (!data.length) {
             return res.status(404).json({ message: "No data found for the given criteria" });
         }
 
+        const splitDataAcrossDays = (data) => {
+        
+            const updatedData = {};
+        
+            // Function to convert UTC timestamp to IST
+            const convertToIST = (timestamp) => {
+                const date = new Date(timestamp * 1000); // Convert to Date object
+                const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC +5:30 in milliseconds
+                return new Date(date.getTime() + istOffset); // Return IST Date object
+            };
+        
+            // Loop through each record in the data array
+            data.forEach((item) => {
+                // Convert timestamps from Unix format to IST Date objects
+                const startTime = convertToIST(item.starttime);
+                const endTime = convertToIST(item.endtime);
+                
+                // Get the date string in 'YYYY-MM-DD' format for IST
+                const date = startTime.toISOString().split('T')[0];
+        
+                // Initialize the object for the current date if it doesn't exist
+                if (!updatedData[date]) {
+                    updatedData[date] = {};
+                }
+        
+                // Initialize the array for the current optimizerId on that date if it doesn't exist
+                if (!updatedData[date][item.optimizerId]) {
+                    updatedData[date][item.optimizerId] = [];
+                }
+        
+                // If the record's end time is on the next day
+                if (startTime.toISOString().split('T')[0] !== endTime.toISOString().split('T')[0]) {
+                    // Split the record into two parts
+        
+                    // 1. First record: For the original date, until 23:59:59
+                    const endOfDay = new Date(startTime);
+                    endOfDay.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59 of the same day
+                    const endOfDayUnix = Math.floor(endOfDay.getTime() / 1000) - 5.5 * 60 * 60; // Unix timestamp for 23:59:59
+                    
+                    const firstPartDuration = endOfDayUnix - item.starttime; // Duration for the first part
+        
+                    // Push the first part (until 23:59:59 of the same day)
+                    updatedData[date][item.optimizerId].push({
+                        optimizerId: item.optimizerId,
+                        starttime: item.starttime,
+                        endtime: endOfDayUnix,
+                        acstatus: item.acstatus,
+                        duration: firstPartDuration
+                    });
+        
+                    // 2. Second record: For the next day, starting at 00:00:00
+                    const nextDay = new Date(endTime);
+                    nextDay.setUTCHours(0, 0, 0, 0); // Set to 00:00:00 of the next day
+                    const nextDayDate = nextDay.toISOString().split('T')[0]; // Get the date of the next day in 'YYYY-MM-DD' format
+                    const secondPartDuration = item.endtime - Math.floor(nextDay.getTime() / 1000); // Duration for the second part
+        
+                    // Initialize the next day if it doesn't exist
+                    if (!updatedData[nextDayDate]) {
+                        updatedData[nextDayDate] = {};
+                    }
+        
+                    // Initialize the array for the optimizerId on the next day if it doesn't exist
+                    if (!updatedData[nextDayDate][item.optimizerId]) {
+                        updatedData[nextDayDate][item.optimizerId] = [];
+                    }
+        
+                    // Push the second part (from 00:00:00 of the next day)
+                    updatedData[nextDayDate][item.optimizerId].push({
+                        optimizerId: item.optimizerId,
+                        starttime: Math.floor(nextDay.getTime() / 1000) - 5.5 * 60 * 60, // 00:00:00 of the next day
+                        endtime: item.endtime,
+                        acstatus: item.acstatus,
+                        duration: secondPartDuration
+                    });
+                } else {
+                    // If the record is within the same day, just push it as it is
+                    updatedData[date][item.optimizerId].push({
+                        optimizerId: item.optimizerId,
+                        starttime: item.starttime,
+                        endtime: item.endtime,
+                        acstatus: item.acstatus,
+                        duration: item.endtime - item.starttime
+                    });
+                }
+            });
+        
+            return updatedData;
+        };
+  
+        splitDataAcrossDays(data);
+
         // Send the data as a JSON response
         return res.status(200).json({
             success: true,
-            message: "Usage trends fetched successfully",
-            data: data
+            message: "Ac data fetched successfully",
+            data: splitDataAcrossDays(data)
         });
 
     } catch (error) {
@@ -3128,7 +2482,7 @@ exports.UsageTrends = async (req, res) => {
         // Handle errors and send a response
         return res.status(500).json({
             success: false,
-            message: "An error occurred while fetching usage trends",
+            message: "An error occurred while fetching Ac Data",
             error: error.message
         });
     }

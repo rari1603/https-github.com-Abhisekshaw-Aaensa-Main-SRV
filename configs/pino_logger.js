@@ -48,7 +48,7 @@ function log(level, fileName, message) {
   // Create a logger with a multistream (console + dynamic log file)
   const streams = [
     { level: 'trace', stream: pretty({ singleLine: true }) },  // Console logging
-    { level: 'trace', stream: logStreams[fileName] },          // File logging with rotation
+    // { level: 'trace', stream: logStreams[fileName] },          // File logging with rotation
   ];
 
   const logger = pino({

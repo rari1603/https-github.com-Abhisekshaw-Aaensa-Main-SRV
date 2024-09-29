@@ -51,7 +51,7 @@ module.exports = function (agenda) {
                     if (latestRecord && latestRecord.length > 0) {
                         const lastRunRecord = await AmbientModel.findOne().sort({ RunID: -1 });
                         const runId = lastRunRecord && !isNaN(Number(lastRunRecord.RunID)) ? Number(lastRunRecord.RunID) + 1 : 1;
-                        const chunkSize = 2;
+                        const chunkSize = 100;
 
                         for (let i = 0; i < latestRecord.length; i += chunkSize) {
                             const batchId = i / chunkSize + 1;

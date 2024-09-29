@@ -14,6 +14,10 @@ const moment = require('moment-timezone');
 const OptimizerOnOffModel = require('../../models/OptimizerOnOff');
 const mongoose = require('mongoose');
 
+const objectId = mongoose.Types.ObjectId;
+
+
+
 
 
 const UtilInter = require('../../utility/Interval');
@@ -39,6 +43,7 @@ const INTERVAL_ARRAY = {
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
+    console.log(JSON.stringify(req.body));
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
     const { page, flag, PrevTimeStamp } = req.query;
 
@@ -142,7 +147,7 @@ exports.AllDeviceData = async (req, res) => {
         const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
 
         const locationIds = Locations.map(loc => loc._id);
-        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
+        const gatewayQuery = gateway_id ? { _id: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
         const Gateways = await GatewayModel.find(gatewayQuery).lean();
 
         const locationIdToGateways = Gateways.reduce((acc, gateway) => {
@@ -158,6 +163,8 @@ exports.AllDeviceData = async (req, res) => {
                 TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
             };
         });
+        console.log(JSON.stringify(optimizerLogQueries));
+
         const OptimizerLogs = await OptimizerLogModel.find({ $or: optimizerLogQueries })
             .populate({
                 path: "OptimizerID",
@@ -548,7 +555,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
 
         const locationIds = Locations.map(loc => loc._id);
-        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
+        const gatewayQuery = gateway_id ? { _id: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
         const Gateways = await GatewayModel.find(gatewayQuery).lean();
 
         const locationIdToGateways = Gateways.reduce((acc, gateway) => {
@@ -886,7 +893,7 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         // Prepare the query for GatewayModel based on locationIds and optional gateway_id
         const gatewayQuery = {
             EnterpriseInfo: { $in: locationIds },
-            ...(gateway_id && { GatewayID: gateway_id })
+            ...(gateway_id && { _id: gateway_id })
         };
 
         // Fetch the gateways
@@ -901,7 +908,7 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         // Prepare the query for OptimizerModel based on GatewayIds and optional Optimizerid
         const optimizerQuery = {
             GatewayId: { $in: GatewayIds },
-            ...(Optimizerid && { OptimizerID: Optimizerid })
+            ...(Optimizerid && { _id: Optimizerid })
         };
 
         // Fetch the optimizers
@@ -1554,7 +1561,7 @@ const TREND_INTERVAL_ARRAY = {
 
 
 exports.UsageTrends = async (req, res) => {
-    const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
+    const { enterprise_id, state_id, location_id, gateway_id, optimizer_id, startDate, endDate, Interval } = req.body;
     const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
     try {
         // Fetch the Enterprise based on enterprise_id
@@ -1601,7 +1608,7 @@ exports.UsageTrends = async (req, res) => {
         // Prepare the query for GatewayModel based on locationIds and optional gateway_id
         const gatewayQuery = {
             EnterpriseInfo: { $in: locationIds },
-            ...(gateway_id && { GatewayID: gateway_id })
+            ...(gateway_id && { _id: gateway_id })
         };
 
         // Fetch the gateways
@@ -1616,9 +1623,10 @@ exports.UsageTrends = async (req, res) => {
         // Prepare the query for OptimizerModel based on GatewayIds and optional Optimizerid
         const optimizerQuery = {
             GatewayId: { $in: GatewayIds },
-            ...(Optimizerid && { OptimizerID: Optimizerid })
+            ...(optimizer_id && { _id: optimizer_id })
         };
 
+        console.log(JSON.stringify(optimizerQuery));
         // Fetch the optimizers
         const optimizers = await OptimizerModel.find(optimizerQuery);
         if (optimizers.length === 0) {

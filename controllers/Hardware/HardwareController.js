@@ -15,6 +15,7 @@ const logger = require('../../configs/pino_logger');
 const fs = require('fs');
 const path = require('path');
 const DeviceStatusModel = require('../../models/deviceStatusModel')
+const DeviceRebootStatusModel = require('../../models/deviceRebootModel');
 
 // console.log({logger});
 
@@ -144,6 +145,12 @@ exports.ConfigureableData = async (req, res) => {
     }
 };
 
+
+
+
+const gatewayReceivedTimes = new Map();
+const gatewayStoredTimes = new Map();
+const errorCounts = new Map();
 // Store Gateway & Optimizer Log data 
 exports.Store = async (req, res) => {
     const data = req.body;
@@ -215,6 +222,34 @@ exports.Store = async (req, res) => {
             };
             return acc;
         }, {});
+
+
+        //----------Check for Gateway Time Problems------------------//
+        // const currentMTime = gatewayLog.createdAt;
+        const currentServerTimeStamp = Math.floor(new Date().getTime() / 1000);
+        const previousServerTimeStamp = gatewayStoredTimes.get(gateway_id) ? gatewayStoredTimes.get(gateway_id) : "0";
+
+        const currentMessageTimeStamp = TimeStamp;
+        const lastMessageTime = gatewayReceivedTimes.get(gateway_id) ? gatewayReceivedTimes.get(gateway_id) : "0";
+
+        const gatewayTimeDiff = (currentMessageTimeStamp - lastMessageTime);
+        const messageTimeDiff = (currentServerTimeStamp - previousServerTimeStamp);
+        const GatewayTimeChanged = false;
+        if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
+
+       
+            errorCounts.set(gateway_id, 0);
+            const deviceStatus = new DeviceRebootStatusModel({
+                GatewayID: gateway_id,
+                storeTime: currentMTime,  // Set storeTime as the currentMTime
+                receivedTime: TimeStamp  // Set receivedTime as the TimeStamp
+            });
+            // Save the document to the database
+            await deviceStatus.save()
+             GatewayTimeChanged = true;
+            TimeStamp = currentServerTimeStamp;
+        }
+        //--------------Check for Gateway Time Problems end--------------//
 
         const gatewayLog = await GatewayLogModel({
             GatewayID: gatewayId,
@@ -333,7 +368,28 @@ exports.Store = async (req, res) => {
 
         console.log({ success: true, message: "Logs created successfully", gatewayLog, OptimizerLogModel });
 
-        return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
+        gatewayReceivedTimes.set(gateway_id, currentServerTimeStamp);
+        gatewayStoredTimes.set(gateway_id, TimeStamp);
+        if (GatewayTimeChanged) {
+            // gatewayReceivedTimes.set(gateway_id, TimeStamp);
+            // gatewayStoredTimes.set(gateway_id, TimeStamp);
+            return res.status(500).json({
+                status: "TMS",
+                errorcode: "G-003",
+                timestamp: currentServerTimeStamp,
+                gatewayLog,
+
+            });
+        } else {
+
+            errorCounts.set(gateway_id, 0);
+            // Return success response
+            return res.status(200).send({
+                success: true, status: "OK", timestamp: currentServerTimeStamp, gatewayLog
+            });
+        }
+
+        //return res.status(200).send({ success: true, message: "Logs created successfully", gatewayLog });
 
     } catch (error) {
         console.error({ StoreError: error.message });
@@ -1281,6 +1337,7 @@ const compressor = async (data) => {
 
 
 exports.deviceStatus = async (req, res) => {
+
     const data = req.body;
     const { HardwareID, DeviceStatus, Type, TimeStamp } = data;
 
@@ -1311,4 +1368,4 @@ exports.deviceStatus = async (req, res) => {
         console.error({ StoreError: error.message });
         res.status(404).send({ success: false, message: error.message });
     }
-};
+}; 

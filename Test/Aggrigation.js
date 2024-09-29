@@ -304,4 +304,671 @@
       }
     }
   }
+],
+
+// this is aggregation for ACoff-jobs where its giving segrigated data 
+
+[{
+  $match: {
+    createdAt: {
+      $gt: ISODate("2024-09-11T14:00:00.000Z"),
+      $lt: ISODate("2024-09-11T20:00:00.000Z")
+    }
+  }
+},
+{ $sort: { TimeStamp: 1 } },
+{
+  $group: {
+    _id: {
+      oid: "$OptimizerID",
+      gid: "$GatewayID"
+    },
+    activities: {
+      $push: {
+        oid: "$OptimizerID",
+        gid: "$GatewayID",
+        compStatus: {
+          $ifNull: ["$CompStatus", "--"]
+        },
+        rtemp: "$RoomTemperature",
+        ctemp: "$CoilTemperature",
+        hum: "$Humidity",
+        optmode: "$OptimizerMode",
+        acstatus: "$DeviceStatus",
+        time: { $toLong: "$TimeStamp" }
+      }
+    }
+  }
+},
+{
+  $project: {
+    _id: 0,
+    firstOccurrences: {
+      $reduce: {
+        input: {
+          $map: {
+            input: {
+              $range: [
+                0,
+                { $size: "$activities" }
+              ]
+            },
+            as: "idx",
+            in: {
+              current: {
+                $arrayElemAt: [
+                  "$activities",
+                  "$$idx"
+                ]
+              },
+              previous: {
+                $cond: {
+                  if: { $eq: ["$$idx", 0] },
+                  then: null,
+                  else: {
+                    $arrayElemAt: [
+                      "$activities",
+                      { $subtract: ["$$idx", 1] }
+                    ]
+                  }
+                }
+              },
+              index: "$$idx"
+            }
+          }
+        },
+        initialValue: [],
+        in: {
+          $let: {
+            vars: {
+              isFirstInSequence: {
+                $or: [
+                  {
+                    $eq: ["$$this.previous", null]
+                  },
+                  {
+                    $or: [
+                      {
+                        $ne: [
+                          "$$this.current.compStatus",
+                          "$$this.previous.compStatus"
+                        ]
+                      },
+                      {
+                        $ne: [
+                          "$$this.current.optmode",
+                          "$$this.previous.optmode"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              isLast: {
+                $cond: {
+                  if: {
+                    $eq: [
+                      "$$this.index",
+                      {
+                        $subtract: [
+                          {
+                            $size: "$activities"
+                          },
+                          1
+                        ]
+                      }
+                    ]
+                  },
+                  then: true,
+                  else: false
+                }
+              }
+            },
+            in: {
+              $cond: {
+                if: "$$isFirstInSequence",
+                then: {
+                  $concatArrays: [
+                    "$$value",
+                    [
+                      {
+                        compStatus:
+                          "$$this.previous.compStatus",
+                        optmode:
+                          "$$this.previous.optmode",
+                        acstatus:
+                          "$$this.previous.acstatus",
+                        time: "$$this.previous.time",
+                        rtemp:
+                          "$$this.previous.rtemp",
+                        ctemp:
+                          "$$this.previous.ctemp",
+                        hum: "$$this.previous.hum",
+                        oid: "$_id.oid",
+                        gid: "$_id.gid",
+                        index: "$$this.index"
+                      },
+                      {
+                        compStatus:
+                          "$$this.current.compStatus",
+                        optmode:
+                          "$$this.current.optmode",
+                        acstatus:
+                          "$$this.current.acstatus",
+                        time: "$$this.current.time",
+                        rtemp:
+                          "$$this.current.rtemp",
+                        ctemp:
+                          "$$this.current.rtemp",
+                        hum: "$$this.current.hum",
+                        oid: "$_id.oid",
+                        gid: "$_id.gid",
+                        index: "$$this.index"
+                      }
+                    ]
+                  ]
+                },
+                else: {
+                  $cond: {
+                    if: "$$isLast",
+                    then: {
+                      $concatArrays: [
+                        "$$value",
+                        [
+                          {
+                            compStatus:
+                              "$$this.current.compStatus",
+                            optmode:
+                              "$$this.current.optmode",
+                            acstatus:
+                              "$$this.current.acstatus",
+                            time: "$$this.current.time",
+                            rtemp:
+                              "$$this.current.rtemp",
+                            ctemp:
+                              "$$this.current.rtemp",
+                            hum: "$$this.current.hum",
+                            oid: "$_id.oid",
+                            gid: "$_id.gid",
+                            index: "$$this.index"
+                          }
+                        ]
+                      ]
+                    },
+                    else: "$$value"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+{
+  $project: {
+    name: 1,
+    optimizers: {
+      $reduce: {
+        input: "$firstOccurrences",
+        initialValue: {
+          list: [],
+          previous: null,
+          index: -1
+        },
+        in: {
+          $let: {
+            vars: {
+              current: "$$this",
+              previousRow: "$$value.previous",
+              currentIndex: {
+                $add: ["$$value.index", 1]
+              }
+            },
+            in: {
+              list: {
+                $cond: {
+                  if: {
+                    $and: [
+                      {
+                        $gt: ["$$currentIndex", 1]
+                      },
+                      {
+                        $eq: [
+                          "$$previousRow.compStatus",
+                          "$$current.compStatus"
+                        ]
+                      },
+                      {
+                        $eq: [
+                          "$$previousRow.optmode",
+                          "$$current.optmode"
+                        ]
+                      },
+                      {
+                        $eq: [
+                          "$$previousRow.acstatus",
+                          "$$current.acstatus"
+                        ]
+                      }
+                    ]
+                  },
+                  then: {
+                    $concatArrays: [
+                      "$$value.list",
+                      [
+                        {
+                          oid: "$$previousRow.oid",
+                          gid: "$$previousRow.gid",
+                          compStatus:
+                            "$$previousRow.compStatus",
+                          optmode:
+                            "$$previousRow.optmode",
+                          acstatus:
+                            "$$previousRow.acstatus",
+                          rtempfrom:
+                            "$$previousRow.rtemp",
+                          rtempto:
+                            "$$current.rtemp",
+                          ctempfrom:
+                            "$$previousRow.ctemp",
+                          ctempto:
+                            "$$current.ctemp",
+                          humfrom:
+                            "$$previousRow.hum",
+                          humto: "$$current.hum",
+                          from: "$$previousRow.time",
+                          to: {
+                            $ifNull: [
+                              "$$current.time",
+                              0
+                            ]
+                          },
+                          counts: {
+                            $subtract: [
+                              "$$current.index",
+                              "$$previousRow.index"
+                            ]
+                          }
+                        }
+                      ]
+                    ]
+                  },
+                  else: "$$value.list"
+                }
+              },
+              previous: "$$current",
+              index: "$$currentIndex"
+            }
+          }
+        }
+      }
+    }
+  }
+}],
+
+// db aggregation of optimizerAgg-----------------------------------------
+
+[
+  {
+    $match: {
+      createdAt: {
+        $gt: ISODate("2024-09-11T14:00:00.000Z"),
+        $lt: ISODate("2024-09-18T20:00:00.000Z")
+      }
+    }
+  },
+
+  { $sort: { to: 1 } },
+  {
+    $group: {
+      _id: {
+        oid: "$oid",
+        gid: "$gid"
+      },
+      activities: {
+        $push: {
+          oid: "$oid",
+          gid: "$gid",
+          compstatus: {
+            $cond: {
+              if: {
+                $or: [
+                  {
+                    $eq: [
+                      "$compStatus",
+                      "COMPOFF"
+                    ]
+                  },
+                  {
+                    $eq: [
+                      "$compStatus",
+                      "COMPOFF+OPT"
+                    ]
+                  },
+                  {
+                    $eq: [
+                      "$compStatus",
+                      "COMPOFF+THERM"
+                    ]
+                  }
+                ]
+              },
+              then: "COMPOFF",
+              else: "$compStatus"
+            }
+          },
+
+          time: "$to"
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      activitiesWithIndexes: {
+        $reduce: {
+          input: {
+            $map: {
+              input: {
+                $range: [
+                  0,
+                  { $size: "$activities" }
+                ]
+              },
+              as: "idx",
+              in: {
+                current: {
+                  $arrayElemAt: [
+                    "$activities",
+                    "$$idx"
+                  ]
+                },
+                previousIndex: {
+                  $cond: {
+                    if: { $gt: ["$$idx", 0] },
+                    then: {
+                      $subtract: ["$$idx", 1]
+                    },
+                    else: -1
+                  }
+                },
+                index: "$$idx"
+              }
+            }
+          },
+          initialValue: {
+            list: [],
+            previous: null
+          },
+          in: {
+            list: {
+              $concatArrays: [
+                "$$value.list",
+                [
+                  {
+                    current: "$$this.current",
+                    previous: {
+                      $cond: {
+                        if: {
+                          $ne: [
+                            "$$this.previousIndex",
+                            -1
+                          ]
+                        },
+                        then: {
+                          $arrayElemAt: [
+                            "$activities",
+                            "$$this.previousIndex"
+                          ]
+                        },
+                        else: null
+                      }
+                    },
+                    index: "$$this.index"
+                  }
+                ]
+              ]
+            },
+            previous: "$$this.current"
+          }
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      firstOccurrences: {
+        $reduce: {
+          input: "$activitiesWithIndexes.list",
+          initialValue: [],
+          in: {
+            $let: {
+              vars: {
+                isFirstInSequence: {
+                  $and: [
+                    {
+                      $ne: [
+                        "$$this.previous",
+                        null
+                      ]
+                    },
+                    {
+                      $ne: [
+                        "$$this.current.compstatus",
+                        "$$this.previous.compstatus"
+                      ]
+                    }
+                  ]
+                },
+                isOne: {
+                  $eq: [
+                    {
+                      $size:
+                        "$activitiesWithIndexes.list"
+                    },
+                    1
+                  ]
+                },
+                isLast: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$this.index",
+                        {
+                          $subtract: [
+                            {
+                              $size:
+                                "$activitiesWithIndexes.list"
+                            },
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    then: true,
+                    else: false
+                  }
+                }
+              },
+              in: {
+                $cond: {
+                  if: "$$isFirstInSequence",
+                  then: {
+                    $cond: {
+                      if: "$$isLast",
+                      then: {
+                        $concatArrays: [
+                          "$$value",
+                          [
+                            {
+                              pcompstatus:
+                                "$$this.previous.compstatus",
+                              compstatus:
+                                "$$this.current.compstatus",
+                              from: "$$this.previous.time",
+                              to: "$$this.current.time",
+                              oid: "$_id.oid",
+                              gid: "$_id.gid",
+                              index:
+                                "$$this.index",
+                              last: "$$isLast"
+                            },
+                            {
+                              compstatus:
+                                "$$this.current.compstatus",
+                              from: "$$this.current.time",
+                              to: "$$this.current.time",
+                              oid: "$_id.oid",
+                              gid: "$_id.gid",
+                              index:
+                                "$$this.index",
+                              last: "$$isLast"
+                            }
+                          ]
+                        ]
+                      },
+                      else: {
+                        $concatArrays: [
+                          "$$value",
+                          [
+                            {
+                              pcompstatus:
+                                "$$this.previous.compstatus",
+                              compstatus:
+                                "$$this.current.compstatus",
+                              from: "$$this.previous.time",
+                              to: "$$this.current.time",
+                              oid: "$_id.oid",
+                              gid: "$_id.gid",
+                              index:
+                                "$$this.index",
+                              last: "$$isLast"
+                            }
+                          ]
+                        ]
+                      }
+                    }
+                  },
+                  else: {
+                    $cond: {
+                      if: "$$isOne",
+                      then: {
+                        $concatArrays: [
+                          "$$value",
+                          [
+                            {
+                              pcompstatus:
+                                "$$this.current.compstatus",
+                              compstatus:
+                                "$$this.current.compstatus",
+                              from: "$$this.current.time",
+                              to: "$$this.current.time",
+                              oid: "$_id.oid",
+                              gid: "$_id.gid",
+                              index:
+                                "$$this.index"
+                            }
+                          ]
+                        ]
+                      },
+                      else: "$$value"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]
+
+// this is the data of ludhiana for mahendra ji for optimizerlogs collection aggredation
+
+[
+  {
+    $match: {
+      GatewayID: new ObjectId(
+        "66d6fd6b45f6f6ca63851bad"
+      ),
+      createdAt: {
+        $gte: ISODate("2024-09-04T00:00:00Z"), // Start of 4th September 2024
+        $lte: ISODate("2024-09-25T23:59:59Z") // End of 25th September 2024
+      },
+      TimeStamp: {
+        $gt: "1725388200"
+      }
+    }
+  },
+  {
+    $sort: {
+      TimeStamp: 1
+    }
+  },
+  {
+    $lookup: {
+      from: "optimizers",
+      localField: "OptimizerID",
+      foreignField: "_id",
+      as: "optimizerData"
+    }
+  },
+  {
+    $lookup: {
+      from: "gateways",
+      localField: "GatewayID",
+      foreignField: "_id",
+      as: "gatewayData"
+    }
+  },
+  {
+    $unwind: {
+      path: "$optimizerData",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $unwind: {
+      path: "$gatewayData",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $addFields: {
+      OptimizerID: "$optimizerData.OptimizerID",
+      GatewayID: "$gatewayData.GatewayID",
+      TimestampIST: {
+        $dateToString: {
+          format: "%Y-%m-%d %H:%M:%S",
+          date: {
+            $toDate: {
+              $multiply: [
+                { $toLong: "$TimeStamp" },
+                1000
+              ]
+            }
+          },
+          timezone: "+05:30"
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      optimizerData: 0,
+      GatewayLogID: 0,
+      DeviceStatus: 0,
+      gatewayData: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      TimeStamp: 0,
+      isDelete: 0,
+      _id: 0,
+      __v: 0
+    }
+  }
 ]

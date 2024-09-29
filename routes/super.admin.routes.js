@@ -25,6 +25,9 @@ router.post('/get/all/meter/data', [logMiddleware('info', 'info-read-meterData')
 // USAGE TRENDS api
 router.post('/get/all/usage/trends', [logMiddleware('info', 'info-read-usageTrends')], ReportController.UsageTrends);
 
+// AC ON OFF api
+router.post('/get/all/acon/off', [logMiddleware('info', 'info-read-aconoff')], ReportController.AcOnOff);
+
 // Download device report
 router.post('/download/all/devicedata/report', [logMiddleware('info', 'info-read-deviceDataReport')], ReportController.DownloadDeviceDataReport);
 // Download meter report
@@ -57,6 +60,13 @@ router.get('/get/optimizer/details/:optimizer_id', [verifyToken, logMiddleware('
 
 // Gateway details
 router.get('/get/gateway/details/:gateway_id', [verifyToken, logMiddleware('info', 'info-read-gatewayDetails')], EnterpriseController.GatewayDetails);
+
+// single call for all details (enterprise, state, location, gateway, optimizer)
+router.get('/get/enterprise/:enterprise_id', [verifyToken, logMiddleware('info', 'info-read-enterpriseDetail')],  EnterpriseController.SingleEnterpriseData);
+
+// single call for all details (enterprise, state, location, gateway, optimizer)
+router.get('/get/enterprise', [verifyToken, logMiddleware('info', 'info-read-enterprisesDetails')], EnterpriseController.AllEnterpriseData);
+
 /*********** END ENTERPRISE ROUTES ***********/
 
 /*********** START ENTERPRISE ADD & UPDATE ***********/

@@ -13,8 +13,9 @@ const DeviceStatus = new mongoose.Schema({
     DeviceStatus: { type: String },
     Type: { type: String },
 }, { timestamps: true });
-
 const DeviceStatusModel = mongoose.model('DeviceStatus', DeviceStatus);
 
 module.exports = DeviceStatusModel;
+
+
 

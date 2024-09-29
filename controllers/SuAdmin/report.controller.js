@@ -7,9 +7,15 @@ const OptimizerModel = require('../../models/optimizer.model');
 const OptimizerLogModel = require('../../models/OptimizerLog.model');
 const StateModel = require('../../models/state.model');
 const NewApplianceLogModel = require('../../models/NewApplianceLog.model');
+const OptimizerOnOff = require('../../models/OptimizerOnOff');
 const { parse } = require('json2csv');
 const istToTimestamp = require('../../utility/TimeStamp');
 const moment = require('moment-timezone');
+const OptimizerOnOffModel = require('../../models/OptimizerOnOff');
+const mongoose = require('mongoose');
+
+const objectId = mongoose.Types.ObjectId;
+
 
 
 
@@ -37,6 +43,7 @@ const INTERVAL_ARRAY = {
 
 // AllDeviceData report
 exports.AllDeviceData = async (req, res) => {
+    console.log(JSON.stringify(req.body));
     const { enterprise_id, state_id, location_id, gateway_id, startDate, endDate, Interval, FirstRef, LastRef } = req.body;
     const { page, flag, PrevTimeStamp } = req.query;
 
@@ -140,7 +147,7 @@ exports.AllDeviceData = async (req, res) => {
         const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
 
         const locationIds = Locations.map(loc => loc._id);
-        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
+        const gatewayQuery = gateway_id ? { _id: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
         const Gateways = await GatewayModel.find(gatewayQuery).lean();
 
         const locationIdToGateways = Gateways.reduce((acc, gateway) => {
@@ -156,6 +163,8 @@ exports.AllDeviceData = async (req, res) => {
                 TimeStamp: { $gte: startIstTimestampUTC, $lte: endIstTimestampUTC },
             };
         });
+        console.log(JSON.stringify(optimizerLogQueries));
+
         const OptimizerLogs = await OptimizerLogModel.find({ $or: optimizerLogQueries })
             .populate({
                 path: "OptimizerID",
@@ -332,7 +341,7 @@ exports.AllMeterData = async (req, res) => {
         let startIstTimestampUTC = startIstTimestamp - istOffsetSeconds;
         const endIstTimestampUTC = endIstTimestamp - istOffsetSeconds;
 
-        console.log({startIstTimestampUTC});
+        console.log({ startIstTimestampUTC });
 
         const countPoint = startIstTimestamp - istOffsetSeconds;
         // Validate page and pageSize parameters
@@ -546,7 +555,7 @@ exports.DownloadDeviceDataReport = async (req, res) => {
         const Locations = await EnterpriseStateLocationModel.find({ $or: locationQueries }).lean();
 
         const locationIds = Locations.map(loc => loc._id);
-        const gatewayQuery = gateway_id ? { GatewayID: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
+        const gatewayQuery = gateway_id ? { _id: gateway_id } : { EnterpriseInfo: { $in: locationIds } };
         const Gateways = await GatewayModel.find(gatewayQuery).lean();
 
         const locationIdToGateways = Gateways.reduce((acc, gateway) => {
@@ -884,7 +893,7 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         // Prepare the query for GatewayModel based on locationIds and optional gateway_id
         const gatewayQuery = {
             EnterpriseInfo: { $in: locationIds },
-            ...(gateway_id && { GatewayID: gateway_id })
+            ...(gateway_id && { _id: gateway_id })
         };
 
         // Fetch the gateways
@@ -899,7 +908,7 @@ exports.DownloadUsageTrendsReport = async (req, res) => {
         // Prepare the query for OptimizerModel based on GatewayIds and optional Optimizerid
         const optimizerQuery = {
             GatewayId: { $in: GatewayIds },
-            ...(Optimizerid && { OptimizerID: Optimizerid })
+            ...(Optimizerid && { _id: Optimizerid })
         };
 
         // Fetch the optimizers
@@ -1550,17 +1559,10 @@ const TREND_INTERVAL_ARRAY = {
 };
 
 
+
 exports.UsageTrends = async (req, res) => {
-    const { enterprise_id, state_id, location_id, gateway_id, Optimizerid, startDate, endDate, Interval } = req.body;
+    const { enterprise_id, state_id, location_id, gateway_id, optimizer_id, startDate, endDate, Interval } = req.body;
     const INTERVAL_IN_SEC = TREND_INTERVAL_ARRAY[Interval];
-
-    if (!enterprise_id) {
-        return res.status(400).json({
-            success: false,
-            message: 'enterprise_id is required'
-        });
-    }
-
     try {
         // Fetch the Enterprise based on enterprise_id
         const Enterprise = await EnterpriseModel.findOne({ _id: enterprise_id });
@@ -1606,7 +1608,7 @@ exports.UsageTrends = async (req, res) => {
         // Prepare the query for GatewayModel based on locationIds and optional gateway_id
         const gatewayQuery = {
             EnterpriseInfo: { $in: locationIds },
-            ...(gateway_id && { GatewayID: gateway_id })
+            ...(gateway_id && { _id: gateway_id })
         };
 
         // Fetch the gateways
@@ -1621,9 +1623,10 @@ exports.UsageTrends = async (req, res) => {
         // Prepare the query for OptimizerModel based on GatewayIds and optional Optimizerid
         const optimizerQuery = {
             GatewayId: { $in: GatewayIds },
-            ...(Optimizerid && { OptimizerID: Optimizerid })
+            ...(optimizer_id && { _id: optimizer_id })
         };
 
+        console.log(JSON.stringify(optimizerQuery));
         // Fetch the optimizers
         const optimizers = await OptimizerModel.find(optimizerQuery);
         if (optimizers.length === 0) {
@@ -1632,6 +1635,9 @@ exports.UsageTrends = async (req, res) => {
                 message: 'Optimizers not found'
             });
         }
+
+
+
         const optimizerIds = optimizers.map(optimizer => optimizer.OptimizerID);
 
         const startIstTimestamp = parseISTDateString(startDate);
@@ -1683,7 +1689,6 @@ exports.UsageTrends = async (req, res) => {
             let startIstTimestampUTC = startIstTimestampInterval - istOffsetSeconds;
             let endIstTimestampUTC = endIstTimestampInterval - istOffsetSeconds;
             // Step 1: Fetch the initial previous value
-
 
             for (let i = 0; i < optimizerIds.length; i++) {
 
@@ -2066,6 +2071,7 @@ exports.UsageTrends = async (req, res) => {
                         if (Interval === "Day") {
 
 
+
                             var Twelve = await TwelveHour(startIstTimestampUTC);
                             let startIstTimestampsUTC;
                             if (!Twelve) {
@@ -2073,6 +2079,7 @@ exports.UsageTrends = async (req, res) => {
                             } else {
                                 startIstTimestampsUTC = startIstTimestampUTC;
                             }
+
                             const newPipeline = [
                                 {
                                     $match: {
@@ -2208,10 +2215,24 @@ exports.UsageTrends = async (req, res) => {
                                     }
                                 }
                             ];
-
-
-
                             const newPD = await PipelineData(newPipeline);
+
+
+
+                            // const newPipeline = [{
+                            //     optimizerId: optimizers[i]._id,
+                            //     starttime: { $gte: startIstTimestampsUTC },
+                            //     $or: [
+                            //         { endtime: { $lte: endIstTimestampUTC } },
+                            //         { endtime: null }
+                            //     ]
+                            // }]
+
+                            // const newPD = await OptimizerOnOffModel.aggregate(newPipeline);
+
+                            //  console.log(newPD, "+++++++++++++++++++");
+
+
                             PD.forEach(entry => {
                                 const newEntry = newPD.find(item => item._id === entry._id);
                                 if (newEntry) {
@@ -2303,6 +2324,181 @@ exports.UsageTrends = async (req, res) => {
     }
 
 };
+
+
+exports.AcOnOff = async (req, res) => {
+    try {
+        const { gateway_id, Optimizerid, startDate, endDate } = req.body;
+
+        const startIstTimestamp = parseISTDateString(startDate);
+        const endIstTimestamp = parseISTDateString(endDate);
+
+
+        let optimizerIds = [];
+
+        if (!Optimizerid) {
+            // If gateway_id is provided but Optimizerid is not, fetch optimizer IDs from the GatewayModel
+            const optids = await GatewayModel.aggregate([
+                {
+                    $match: {
+                        GatewayID: gateway_id
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "optimizers",
+                        localField: "_id",
+                        foreignField: "GatewayId",
+                        as: "optimizerInfo"
+                    }
+                },
+                {
+                    $unwind: "$optimizerInfo"
+                },
+                {
+                    $group: {
+                        _id: "$GatewayID",
+                        optimizerIds: {
+                            $addToSet: "$optimizerInfo._id"
+                        }
+                    }
+                }
+            ]).exec();
+
+            if (!optids.length) {
+                return res.status(404).json({ message: "No optimizer IDs found for the given Gateway ID" });
+            }
+
+            optimizerIds = optids[0].optimizerIds;
+        } else {
+            optimizerIds = [new mongoose.Types.ObjectId(Optimizerid)];
+        }
+
+        const data = await OptimizerOnOff.aggregate([
+            {
+                $match: {
+                    optimizerId: { $in: optimizerIds },
+                    starttime: { $gte: startIstTimestamp },
+                    endtime: { $lte: endIstTimestamp }
+                }
+            },
+        ]);
+        if (!data.length) {
+            return res.status(404).json({ message: "No data found for the given criteria" });
+        }
+
+        const splitDataAcrossDays = (data) => {
+        
+            const updatedData = {};
+        
+            // Function to convert UTC timestamp to IST
+            const convertToIST = (timestamp) => {
+                const date = new Date(timestamp * 1000); // Convert to Date object
+                const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC +5:30 in milliseconds
+                return new Date(date.getTime() + istOffset); // Return IST Date object
+            };
+        
+            // Loop through each record in the data array
+            data.forEach((item) => {
+                // Convert timestamps from Unix format to IST Date objects
+                const startTime = convertToIST(item.starttime);
+                const endTime = convertToIST(item.endtime);
+                
+                // Get the date string in 'YYYY-MM-DD' format for IST
+                const date = startTime.toISOString().split('T')[0];
+        
+                // Initialize the object for the current date if it doesn't exist
+                if (!updatedData[date]) {
+                    updatedData[date] = {};
+                }
+        
+                // Initialize the array for the current optimizerId on that date if it doesn't exist
+                if (!updatedData[date][item.optimizerId]) {
+                    updatedData[date][item.optimizerId] = [];
+                }
+        
+                // If the record's end time is on the next day
+                if (startTime.toISOString().split('T')[0] !== endTime.toISOString().split('T')[0]) {
+                    // Split the record into two parts
+        
+                    // 1. First record: For the original date, until 23:59:59
+                    const endOfDay = new Date(startTime);
+                    endOfDay.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59 of the same day
+                    const endOfDayUnix = Math.floor(endOfDay.getTime() / 1000) - 5.5 * 60 * 60; // Unix timestamp for 23:59:59
+                    
+                    const firstPartDuration = endOfDayUnix - item.starttime; // Duration for the first part
+        
+                    // Push the first part (until 23:59:59 of the same day)
+                    updatedData[date][item.optimizerId].push({
+                        optimizerId: item.optimizerId,
+                        starttime: item.starttime,
+                        endtime: endOfDayUnix,
+                        acstatus: item.acstatus,
+                        duration: firstPartDuration
+                    });
+        
+                    // 2. Second record: For the next day, starting at 00:00:00
+                    const nextDay = new Date(endTime);
+                    nextDay.setUTCHours(0, 0, 0, 0); // Set to 00:00:00 of the next day
+                    const nextDayDate = nextDay.toISOString().split('T')[0]; // Get the date of the next day in 'YYYY-MM-DD' format
+                    const secondPartDuration = item.endtime - Math.floor(nextDay.getTime() / 1000); // Duration for the second part
+        
+                    // Initialize the next day if it doesn't exist
+                    if (!updatedData[nextDayDate]) {
+                        updatedData[nextDayDate] = {};
+                    }
+        
+                    // Initialize the array for the optimizerId on the next day if it doesn't exist
+                    if (!updatedData[nextDayDate][item.optimizerId]) {
+                        updatedData[nextDayDate][item.optimizerId] = [];
+                    }
+        
+                    // Push the second part (from 00:00:00 of the next day)
+                    updatedData[nextDayDate][item.optimizerId].push({
+                        optimizerId: item.optimizerId,
+                        starttime: Math.floor(nextDay.getTime() / 1000) - 5.5 * 60 * 60, // 00:00:00 of the next day
+                        endtime: item.endtime,
+                        acstatus: item.acstatus,
+                        duration: secondPartDuration
+                    });
+                } else {
+                    // If the record is within the same day, just push it as it is
+                    updatedData[date][item.optimizerId].push({
+                        optimizerId: item.optimizerId,
+                        starttime: item.starttime,
+                        endtime: item.endtime,
+                        acstatus: item.acstatus,
+                        duration: item.endtime - item.starttime
+                    });
+                }
+            });
+        
+            return updatedData;
+        };
+  
+        splitDataAcrossDays(data);
+
+        // Send the data as a JSON response
+        return res.status(200).json({
+            success: true,
+            message: "Ac data fetched successfully",
+            data: splitDataAcrossDays(data)
+        });
+
+    } catch (error) {
+        console.error(error);
+        // Handle errors and send a response
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while fetching Ac Data",
+            error: error.message
+        });
+    }
+};
+
+
+
+
 
 async function TwelveHour(timestamp) {
 

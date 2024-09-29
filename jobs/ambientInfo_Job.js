@@ -1,6 +1,6 @@
 const AmbientModel = require('../models/ambientInfoModel')
 const OptimizerLogModel = require('../models/OptimizerLog.model');
-const { SendAudit } = require('../controllers/Delloite/action');
+const { SendAmbientAudit } = require('../controllers/Delloite/action');
 const { Data } = require('../Test/RetriveId');
 const mongoose = require('mongoose');
 const moment = require('moment');
@@ -31,7 +31,7 @@ module.exports = function (agenda) {
                     const optimizerIdArr = [];
 
                     for (const gateway of gateways) {
-                       
+
                         gateway.optimizers.forEach(optimizer => {
                             // Normalize optimizer data structure
                             const normalizedOptimizer = {
@@ -40,21 +40,21 @@ module.exports = function (agenda) {
                             };
 
                             // Check if optimizer has the expected properties
-                            if (normalizedOptimizer.OptimizerID ) {
+                            if (normalizedOptimizer.OptimizerID) {
                                 optimizerIdArr.push(normalizedOptimizer.OptimizerID);
                             }
                         });
                     }
-                    
+
                     const latestRecord = await findLatestRecords(optimizerIdArr);
-                
+
                     if (latestRecord && latestRecord.length > 0) {
                         const lastRunRecord = await AmbientModel.findOne().sort({ RunID: -1 });
                         const runId = lastRunRecord && !isNaN(Number(lastRunRecord.RunID)) ? Number(lastRunRecord.RunID) + 1 : 1;
                         const chunkSize = 2;
 
                         for (let i = 0; i < latestRecord.length; i += chunkSize) {
-                            const batchId = i / chunkSize + 1; 
+                            const batchId = i / chunkSize + 1;
                             const recordsToInsert = [];
 
                             for (const entry of latestRecord) {
@@ -63,47 +63,49 @@ module.exports = function (agenda) {
                                     GID: entry.GatewayID,
                                     OID: entry.OptimizerID,
                                     TimeStamp: entry.TimeStamp,
-                                    TempUT: entry.RoomTemperature,
+                                    TempUT: "C",
                                     AmbTemp: temp,
                                     AmbHum: humidity,
-                                    HumUT: entry.Humidity,
+                                    HumUT: "%",
                                     RunID: runId,
                                     BatchID: batchId,
                                     Type: "AmbientInfo"
                                 };
                                 recordsToInsert.push(newRecord);
                             }
-                             // Insert all records ---------
+                            // Insert all records ---------
                             const insertedRecords = await AmbientModel.insertMany(recordsToInsert);
-            
+
                             // Generate a single groupId for the entire chunk
                             const groupId = `${insertedRecords[0].RunID}-${insertedRecords[0].BatchID}`;
 
                             //create the `Message` array
                             const chunk = {
-                                groupId: groupId, // Same groupId for all records in this chunk
-                                Message: insertedRecords.map(record => {
+                                GroupMsgId: groupId, // Same groupId for all records in this chunk
+                                Messages: insertedRecords.map(record => {
                                     // Convert Unix timestamp to human-readable format using moment.js
                                     const humanReadableTimeStamp = moment.unix(record.TimeStamp).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
+                                    // Convert createdAt to human-readable format
+                                    const humanReadableCreatedAt = moment(record.createdAt).format('YYYY-MM-DD HH:mm:ss'); // Adjust format as needed
 
                                     return {
                                         MessageId: record._id.toString(),
                                         OptimizerId: record.OID,      // Include the _id of newRecord
                                         GatewayId: record.GID,
-                                        TempUnit: record.TempUT,
+                                        TempUnit: "C",
                                         AmbientTemp: record.AmbTemp,
                                         AmbientHumidity: record.AmbHum,
-                                        HumidityUnit: record.HumUT,
+                                        HumidityUnit: "%",
                                         Time: humanReadableTimeStamp, // Human-readable timestamp
-                                        MessageTime: record.createdAt,
+                                        MessageTime: humanReadableCreatedAt,
                                         Type: record.Type
                                     };
                                 })
                             };
                             // Send the chunk with the _id, groupId, and other fields to SendAudit
-                            const SendAuditResp = await SendAudit(chunk); // Assuming SendAudit accepts the chunk with groupId
+                            const SendAuditResp = await SendAmbientAudit(chunk); // Assuming SendAudit accepts the chunk with groupId
                         }
-                        
+
                     } else {
                         console.log('No records found in Ambient Info');
                     }
@@ -113,7 +115,7 @@ module.exports = function (agenda) {
             console.error('Error while storing record:', err);
         }
     });
-    
+
     const LocationKey = async (lat, long) => {
         let config = {
             method: 'get',
@@ -154,7 +156,7 @@ module.exports = function (agenda) {
     async function findLatestRecords(optimizerIdArr) {
         try {
             const objectIdArray = optimizerIdArr.map(id => new mongoose.Types.ObjectId(id));
-      
+
             // Get the current Unix timestamp and 5 minutes back
             const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
             const fiveMinutesAgo = currentTime - (25 * 60); // 5 minutes ago in seconds
@@ -185,22 +187,22 @@ module.exports = function (agenda) {
                     $replaceRoot: { newRoot: "$latestRecord" } // Replace root with the latest record
                 },
                 {
-                    $lookup:{
-                        from:"optimizers",
+                    $lookup: {
+                        from: "optimizers",
                         localField: "OptimizerID",
                         foreignField: "_id",
-                        as:"OptimizerIDs"
+                        as: "OptimizerIDs"
                     }
                 },
                 {
                     $unwind: "$OptimizerIDs" // Converts optimizerData array into an object
                 },
                 {
-                    $lookup:{
-                        from:"gateways",
+                    $lookup: {
+                        from: "gateways",
                         localField: "GatewayID",
                         foreignField: "_id",
-                        as:"GatewayIDs"
+                        as: "GatewayIDs"
                     }
                 },
                 {

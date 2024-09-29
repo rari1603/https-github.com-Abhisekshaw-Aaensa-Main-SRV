@@ -28,7 +28,7 @@ module.exports = function (agenda) {
 
                 const runId = lastRunRecord && !isNaN(Number(lastRunRecord.runId)) ? Number(lastRunRecord.runId) + 1 : 1;
 
-                const chunkSize = 2;
+                const chunkSize = 50;
 
                 for (let i = 0; i < latestRecord.length; i += chunkSize) {
                     const batchId = i / chunkSize + 1; // BatchId starts from 1 for each new runId

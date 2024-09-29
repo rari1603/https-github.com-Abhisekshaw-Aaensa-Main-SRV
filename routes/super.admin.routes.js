@@ -57,6 +57,13 @@ router.get('/get/optimizer/details/:optimizer_id', [verifyToken, logMiddleware('
 
 // Gateway details
 router.get('/get/gateway/details/:gateway_id', [verifyToken, logMiddleware('info', 'info-read-gatewayDetails')], EnterpriseController.GatewayDetails);
+
+// single call for all details (enterprise, state, location, gateway, optimizer)
+router.get('/get/enterprise/:enterprise_id', [verifyToken], EnterpriseController.SingleEnterpriseData);
+
+// single call for all details (enterprise, state, location, gateway, optimizer)
+router.get('/get/enterprise', [verifyToken], EnterpriseController.AllEnterpriseData);
+
 /*********** END ENTERPRISE ROUTES ***********/
 
 /*********** START ENTERPRISE ADD & UPDATE ***********/

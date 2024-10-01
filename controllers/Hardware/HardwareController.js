@@ -371,7 +371,7 @@ exports.Store = async (req, res) => {
         if (GatewayTimeChanged) {
             // gatewayReceivedTimes.set(gateway_id, GateayTimeStamp);
             // gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
-            return res.status(200).json({
+            return res.status(500).json({
                 status: "TMS",
                 errorcode: "G-003",
                 timestamp: currentServerTimeStamp,

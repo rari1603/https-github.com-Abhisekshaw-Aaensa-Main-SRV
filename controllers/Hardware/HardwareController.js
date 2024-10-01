@@ -225,7 +225,6 @@ exports.Store = async (req, res) => {
 
 
         //----------Check for Gateway Time Problems------------------//
-        // const currentMTime = gatewayLog.createdAt;
         const currentServerTimeStamp = Math.floor(new Date().getTime() / 1000);
         const previousServerTimeStamp = gatewayStoredTimes.get(gateway_id) ? gatewayStoredTimes.get(gateway_id) : "0";
 
@@ -237,7 +236,6 @@ exports.Store = async (req, res) => {
         const GatewayTimeChanged = false;
         if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
 
-       
             errorCounts.set(gateway_id, 0);
             const deviceStatus = new DeviceRebootStatusModel({
                 GatewayID: gateway_id,
@@ -377,7 +375,7 @@ exports.Store = async (req, res) => {
                 status: "TMS",
                 errorcode: "G-003",
                 timestamp: currentServerTimeStamp,
-                gatewayLog,
+                // gatewayLog,
 
             });
         } else {
@@ -385,7 +383,8 @@ exports.Store = async (req, res) => {
             errorCounts.set(gateway_id, 0);
             // Return success response
             return res.status(200).send({
-                success: true, status: "OK", timestamp: currentServerTimeStamp, gatewayLog
+                success: true, status: "OK", timestamp: currentServerTimeStamp,
+                //  gatewayLog
             });
         }
 

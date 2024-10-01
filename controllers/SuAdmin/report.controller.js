@@ -2369,7 +2369,7 @@ exports.AcOnOff = async (req, res) => {
                 //return res.status(404).json({ message: "No optimizer IDs found for the given Gateway ID" });
                 return res.status(200).json({
                     success: true,
-                    message: "Ac data fetched successfully",
+                    message: "No optimizer IDs found for the given Gateway ID",
                     data: []
                 })
             }

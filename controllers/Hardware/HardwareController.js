@@ -233,7 +233,7 @@ exports.Store = async (req, res) => {
 
         const gatewayTimeDiff = (currentMessageTimeStamp - lastMessageTime);
         const messageTimeDiff = (currentServerTimeStamp - previousServerTimeStamp);
-        const GatewayTimeChanged = false;
+        let GatewayTimeChanged = false;
         if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
             console.log("time mismatched condition 101000000000000");
 

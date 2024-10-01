@@ -223,7 +223,7 @@ exports.Store = async (req, res) => {
             return acc;
         }, {});
 
-        let GateayTimeStamp=TimeStamp
+        let GateayTimeStamp = TimeStamp
         //----------Check for Gateway Time Problems------------------//
         const currentServerTimeStamp = Math.floor(new Date().getTime() / 1000);
         const previousServerTimeStamp = gatewayStoredTimes.get(gateway_id) ? gatewayStoredTimes.get(gateway_id) : "0";
@@ -235,6 +235,7 @@ exports.Store = async (req, res) => {
         const messageTimeDiff = (currentServerTimeStamp - previousServerTimeStamp);
         const GatewayTimeChanged = false;
         if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
+            console.log("time mismatched condition 101000000000000");
 
             errorCounts.set(gateway_id, 0);
             const deviceStatus = new DeviceRebootStatusModel({
@@ -325,7 +326,7 @@ exports.Store = async (req, res) => {
                 const data = {
                     Opt_id: optimizer._id,
                     OptimizerID: optimizer.OptimizerID,
-                    DeviceStatus: false,  
+                    DeviceStatus: false,
                     CompStatus: "--",
                     OptimizerMode: "--",
                     TimeStamp: Math.floor(new Date().getTime() / 1000), // Unix timestamp
@@ -369,20 +370,19 @@ exports.Store = async (req, res) => {
         gatewayReceivedTimes.set(gateway_id, currentServerTimeStamp);
         gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
         if (GatewayTimeChanged) {
-            // gatewayReceivedTimes.set(gateway_id, GateayTimeStamp);
-            // gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
-            // return res.status(500).json({
-            //     status: "TMS",
-            //     errorcode: "G-003",
-            //     timestamp: currentServerTimeStamp,
-            //     // gatewayLog,
+            console.log("time mismatch condition");
 
-            // });
+            gatewayReceivedTimes.set(gateway_id, GateayTimeStamp);
+            gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
+            return res.status(500).json({
+                status: "TMS",
+                errorcode: "G-003",
+                timestamp: currentServerTimeStamp,
+                // gatewayLog,
 
-            return res.status(200).send({
-                success: true, status: "TMS", timestamp: currentServerTimeStamp,
-                //  gatewayLog
             });
+
+
         } else {
 
             errorCounts.set(gateway_id, 0);

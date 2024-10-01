@@ -369,8 +369,6 @@ exports.Store = async (req, res) => {
         gatewayReceivedTimes.set(gateway_id, currentServerTimeStamp);
         gatewayStoredTimes.set(gateway_id, TimeStamp);
         if (GatewayTimeChanged) {
-            console.log("time mismatch condition");
-
             gatewayReceivedTimes.set(gateway_id, TimeStamp);
             gatewayStoredTimes.set(gateway_id, TimeStamp);
 

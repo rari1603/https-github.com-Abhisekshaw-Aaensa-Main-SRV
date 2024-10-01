@@ -247,6 +247,8 @@ exports.Store = async (req, res) => {
             await deviceStatus.save()
             GatewayTimeChanged = true;
             GateayTimeStamp = currentServerTimeStamp;
+            console.log("this is after mismatch %%%%%%%");
+            
         }
         //--------------Check for Gateway Time Problems end--------------//
 

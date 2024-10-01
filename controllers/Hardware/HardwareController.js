@@ -209,7 +209,7 @@ exports.Store = async (req, res) => {
 
 
         const gatewayId = gateway._id;
-        const { TimeStamp, Phases, KVAH, KWH, PF } = data;
+        let { TimeStamp, Phases, KVAH, KWH, PF } = data;
 
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {

@@ -209,7 +209,7 @@ exports.Store = async (req, res) => {
 
 
         const gatewayId = gateway._id;
-        let { TimeStamp, Phases, KVAH, KWH, PF } = data;
+        const { TimeStamp, Phases, KVAH, KWH, PF } = data;
 
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
@@ -223,12 +223,12 @@ exports.Store = async (req, res) => {
             return acc;
         }, {});
 
-
+        let GateayTimeStamp=TimeStamp
         //----------Check for Gateway Time Problems------------------//
         const currentServerTimeStamp = Math.floor(new Date().getTime() / 1000);
         const previousServerTimeStamp = gatewayStoredTimes.get(gateway_id) ? gatewayStoredTimes.get(gateway_id) : "0";
 
-        const currentMessageTimeStamp = TimeStamp;
+        const currentMessageTimeStamp = GateayTimeStamp;
         const lastMessageTime = gatewayReceivedTimes.get(gateway_id) ? gatewayReceivedTimes.get(gateway_id) : "0";
 
         const gatewayTimeDiff = (currentMessageTimeStamp - lastMessageTime);
@@ -240,18 +240,18 @@ exports.Store = async (req, res) => {
             const deviceStatus = new DeviceRebootStatusModel({
                 GatewayID: gateway_id,
                 storeTime: currentServerTimeStamp,  // Set storeTime as the currentServerTimeStamp
-                receivedTime: TimeStamp  // Set receivedTime as the TimeStamp
+                receivedTime: GateayTimeStamp  // Set receivedTime as the TimeStamp
             });
             // Save the document to the database
             await deviceStatus.save()
             GatewayTimeChanged = true;
-            TimeStamp = currentServerTimeStamp;
+            GateayTimeStamp = currentServerTimeStamp;
         }
         //--------------Check for Gateway Time Problems end--------------//
 
         const gatewayLog = await GatewayLogModel({
             GatewayID: gatewayId,
-            TimeStamp: TimeStamp,
+            TimeStamp: GateayTimeStamp,
             Phases: sanitizedPhases,
             KVAH: handleNaN(KVAH).toFixed(2),
             KWH: handleNaN(KWH).toFixed(2),
@@ -274,7 +274,7 @@ exports.Store = async (req, res) => {
                     DeviceStatus: true,
                     CompStatus: element.CompStatus,
                     OptimizerMode: element.OptimizerMode,
-                    TimeStamp: TimeStamp, // Unix timestamp
+                    TimeStamp: GateayTimeStamp, // Unix timestamp
                     Flag: "ONLINE",
                     Ac_Status: element.Ac_Status,
                 }
@@ -300,7 +300,7 @@ exports.Store = async (req, res) => {
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
                     DeviceStatus: true, // optimizer.isOnline,
-                    TimeStamp: TimeStamp,
+                    TimeStamp: GateayTimeStamp,
                     RoomTemperature: element.RoomTemperature,
                     Humidity: (element.Humidity).toFixed(2),
                     CoilTemperature: element.CoilTemperature,
@@ -325,7 +325,7 @@ exports.Store = async (req, res) => {
                 const data = {
                     Opt_id: optimizer._id,
                     OptimizerID: optimizer.OptimizerID,
-                    DeviceStatus: false,
+                    DeviceStatus: false,  
                     CompStatus: "--",
                     OptimizerMode: "--",
                     TimeStamp: Math.floor(new Date().getTime() / 1000), // Unix timestamp
@@ -353,7 +353,7 @@ exports.Store = async (req, res) => {
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
                     DeviceStatus: false, // optimizer.isOnline,
-                    TimeStamp: TimeStamp,
+                    TimeStamp: GateayTimeStamp,
                     RoomTemperature: 0,
                     Humidity: 0,
                     CoilTemperature: 0,
@@ -367,10 +367,10 @@ exports.Store = async (req, res) => {
         console.log({ success: true, message: "Logs created successfully", gatewayLog, OptimizerLogModel });
 
         gatewayReceivedTimes.set(gateway_id, currentServerTimeStamp);
-        gatewayStoredTimes.set(gateway_id, TimeStamp);
+        gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
         if (GatewayTimeChanged) {
-            // gatewayReceivedTimes.set(gateway_id, TimeStamp);
-            // gatewayStoredTimes.set(gateway_id, TimeStamp);
+            // gatewayReceivedTimes.set(gateway_id, GateayTimeStamp);
+            // gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
             return res.status(200).json({
                 status: "TMS",
                 errorcode: "G-003",

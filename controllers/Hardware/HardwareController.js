@@ -209,7 +209,7 @@ exports.Store = async (req, res) => {
 
 
         const gatewayId = gateway._id;
-        const { TimeStamp, Phases, KVAH, KWH, PF } = data;
+        let { TimeStamp, Phases, KVAH, KWH, PF } = data;
 
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
@@ -223,38 +223,35 @@ exports.Store = async (req, res) => {
             return acc;
         }, {});
 
-        let GateayTimeStamp = TimeStamp
         //----------Check for Gateway Time Problems------------------//
         const currentServerTimeStamp = Math.floor(new Date().getTime() / 1000);
         const previousServerTimeStamp = gatewayStoredTimes.get(gateway_id) ? gatewayStoredTimes.get(gateway_id) : "0";
 
-        const currentMessageTimeStamp = GateayTimeStamp;
+        const currentMessageTimeStamp = TimeStamp;
         const lastMessageTime = gatewayReceivedTimes.get(gateway_id) ? gatewayReceivedTimes.get(gateway_id) : "0";
 
         const gatewayTimeDiff = (currentMessageTimeStamp - lastMessageTime);
         const messageTimeDiff = (currentServerTimeStamp - previousServerTimeStamp);
         let GatewayTimeChanged = false;
         if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
-            console.log("time mismatched condition 101000000000000");
 
             errorCounts.set(gateway_id, 0);
             const deviceStatus = new DeviceRebootStatusModel({
                 GatewayID: gateway_id,
                 storeTime: currentServerTimeStamp,  // Set storeTime as the currentServerTimeStamp
-                receivedTime: GateayTimeStamp  // Set receivedTime as the TimeStamp
+                receivedTime: TimeStamp  // Set receivedTime as the TimeStamp
             });
             // Save the document to the database
             await deviceStatus.save()
             GatewayTimeChanged = true;
-            console.log("this is after mismatch line 249 %%%%%%%%%");
-            GateayTimeStamp = currentServerTimeStamp;
-            
+            TimeStamp = currentServerTimeStamp;
+
         }
         //--------------Check for Gateway Time Problems end--------------//
 
         const gatewayLog = await GatewayLogModel({
             GatewayID: gatewayId,
-            TimeStamp: GateayTimeStamp,
+            TimeStamp: TimeStamp,
             Phases: sanitizedPhases,
             KVAH: handleNaN(KVAH).toFixed(2),
             KWH: handleNaN(KWH).toFixed(2),
@@ -277,7 +274,7 @@ exports.Store = async (req, res) => {
                     DeviceStatus: true,
                     CompStatus: element.CompStatus,
                     OptimizerMode: element.OptimizerMode,
-                    TimeStamp: GateayTimeStamp, // Unix timestamp
+                    TimeStamp: TimeStamp, // Unix timestamp
                     Flag: "ONLINE",
                     Ac_Status: element.Ac_Status,
                 }
@@ -303,7 +300,7 @@ exports.Store = async (req, res) => {
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
                     DeviceStatus: true, // optimizer.isOnline,
-                    TimeStamp: GateayTimeStamp,
+                    TimeStamp: TimeStamp,
                     RoomTemperature: element.RoomTemperature,
                     Humidity: (element.Humidity).toFixed(2),
                     CoilTemperature: element.CoilTemperature,
@@ -356,7 +353,7 @@ exports.Store = async (req, res) => {
                     GatewayID: gatewayId,
                     GatewayLogID: gatewayLog._id,
                     DeviceStatus: false, // optimizer.isOnline,
-                    TimeStamp: GateayTimeStamp,
+                    TimeStamp: TimeStamp,
                     RoomTemperature: 0,
                     Humidity: 0,
                     CoilTemperature: 0,
@@ -370,12 +367,13 @@ exports.Store = async (req, res) => {
         console.log({ success: true, message: "Logs created successfully", gatewayLog, OptimizerLogModel });
 
         gatewayReceivedTimes.set(gateway_id, currentServerTimeStamp);
-        gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
+        gatewayStoredTimes.set(gateway_id, TimeStamp);
         if (GatewayTimeChanged) {
             console.log("time mismatch condition");
 
-            gatewayReceivedTimes.set(gateway_id, GateayTimeStamp);
-            gatewayStoredTimes.set(gateway_id, GateayTimeStamp);
+            gatewayReceivedTimes.set(gateway_id, TimeStamp);
+            gatewayStoredTimes.set(gateway_id, TimeStamp);
+
             return res.status(500).json({
                 status: "TMS",
                 errorcode: "G-003",

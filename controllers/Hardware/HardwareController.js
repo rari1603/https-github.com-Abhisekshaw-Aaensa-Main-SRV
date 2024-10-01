@@ -246,8 +246,8 @@ exports.Store = async (req, res) => {
             // Save the document to the database
             await deviceStatus.save()
             GatewayTimeChanged = true;
+            console.log("this is after mismatch line 249 %%%%%%%%%");
             GateayTimeStamp = currentServerTimeStamp;
-            console.log("this is after mismatch %%%%%%%");
             
         }
         //--------------Check for Gateway Time Problems end--------------//

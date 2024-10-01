@@ -244,7 +244,7 @@ exports.Store = async (req, res) => {
             });
             // Save the document to the database
             await deviceStatus.save()
-             GatewayTimeChanged = true;
+            GatewayTimeChanged = true;
             TimeStamp = currentServerTimeStamp;
         }
         //--------------Check for Gateway Time Problems end--------------//
@@ -371,7 +371,7 @@ exports.Store = async (req, res) => {
         if (GatewayTimeChanged) {
             // gatewayReceivedTimes.set(gateway_id, TimeStamp);
             // gatewayStoredTimes.set(gateway_id, TimeStamp);
-            return res.status(500).json({
+            return res.status(200).json({
                 status: "TMS",
                 errorcode: "G-003",
                 timestamp: currentServerTimeStamp,

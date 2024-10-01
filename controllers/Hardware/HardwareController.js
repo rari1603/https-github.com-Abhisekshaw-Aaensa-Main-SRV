@@ -372,7 +372,7 @@ exports.Store = async (req, res) => {
             gatewayReceivedTimes.set(gateway_id, TimeStamp);
             gatewayStoredTimes.set(gateway_id, TimeStamp);
 
-            return res.status(500).json({
+            return res.status(200).json({
                 status: "TMS",
                 errorcode: "G-003",
                 timestamp: currentServerTimeStamp,

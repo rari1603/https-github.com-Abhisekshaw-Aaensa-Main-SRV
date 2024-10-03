@@ -11,10 +11,9 @@ const OptimizerByPass = new mongoose.Schema({
     GatewayID: {
         type: String
         },
-    ByPassSchedule: { type: String, required: true },
-    ByPassTime: { type: String },  // Updated to String
-    scheduleStartTime: { type: String},  
-    scheduleEndTime: { type: String },      // Updated to String
+    ByPassType: { type: String, required: true },
+    startTime: { type: String},  
+    endTime: { type: String },      // Updated to String
     Status: { type: String}, 
 }, { timestamps: true });
 

@@ -899,91 +899,6 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 };
 
 // Optimizer switch bypass
-// exports.BypassOptimizers = async (req, res) => {
-//     logger.info("bypass optimizer API is running");
-//     const { OptimizerId, Status, ByPassSchedule, ByPassTime, scheduleStartTime, scheduleEndTime, GatewayID } = req.body;
-
-//     try {
-//         let optimizerIds = [];
-//         if (!OptimizerId) {
-//             // If GatewayID is provided but OptimizerId is not, fetch optimizer IDs from the GatewayModel
-//             const optids = await GatewayModel.aggregate([
-//                 {
-//                     $match: {
-//                         GatewayID: GatewayID,
-//                     }
-//                 },
-//                 {
-//                     $lookup: {
-//                         from: "optimizers",
-//                         localField: "_id",
-//                         foreignField: "GatewayId",
-//                         as: "optimizerInfo"
-//                     }
-//                 },
-//                 {
-//                     $unwind: "$optimizerInfo"
-//                 },
-//                 {
-//                     $group: {
-//                         _id: "$GatewayID",
-//                         optimizerIds: {
-//                             $addToSet: "$optimizerInfo.OptimizerID"
-//                         }
-//                     }
-//                 }
-//             ]).exec();
-
-//             if (!optids.length) {
-//                 return res.status(200).json({
-//                     success: true,
-//                     message: "No optimizer IDs found for the given Gateway ID",
-//                     data: []
-//                 });
-//             }
-
-//             optimizerIds = optids[0].optimizerIds;
-
-//         } else {
-//             optimizerIds = OptimizerId;
-//         }
-
-//         // Helper function to create and save OptimizerByPass
-//         const createOptimizerByPass = async (startTime, endTime, status) => {
-//             const optimizerByPassDataArray = optimizerIds.map(optimizerId => ({
-//                 GatewayID: GatewayID._id,
-//                 OptimizerId: optimizerId,
-//                 ByPassSchedule,
-//                 ByPassTime,
-//                 scheduleStartTime: startTime || "",  // Pass empty string if not provided
-//                 scheduleEndTime: endTime || "",      // Pass empty string if not provided
-//                 Status: status
-//             }));
-
-//             // Insert all the documents at once using insertMany
-//             await OptimizerByPassModel.insertMany(optimizerByPassDataArray);
-//         };
-
-//         // Conditions for bypass logic
-//         if (Status === "Active") {
-//             if (scheduleStartTime) {
-//                 await createOptimizerByPass(scheduleStartTime, "", Status);
-//             }
-//             if (scheduleEndTime) {
-//                 await createOptimizerByPass("", scheduleEndTime, Status);
-//             }
-//         } else if (Status === "InActive") {
-//             await createOptimizerByPass("", scheduleEndTime, Status === "Active");
-//         }
-//         // Response based on the conditions
-//         return res.status(200).json({ success: true, message: "Bypass operation completed successfully." });
-
-//     } catch (error) {
-//         logger.error({ error: error.message });
-//         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
-//     }
-// };
-
 exports.BypassOptimizers = async (req, res) => {
     logger.info("----------bypass optimizer API is running-------");
     const { OptimizerId, ByPassType, Status, startTime, endTime, GatewayID } = req.body;
@@ -1069,6 +984,7 @@ exports.BypassOptimizers = async (req, res) => {
         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
+////for instant bypass on/off---------
 exports.BypassOnOff = async (req, res) => {
     const { OptimizerId, ByPassType, Status, startTime, endTime, GatewayID } = req.body;
     // Check if required fields are present in the request body
@@ -1160,6 +1076,7 @@ exports.BypassOnOff = async (req, res) => {
         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
+//for schedule delete ----
 exports.BypassDelete = async (req, res) => {
     logger.info("----------bypass optimizer delete of api is running-------");
 

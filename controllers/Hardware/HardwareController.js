@@ -898,7 +898,7 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
     }
 };
 
-///API 1-----
+///API 1-----schedule
 exports.BypassOptimizers = async (req, res) => {
     logger.info("----------bypass optimizer api is running-------");
     const { OptimizerId, startTime, endTime, GatewayID } = req.body;

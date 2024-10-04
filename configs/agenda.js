@@ -36,10 +36,10 @@ AC_ON_OFF_JOB(agenda);
     console.log("Agenda Started");
 
   // Clear any existing jobs to prevent duplication
-    await agenda.cancel({ name: 'EnergyMeterAudit' });
-    await agenda.cancel({ name: 'ambientInfo_Job' });
-    await agenda.cancel({ name: 'Optimizer_Agg_job' });
-    await agenda.cancel({ name: 'AC_ON_OFF_JOB' });
+    // await agenda.cancel({ name: 'EnergyMeterAudit' });
+    // await agenda.cancel({ name: 'ambientInfo_Job' });
+    // await agenda.cancel({ name: 'Optimizer_Agg_job' });
+    // await agenda.cancel({ name: 'AC_ON_OFF_JOB' });
     
     //Check when the next execution time is for a specific job
     const nextRunAcOnOffJob = await agenda.jobs({ name: 'AC_ON_OFF_JOB' }, { nextRunAt: 1 });

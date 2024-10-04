@@ -238,8 +238,8 @@ exports.Store = async (req, res) => {
             errorCounts.set(gateway_id, 0);
             const deviceStatus = new DeviceRebootStatusModel({
                 GatewayID: gateway_id,
-                storeTime: currentServerTimeStamp,  // Set storeTime as the currentServerTimeStamp
-                receivedTime: TimeStamp  // Set receivedTime as the TimeStamp
+                storeTime: currentServerTimeStamp*1000,  // Set storeTime as the currentServerTimeStamp in millis
+                receivedTime: TimeStamp*1000  // Set receivedTime as the TimeStamp in millis
             });
             // Save the document to the database
             await deviceStatus.save()

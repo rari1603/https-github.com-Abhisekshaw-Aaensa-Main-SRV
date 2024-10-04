@@ -900,17 +900,18 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
 
 ///API 1-----
 exports.BypassOptimizers = async (req, res) => {
-    logger.info("----------bypass optimizer API is running-------");
-    const { OptimizerId, ByPassType, Status, startTime, endTime, GatewayID } = req.body;
-
+    logger.info("----------bypass optimizer api is running-------");
+    const { OptimizerId, startTime, endTime, GatewayID } = req.body;
+  
     // Check if required fields are present in the request body
-    if (!ByPassType || !Status || !startTime  || !endTime || !GatewayID) {
+    if (!startTime  || !endTime || !GatewayID) {
         return res.status(400).json({
             success: false,
             message: "Missing required fields: ByPassType, Status, startTime, endTime, or GatewayID"
         });
     }
-
+    let Status = "active";
+    let ByPassType = "schedule";
     try {
         let optimizerIds = [];
         if (!OptimizerId || !OptimizerId.length) {
@@ -954,43 +955,40 @@ exports.BypassOptimizers = async (req, res) => {
         } else {
             optimizerIds = [OptimizerId];
         }
-// Check if any existing bypass with Status "on" exists for the same GatewayID and OptimizerId
-const existingByPass = await OptimizerByPassModel.findOne({
+// Check if any existing bypass with Status "active" exists for the same GatewayID and OptimizerId
+const existingByPass = await OptimizerByPassModel.find({
     GatewayID: GatewayID,
     OptimizerId: { $in: optimizerIds },
-    Status: "on"
+    Status: "active"
 });
 
-if (existingByPass) {
+// If the existingByPass array contains documents, a bypass already exists
+if (existingByPass.length > 0) {
     return res.status(400).json({
         success: false,
-        message: "A bypass with Status 'on' already exists for the provided GatewayID and OptimizerId(s)."
+        message: "A bypass with Status 'active' already exists for the provided GatewayID and OptimizerId(s)."
     });
 }
-        // Proceed only if ByPassType is "schedule" and Status is "on"
-        if (Status === "on" && ByPassType === "schedule" && startTime) {
-            // Helper function to create and save OptimizerByPass
-            const optimizerByPassDataArray = optimizerIds.map(optimizerId => ({
-                GatewayID: GatewayID,  
-                OptimizerId: optimizerId,
-                ByPassType,
-                Status,
-                startTime,  
-                endTime  
-            }));
-            
-            // Insert all the documents at once using insertMany
-            await OptimizerByPassModel.insertMany(optimizerByPassDataArray);
+     // If no existing bypass is found, proceed with creating the new bypass
+if (Status === "active" && ByPassType === "schedule" && startTime) {
+    const optimizerByPassDataArray = optimizerIds.map(optimizerId => ({
+        GatewayID: GatewayID,  
+        OptimizerId: optimizerId,
+        ByPassType,
+        Status,
+        startTime,  
+        endTime  
+    }));
 
-            // Response after successful operation
-            return res.status(200).json({ success: true, message: "Bypass schedule created successfully." });
-        } else {
-            return res.status(400).json({
-                success: false,
-                message: "ByPassType must be 'schedule' and Status must be 'on' to create the bypass."
-            });
-        }
+    await OptimizerByPassModel.insertMany(optimizerByPassDataArray);
 
+    return res.status(200).json({ success: true, message: "Bypass schedule created successfully." });
+} else {
+    return res.status(400).json({
+        success: false,
+        message: "ByPassType must be 'schedule' and Status must be 'active' to create the bypass."
+    });
+}
     } catch (error) {
         logger.error({ error: error.message });
         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
@@ -1121,14 +1119,13 @@ exports.BypassDelete = async (req, res) => {
             message: "Missing required fields: ByPassType, Status, OptimizerId, or GatewayID"
         });
     }
-
     try {
         // Check if there is an active record with ByPassType = "schedule" and Status = "on"
-        const activeBypassRecord = await OptimizerByPassModel.findOne({
-            OptimizerId: OptimizerId,
+        const activeBypassRecord = await OptimizerByPassModel.find({
+            OptimizerId: { $in: OptimizerId },
             GatewayID: GatewayID,
             ByPassType: "schedule",
-            Status: "on"
+            Status: "active"
         });
 
         // If an active bypass record exists, update it with endTime as "now"
@@ -1136,9 +1133,9 @@ exports.BypassDelete = async (req, res) => {
             const now = Math.floor(Date.now() / 1000)
 
             // Update the record's endTime and Status to "off"
-            await OptimizerByPassModel.updateOne(
+            await OptimizerByPassModel.updateMany(
                 { _id: activeBypassRecord._id },
-                { $set: { endTime: now, Status: "off" } }
+                { $set: { endTime: now} }
             );
 
             return res.status(200).json({

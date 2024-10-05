@@ -209,7 +209,7 @@ exports.Store = async (req, res) => {
 
 
         const gatewayId = gateway._id;
-        const { TimeStamp, Phases, KVAH, KWH, PF } = data;
+        let { TimeStamp, Phases, KVAH, KWH, PF } = data;
 
         // Convert "nan" values to 0
         const sanitizedPhases = Object.keys(Phases).reduce((acc, phase) => {
@@ -223,9 +223,7 @@ exports.Store = async (req, res) => {
             return acc;
         }, {});
 
-
         //----------Check for Gateway Time Problems------------------//
-        // const currentMTime = gatewayLog.createdAt;
         const currentServerTimeStamp = Math.floor(new Date().getTime() / 1000);
         const previousServerTimeStamp = gatewayStoredTimes.get(gateway_id) ? gatewayStoredTimes.get(gateway_id) : "0";
 
@@ -234,20 +232,20 @@ exports.Store = async (req, res) => {
 
         const gatewayTimeDiff = (currentMessageTimeStamp - lastMessageTime);
         const messageTimeDiff = (currentServerTimeStamp - previousServerTimeStamp);
-        const GatewayTimeChanged = false;
+        let GatewayTimeChanged = false;
         if (Math.abs(gatewayTimeDiff - messageTimeDiff) > 7200) {
 
-       
             errorCounts.set(gateway_id, 0);
             const deviceStatus = new DeviceRebootStatusModel({
                 GatewayID: gateway_id,
-                storeTime: currentMTime,  // Set storeTime as the currentMTime
-                receivedTime: TimeStamp  // Set receivedTime as the TimeStamp
+                storeTime: currentServerTimeStamp*1000,  // Set storeTime as the currentServerTimeStamp in millis
+                receivedTime: TimeStamp*1000  // Set receivedTime as the TimeStamp in millis
             });
             // Save the document to the database
             await deviceStatus.save()
-             GatewayTimeChanged = true;
+            GatewayTimeChanged = true;
             TimeStamp = currentServerTimeStamp;
+
         }
         //--------------Check for Gateway Time Problems end--------------//
 
@@ -371,21 +369,25 @@ exports.Store = async (req, res) => {
         gatewayReceivedTimes.set(gateway_id, currentServerTimeStamp);
         gatewayStoredTimes.set(gateway_id, TimeStamp);
         if (GatewayTimeChanged) {
-            // gatewayReceivedTimes.set(gateway_id, TimeStamp);
-            // gatewayStoredTimes.set(gateway_id, TimeStamp);
-            return res.status(500).json({
+            gatewayReceivedTimes.set(gateway_id, TimeStamp);
+            gatewayStoredTimes.set(gateway_id, TimeStamp);
+
+            return res.status(200).json({
                 status: "TMS",
                 errorcode: "G-003",
                 timestamp: currentServerTimeStamp,
-                gatewayLog,
+                // gatewayLog,
 
             });
+
+
         } else {
 
             errorCounts.set(gateway_id, 0);
             // Return success response
             return res.status(200).send({
-                success: true, status: "OK", timestamp: currentServerTimeStamp, gatewayLog
+                success: true, status: "OK", timestamp: currentServerTimeStamp,
+                //  gatewayLog
             });
         }
 

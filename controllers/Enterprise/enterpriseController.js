@@ -160,7 +160,185 @@ exports.SingleEnterpriseData = async (req, res) => {
 // AllEnterpriseData
 exports.AllEnterpriseData = async (req, res) => {
     try {        
-        const AllEnt = await EnterpriseAdminModel.aggregate([{$lookup: {from: "enterprisestates",localField: "_id",foreignField: "Enterprise_ID",as: "stateData"}},{ $unwind: "$stateData" },{$lookup: {from: "enterprisestatelocations",localField: "stateData.Enterprise_ID",foreignField: "Enterprise_ID",as: "locationData"}},{ $unwind: "$locationData" },  {$match: {$expr: {$eq: ["$locationData.State_ID", "$stateData.State_ID"]}}},{$lookup: {from: "states",localField: "stateData.State_ID",foreignField: "_id",as: "stateInfo"}},{ $unwind: "$stateInfo" }, {$lookup: {from: "gateways",localField: "locationData._id",foreignField: "EnterpriseInfo",as: "gatewayInfo"}},{ $unwind: "$gatewayInfo" },{$lookup: {from: "optimizers",localField: "gatewayInfo._id",foreignField: "GatewayId",as: "optimizerInfo"}},{ $unwind: "$optimizerInfo" },{$group: {_id: {enterpriseId: "$_id",stateId: "$stateData.State_ID",locationId: "$locationData._id",gtId: "$gatewayInfo._id"},enterpriseName: {$first: "$EnterpriseName"},stateName: { $first: "$stateInfo.name" },locationName: {$first: "$locationData.LocationName"},gatewayId: {$first: "$gatewayInfo.GatewayID"},ssid: {$first: "$gatewayInfo.NetworkSSID"},bypassmode: {$first: "$gatewayInfo.BypassMode"},optimizers: {$addToSet: {name: "$optimizerInfo.OptimizerName",id: "$optimizerInfo._id"}}}},{$group: {_id: {enterpriseId: "$_id.enterpriseId",stateId: "$_id.stateId",locationId: "$_id.locationId"},enterpriseName: {$first: "$enterpriseName"},stateName: { $first: "$stateName" },locationName: { $first: "$locationName" },gates: {$addToSet: {_id: "$_id.gtId",gatewayId: "$gatewayId",ssid: "$ssid",bypassmode: "$bypassmode",optimizers: "$optimizers"}}}},{$group: {_id: {enterpriseId: "$_id.enterpriseId",stateId: "$_id.stateId"},enterpriseName: {$first: "$enterpriseName"},stateName: { $first: "$stateName" },locations: {$push: {locationName: "$locationName",locId: "$_id.locationId",gateways: "$gates"}}}},{$group: {_id: { enterpriseId: "$_id.enterpriseId" },enterpriseName: {$first: "$enterpriseName"},states: {$push: {stateName: "$stateName",stateId: "$_id.stateId",locations: "$locations"}}}},{$project: {_id: 0,enterpriseName: "$enterpriseName",entepriseId: "$_id.enterpriseId",states: "$states"}}]);
+        const AllEnt = await EnterpriseAdminModel.aggregate([
+            {
+              $lookup: {
+                from: "enterprisestates",
+                localField: "_id",
+                foreignField: "Enterprise_ID",
+                as: "stateData"
+              }
+            },
+            {
+              $unwind: {
+                path: "$stateData",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $lookup: {
+                from: "enterprisestatelocations",
+                localField: "stateData.Enterprise_ID",
+                foreignField: "Enterprise_ID",
+                as: "locationData"
+              }
+            },
+            {
+              $unwind: {
+                path: "$locationData",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    "$locationData.State_ID",
+                    "$stateData.State_ID"
+                  ]
+                }
+              }
+            },
+            {
+              $lookup: {
+                from: "states",
+                localField: "stateData.State_ID",
+                foreignField: "_id",
+                as: "stateInfo"
+              }
+            },
+            {
+              $unwind: {
+                path: "$stateInfo",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $lookup: {
+                from: "gateways",
+                localField: "locationData._id",
+                foreignField: "EnterpriseInfo",
+                as: "gatewayInfo"
+              }
+            },
+            {
+              $unwind: {
+                path: "$gatewayInfo",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $lookup: {
+                from: "optimizers",
+                localField: "gatewayInfo._id",
+                foreignField: "GatewayId",
+                as: "optimizerInfo"
+              }
+            },
+            {
+              $unwind: {
+                path: "$optimizerInfo",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  enterpriseId: "$_id",
+                  stateId: "$stateData.State_ID",
+                  locationId: "$locationData._id",
+                  gtId: "$gatewayInfo._id"
+                },
+                enterpriseName: {
+                  $first: "$EnterpriseName"
+                },
+                stateName: { $first: "$stateInfo.name" },
+                locationName: {
+                  $first: "$locationData.LocationName"
+                },
+                gatewayId: {
+                  $first: "$gatewayInfo.GatewayID"
+                },
+                ssid: {
+                  $first: "$gatewayInfo.NetworkSSID"
+                },
+                bypassmode: {
+                  $first: "$gatewayInfo.BypassMode"
+                },
+                optimizers: {
+                  $addToSet: {
+                    name: "$optimizerInfo.OptimizerName",
+                    id: "$optimizerInfo._id"
+                  }
+                }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  enterpriseId: "$_id.enterpriseId",
+                  stateId: "$_id.stateId",
+                  locationId: "$_id.locationId"
+                },
+                enterpriseName: {
+                  $first: "$enterpriseName"
+                },
+                stateName: { $first: "$stateName" },
+                locationName: { $first: "$locationName" },
+                gates: {
+                  $addToSet: {
+                    _id: "$_id.gtId",
+                    gatewayId: "$gatewayId",
+                    ssid: "$ssid",
+                    bypassmode: "$bypassmode",
+                    optimizers: "$optimizers"
+                  }
+                }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  enterpriseId: "$_id.enterpriseId",
+                  stateId: "$_id.stateId"
+                },
+                enterpriseName: {
+                  $first: "$enterpriseName"
+                },
+                stateName: { $first: "$stateName" },
+                locations: {
+                  $push: {
+                    locationName: "$locationName",
+                    locId: "$_id.locationId",
+                    gateways: "$gates"
+                  }
+                }
+              }
+            },
+            {
+              $group: {
+                _id: { enterpriseId: "$_id.enterpriseId" },
+                enterpriseName: {
+                  $first: "$enterpriseName"
+                },
+                states: {
+                  $push: {
+                    stateName: "$stateName",
+                    stateId: "$_id.stateId",
+                    locations: "$locations"
+                  }
+                }
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                enterpriseName: "$enterpriseName",
+                entepriseId: "$_id.enterpriseId",
+                states: "$states"
+              }
+            }
+          ]);
         logger.debug("AllData" + JSON.stringify(AllEnt));
         return res.status(200).json({ success: true, message: "Data fetched successfully", data: AllEnt });
         

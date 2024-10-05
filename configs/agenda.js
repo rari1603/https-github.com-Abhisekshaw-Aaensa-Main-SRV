@@ -25,8 +25,8 @@ AC_ON_OFF_JOB(agenda);
 (async function () {
 
   
-  // await agenda.schedule("in 2 minutes", 'Optimizer_Hist_job');
-  // await agenda.schedule("in 1 minutes", 'Gateway_Hist_job');
+// await agenda.schedule("in 2 minutes", 'Optimizer_Hist_job');
+// await agenda.schedule("in 1 minutes", 'Gateway_Hist_job');
   
   const cmdlineargs = process.argv.slice(2);
   console.log({cmdlineargs});
@@ -35,16 +35,13 @@ AC_ON_OFF_JOB(agenda);
     await agenda.start();
     console.log("Agenda Started");
 
-       // Clear any existing jobs to prevent duplication
-      // await agenda.cancel({ name: 'EnergyMeterAudit' });
-      // await agenda.cancel({ name: 'ambientInfo_Job' });
-      // await agenda.cancel({ name: 'Optimizer_Agg_job' });
-      // await agenda.cancel({ name: 'AC_ON_OFF_JOB' });
+  // Clear any existing jobs to prevent duplication
+    // await agenda.cancel({ name: 'EnergyMeterAudit' });
+    // await agenda.cancel({ name: 'ambientInfo_Job' });
+    // await agenda.cancel({ name: 'Optimizer_Agg_job' });
+    // await agenda.cancel({ name: 'AC_ON_OFF_JOB' });
     
-
-
-
-    // Check when the next execution time is for a specific job
+    //Check when the next execution time is for a specific job
     const nextRunAcOnOffJob = await agenda.jobs({ name: 'AC_ON_OFF_JOB' }, { nextRunAt: 1 });
     if (nextRunAcOnOffJob.length > 0) {
         console.log(`Next 'AC_ON_OFF_JOB' job will run at: ${nextRunAcOnOffJob[0].attrs.nextRunAt}`);
@@ -52,8 +49,8 @@ AC_ON_OFF_JOB(agenda);
           console.log("No job scheduled, scheduling 'AC_ON_OFF_JOB' now.");
       await agenda.every('5 */3 * * *', 'AC_ON_OFF_JOB');
     }
-// '5 */3 * * *'
-    // Check when the next execution time is for a specific job
+
+    //Check when the next execution time is for a specific job
     const nextRunEnterpriseAuditMeter_job = await agenda.jobs({ name: 'EnergyMeterAudit' }, { nextRunAt: 1 });
     if (nextRunEnterpriseAuditMeter_job.length > 0) {
         console.log(`Next 'EnergyMeterAudit' job will run at: ${nextRunEnterpriseAuditMeter_job[0].attrs.nextRunAt}`);
@@ -81,11 +78,6 @@ AC_ON_OFF_JOB(agenda);
   } else {
     console.log("Cron jobs not enabled. args:" + cmdlineargs);
   }
-      // Schedule the jobs
-      // await agenda.every('5 minutes', 'EnergyMeterAudit');
-      // await agenda.every('1 hour', 'ambientInfo_Job');
-      // await agenda.every('3 hours', 'Optimizer_Agg_job');
-      // await agenda.every('3 hours', 'AC_ON_OFF_JOB');
 })();
 
 

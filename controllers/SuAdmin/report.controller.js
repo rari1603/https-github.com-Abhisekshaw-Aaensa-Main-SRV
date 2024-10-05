@@ -2332,7 +2332,7 @@ exports.AcOnOff = async (req, res) => {
 
         const startIstTimestamp = parseISTDateString(startDate);
         const endIstTimestamp = parseISTDateString(endDate);
-
+        
 
         let optimizerIds = [];
 
@@ -2341,7 +2341,7 @@ exports.AcOnOff = async (req, res) => {
             const optids = await GatewayModel.aggregate([
                 {
                     $match: {
-                        GatewayID: gateway_id
+                        _id: new objectId(gateway_id)
                     }
                 },
                 {
@@ -2366,14 +2366,20 @@ exports.AcOnOff = async (req, res) => {
             ]).exec();
 
             if (!optids.length) {
-                return res.status(404).json({ message: "No optimizer IDs found for the given Gateway ID" });
+                //return res.status(404).json({ message: "No optimizer IDs found for the given Gateway ID" });
+                return res.status(200).json({
+                    success: true,
+                    message: "No optimizer IDs found for the given Gateway ID",
+                    data: []
+                })
             }
 
             optimizerIds = optids[0].optimizerIds;
         } else {
-            optimizerIds = [new mongoose.Types.ObjectId(Optimizerid)];
+            optimizerIds = [new objectId(Optimizerid)];
         }
 
+        console.log("optimizerIds:" + optimizerIds + ", starttime:" + startIstTimestamp +", endtime:" + endIstTimestamp);
         const data = await OptimizerOnOff.aggregate([
             {
                 $match: {
@@ -2381,15 +2387,20 @@ exports.AcOnOff = async (req, res) => {
                     starttime: { $gte: startIstTimestamp },
                     endtime: { $lte: endIstTimestamp }
                 }
-            },
+            }
         ]);
         if (!data.length) {
-            return res.status(404).json({ message: "No data found for the given criteria" });
+            return res.status(200).json({
+                success: true,
+                message: "No data found for the given criteria",
+                data: []
+            })
+           // return res.status(404).json({ message: "No data found for the given criteria" });
         }
 
         const splitDataAcrossDays = (data) => {
         
-            const updatedData = {};
+            const updatedData = [];
         
             // Function to convert UTC timestamp to IST
             const convertToIST = (timestamp) => {
@@ -2397,78 +2408,62 @@ exports.AcOnOff = async (req, res) => {
                 const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC +5:30 in milliseconds
                 return new Date(date.getTime() + istOffset); // Return IST Date object
             };
-        
+            
+            // let key = {"date":date, "data":[]};
             // Loop through each record in the data array
             data.forEach((item) => {
                 // Convert timestamps from Unix format to IST Date objects
                 const startTime = convertToIST(item.starttime);
                 const endTime = convertToIST(item.endtime);
                 
-                // Get the date string in 'YYYY-MM-DD' format for IST
-                const date = startTime.toISOString().split('T')[0];
-        
-                // Initialize the object for the current date if it doesn't exist
-                if (!updatedData[date]) {
-                    updatedData[date] = {};
-                }
-        
-                // Initialize the array for the current optimizerId on that date if it doesn't exist
-                if (!updatedData[date][item.optimizerId]) {
-                    updatedData[date][item.optimizerId] = [];
-                }
-        
+                const startDate = startTime.toISOString().split('T')[0];
+                const endDate = endTime.toISOString().split('T')[0];
                 // If the record's end time is on the next day
-                if (startTime.toISOString().split('T')[0] !== endTime.toISOString().split('T')[0]) {
-                    // Split the record into two parts
-        
+                if ( startDate !== endDate) {
+                    // Split the record into two parts        
                     // 1. First record: For the original date, until 23:59:59
                     const endOfDay = new Date(startTime);
                     endOfDay.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59 of the same day
-                    const endOfDayUnix = Math.floor(endOfDay.getTime() / 1000) - 5.5 * 60 * 60; // Unix timestamp for 23:59:59
-                    
+                    const endOfDayUnix = Math.floor(endOfDay.getTime() / 1000) - 5.5 * 60 * 60; // Unix timestamp for 23:59:59                    
                     const firstPartDuration = endOfDayUnix - item.starttime; // Duration for the first part
         
                     // Push the first part (until 23:59:59 of the same day)
-                    updatedData[date][item.optimizerId].push({
+                    updatedData.push({
                         optimizerId: item.optimizerId,
                         starttime: item.starttime,
                         endtime: endOfDayUnix,
                         acstatus: item.acstatus,
-                        duration: firstPartDuration
+                        duration: firstPartDuration,
+                        date: startDate
                     });
         
                     // 2. Second record: For the next day, starting at 00:00:00
+                    // push the current key
+                    
                     const nextDay = new Date(endTime);
                     nextDay.setUTCHours(0, 0, 0, 0); // Set to 00:00:00 of the next day
                     const nextDayDate = nextDay.toISOString().split('T')[0]; // Get the date of the next day in 'YYYY-MM-DD' format
                     const secondPartDuration = item.endtime - Math.floor(nextDay.getTime() / 1000); // Duration for the second part
-        
-                    // Initialize the next day if it doesn't exist
-                    if (!updatedData[nextDayDate]) {
-                        updatedData[nextDayDate] = {};
-                    }
-        
-                    // Initialize the array for the optimizerId on the next day if it doesn't exist
-                    if (!updatedData[nextDayDate][item.optimizerId]) {
-                        updatedData[nextDayDate][item.optimizerId] = [];
-                    }
-        
+                    nextKey = {"date": nextDayDate, data:[]};
+       
                     // Push the second part (from 00:00:00 of the next day)
-                    updatedData[nextDayDate][item.optimizerId].push({
+                    updatedData.push({
                         optimizerId: item.optimizerId,
                         starttime: Math.floor(nextDay.getTime() / 1000) - 5.5 * 60 * 60, // 00:00:00 of the next day
                         endtime: item.endtime,
                         acstatus: item.acstatus,
-                        duration: secondPartDuration
+                        duration: secondPartDuration,
+                        date: endDate
                     });
                 } else {
                     // If the record is within the same day, just push it as it is
-                    updatedData[date][item.optimizerId].push({
+                    updatedData.push({
                         optimizerId: item.optimizerId,
                         starttime: item.starttime,
                         endtime: item.endtime,
                         acstatus: item.acstatus,
-                        duration: item.endtime - item.starttime
+                        duration: item.endtime - item.starttime,
+                        date: startDate
                     });
                 }
             });

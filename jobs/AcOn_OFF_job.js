@@ -442,7 +442,7 @@ async function findonoffRecord(startTime, endTime) {
           }
         }
       }
-    ]
+    ];
     console.log(util.inspect(pipeline, { showHidden: false, depth: null, colors: true }));
     const latestRecords = await OptimizerAgg.aggregate(pipeline).exec();
     return latestRecords;

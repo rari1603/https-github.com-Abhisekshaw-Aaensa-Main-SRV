@@ -78,7 +78,7 @@ module.exports = function (agenda) {
     })
 
 
-    //Record from optimizerlog
+    //Record from optimizerlogs
     async function findonoffRecord(startTime, endTime) {
         try {
 

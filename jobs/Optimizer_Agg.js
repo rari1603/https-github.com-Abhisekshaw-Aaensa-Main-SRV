@@ -78,7 +78,7 @@ module.exports = function (agenda) {
     })
 
 
-
+    //To get the record from collection 
     async function findonoffRecord(startTime, endTime) {
         try {
 

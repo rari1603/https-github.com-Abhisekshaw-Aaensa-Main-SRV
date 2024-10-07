@@ -2329,11 +2329,10 @@ exports.UsageTrends = async (req, res) => {
 exports.AcOnOff = async (req, res) => {
     try {
         const { gateway_id, Optimizerid, startDate, endDate } = req.body;
-
+        const timeZone = 'Asia/Kolkata';
         const startIstTimestamp = parseISTDateString(startDate);
         const endIstTimestamp = parseISTDateString(endDate);
         
-
         let optimizerIds = [];
 
         if (!Optimizerid) {
@@ -2380,15 +2379,24 @@ exports.AcOnOff = async (req, res) => {
         }
 
         console.log("optimizerIds:" + optimizerIds + ", starttime:" + startIstTimestamp +", endtime:" + endIstTimestamp);
-        const data = await OptimizerOnOff.aggregate([
+        const data = await OptimizerOnOff.aggregate(    
+        [
             {
-                $match: {
-                    optimizerId: { $in: optimizerIds },
-                    starttime: { $gte: startIstTimestamp },
-                    endtime: { $lte: endIstTimestamp }
-                }
+              $match: {
+                $and: [
+                  
+                  { optimizerId: { $in: optimizerIds }},
+                  { starttime: { $gte: startIstTimestamp } },
+                  {
+                    $or: [
+                      { endtime: { $lte: endIstTimestamp } },
+                      { endtime: null }
+                    ]
+                  }
+                ]
+              }
             }
-        ]);
+          ]);
         if (!data.length) {
             return res.status(200).json({
                 success: true,
@@ -2409,63 +2417,21 @@ exports.AcOnOff = async (req, res) => {
                 return new Date(date.getTime() + istOffset); // Return IST Date object
             };
             
-            // let key = {"date":date, "data":[]};
             // Loop through each record in the data array
             data.forEach((item) => {
-                // Convert timestamps from Unix format to IST Date objects
-                const startTime = convertToIST(item.starttime);
-                const endTime = convertToIST(item.endtime);
                 
-                const startDate = startTime.toISOString().split('T')[0];
-                const endDate = endTime.toISOString().split('T')[0];
-                // If the record's end time is on the next day
-                if ( startDate !== endDate) {
-                    // Split the record into two parts        
-                    // 1. First record: For the original date, until 23:59:59
-                    const endOfDay = new Date(startTime);
-                    endOfDay.setUTCHours(23, 59, 59, 999); // Set time to 23:59:59 of the same day
-                    const endOfDayUnix = Math.floor(endOfDay.getTime() / 1000) - 5.5 * 60 * 60; // Unix timestamp for 23:59:59                    
-                    const firstPartDuration = endOfDayUnix - item.starttime; // Duration for the first part
-        
-                    // Push the first part (until 23:59:59 of the same day)
+                const recordEndTime = item.endtime? item.endtime: item.lastmsgtime;
+                const windows = getTimeWindows(item.starttime, recordEndTime, timeZone);
+                windows.map(window => {
                     updatedData.push({
                         optimizerId: item.optimizerId,
-                        starttime: item.starttime,
-                        endtime: endOfDayUnix,
+                        starttime: Math.floor(window.startTime/1000),
+                        endtime: Math.floor(window.endTime/1000),
                         acstatus: item.acstatus,
-                        duration: firstPartDuration,
-                        date: startDate
+                        duration: window.seconds,
+                        date: window.date
                     });
-        
-                    // 2. Second record: For the next day, starting at 00:00:00
-                    // push the current key
-                    
-                    const nextDay = new Date(endTime);
-                    nextDay.setUTCHours(0, 0, 0, 0); // Set to 00:00:00 of the next day
-                    const nextDayDate = nextDay.toISOString().split('T')[0]; // Get the date of the next day in 'YYYY-MM-DD' format
-                    const secondPartDuration = item.endtime - Math.floor(nextDay.getTime() / 1000); // Duration for the second part
-                    nextKey = {"date": nextDayDate, data:[]};
-       
-                    // Push the second part (from 00:00:00 of the next day)
-                    updatedData.push({
-                        optimizerId: item.optimizerId,
-                        starttime: Math.floor(nextDay.getTime() / 1000) - 5.5 * 60 * 60, // 00:00:00 of the next day
-                        endtime: item.endtime,
-                        acstatus: item.acstatus,
-                        duration: secondPartDuration,
-                        date: endDate
-                    });
-                } else {
-                    // If the record is within the same day, just push it as it is
-                    updatedData.push({
-                        optimizerId: item.optimizerId,
-                        starttime: item.starttime,
-                        endtime: item.endtime,
-                        acstatus: item.acstatus,
-                        duration: item.endtime - item.starttime,
-                        date: startDate
-                    });
-                }
+                })
             });
         
             return updatedData;
@@ -2492,6 +2458,62 @@ exports.AcOnOff = async (req, res) => {
 };
 
 
+function getTimeWindows(startTime, endTime, timeZone) {
+    const results = [];
+
+    // Convert startTime and endTime to the given timezone
+    let start = moment.tz(startTime * 1000, timeZone); // startTime is assumed to be in epoch seconds
+    let end = moment.tz(endTime * 1000, timeZone); // endTime is assumed to be in epoch seconds
+
+    // Extract the date parts
+    let startDate = start.clone().startOf('day');
+    let endDate = end.clone().startOf('day');
+
+    // Calculate the first day's time part up to midnight
+    if (!start.isSame(end, 'day')) {
+        let midnight = start.clone().endOf('day');
+        results.push({
+            date: start.format('YYYY-MM-DD'),
+            startTime: start.valueOf(),
+            endTime: midnight.valueOf(),
+            seconds: (midnight.unix() - start.unix()) // Duration in seconds for the first day
+        });
+
+        // Increment the current date to the next day
+        let currentDate = startDate.clone().add(1, 'day');
+
+        // Loop through all the full days between start and end date
+        while (currentDate.isBefore(endDate)) {
+            let dayStart = currentDate.clone().startOf('day');
+            let dayEnd = currentDate.clone().endOf('day');
+            results.push({
+                date: dayStart.format('YYYY-MM-DD'),
+                startTime: dayStart.valueOf(),
+                endTime: dayEnd.valueOf(),
+                seconds: 86400 // Full day duration in seconds
+            });
+            currentDate.add(1, 'day');
+        }
+
+        // Handle the final day's time part
+        results.push({
+            date: endDate.format('YYYY-MM-DD'),
+            startTime: endDate.valueOf(),
+            endTime: end.valueOf(),
+            seconds: end.unix() - endDate.unix() // Duration in seconds for the last day
+        });
+    } else {
+        // If start and end are on the same day
+        results.push({
+            date: start.format('YYYY-MM-DD'),
+            startTime: start.valueOf(),
+            endTime: end.valueOf(),
+            seconds: end.unix() - start.unix() // Duration in seconds for the same day
+        });
+    }
+
+    return results;
+}
 
 
 

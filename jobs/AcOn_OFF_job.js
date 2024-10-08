@@ -33,7 +33,6 @@ const executeOnOffLogic = async (startTime, endTime) => {
   
  
   try {
-    console.log("on off starting")
     const latestRecord = await findonoffRecord(startTime, endTime);
     console.log(JSON.stringify(latestRecord));
     // Function to get the last record for the given `oid` (optimizerId)
@@ -51,7 +50,7 @@ const executeOnOffLogic = async (startTime, endTime) => {
 
       const { firstOccurrences } = entry;
       
-      let lastRecordTime = null;
+      let lastRecordStartTime = null;
       let lastRecordAcStatus = null;
       let lastRecordId = null;
 
@@ -60,7 +59,7 @@ const executeOnOffLogic = async (startTime, endTime) => {
         const optimizerId = occurance.oid;
         if(lastRecordId == null){ // first record in the loop processing
           const lastRecord = await getLastRecordForOptimizer(optimizerId);
-          lastRecordTime = lastRecord? lastRecord.starttime :null;
+          lastRecordStartTime = lastRecord? lastRecord.starttime :null;
           lastRecordAcStatus = lastRecord? lastRecord.acstatus: null;
           lastRecordId = lastRecord? lastRecord._id: null;
         }
@@ -79,38 +78,65 @@ const executeOnOffLogic = async (startTime, endTime) => {
             lastmsgtime: occurance.from
           };
           lastRecordAcStatus = newacstatus;
-          lastRecordTime = occurance.from;
+          lastRecordStartTime = occurance.from;
+          lastRecordEndTime = occurance.to;
           // Insert the new record into the database
           let newInsertedRecord = await OptimizerOnOff.create(newRecord);
           lastRecordId = newInsertedRecord._id;
           console.log(`New record inserted for optimizer ${optimizerId} with Id ${lastRecordId}`);
 
-        } else if (lastRecordAcStatus === newacstatus && (occurance.from > lastRecordTime)) {
-          await OptimizerOnOff.updateOne(
-            { _id: lastRecordId }, // Find the specific last record by its ID
-            { $set: { lastmsgtime: occurance.from } } // Update lastmsgtime field
-          );
-          console.log(`Lastmsgtime updated for optimizer ${optimizerId} line50`);
-          lastRecordTime = occurance.from;
-        } else {
-          if ((newacstatus === 'OFF' || newacstatus === '--') && lastRecordAcStatus === "ON" && (occurance.from > lastRecordTime)) {
-            if (occurance.from - lastRecordTime <= TIME_TO_CONSIDER_AC_OFF_IN_SEC) {
+        } else if (occurance.from > lastRecordStartTime) { // are we processing a stale record? if yes, ignore and continue
+          if (lastRecordAcStatus === newacstatus) { // if the status is the same just update the lastmsgtime and continue
+            await OptimizerOnOff.updateOne(
+              { _id: lastRecordId }, // Find the specific last record by its ID
+              { $set: { lastmsgtime: occurance.from } } // Update lastmsgtime field
+            );
+            console.log(`Lastmsgtime updated for optimizer ${optimizerId} line50`);
+            lastRecordStartTime = occurance.from;
+          } else {
+            if ((newacstatus === 'OFF' || newacstatus === '--') && lastRecordAcStatus === "ON") { // if ON -> OFF
+              if (occurance.to - occurance.from <= TIME_TO_CONSIDER_AC_OFF_IN_SEC) { // if the off transition is too small to consider?
+                await OptimizerOnOff.updateOne(
+                  { _id: lastRecordId }, // Find the specific last record by its ID
+                  { $set: { lastmsgtime: occurance.from } } // Update lastmsgtime field
+                );
+                // Skip to the next iteration
+                continue;
+              } else if ((occurance.to - occurance.from) > TIME_TO_CONSIDER_AC_OFF_IN_SEC) { // if the off transition is big enough to consider it as 
+                await OptimizerOnOff.updateOne(
+                  { _id: lastRecordId }, // Find the specific last record by its ID
+                  { $set: { endtime: occurance.from } } // Update endtime field with the new record from
+                );
+                console.log(`endtime updated for optimizer ${optimizerId}`);
+
+                const newRecord = {
+                  optimizerId,
+                  starttime: occurance.from, // Assuming 'from' is the starttime
+                  endtime: null,     // Assuming 'to' is the endtime
+                  acstatus: newacstatus, // Assuming 'compstatus' is equivalent to acstatus
+                  lastmsgtime: occurance.from
+                };
+                // Insert the new record into the database
+                let newInsertedRecord = await OptimizerOnOff.create(newRecord);
+                lastRecordId = newInsertedRecord._id;
+                console.log(`New record inserted for optimizer ${optimizerId} with Id ${lastRecordId}`);
+
+              }
+            } else if (newacstatus === 'ON' && (lastRecordAcStatus === "--" || lastRecordAcStatus === "OFF")) { // OFF -> ON
               await OptimizerOnOff.updateOne(
                 { _id: lastRecordId }, // Find the specific last record by its ID
-                { $set: { lastmsgtime: occurance.from } } // Update lastmsgtime field
-              );
-              // Skip to the next iteration
-              continue;
-            } else if ((occurance.from - lastRecordTime) > TIME_TO_CONSIDER_AC_OFF_IN_SEC) {
-              await OptimizerOnOff.updateOne(
-                { _id: lastRecordId }, // Find the specific last record by its ID
-                { $set: { endtime: (occurance.from - TIME_TO_CONSIDER_AC_OFF_IN_SEC) } } // Update endtime field
+                {
+                  $set: {
+                    endtime: occurance.from - TIME_TO_CONSIDER_AC_ON_IN_SEC, // Update endtime field
+                    // lastmsgtime: occurance.from    // Update lastmsgtime field
+                  }
+                }
               );
               console.log(`endtime updated for optimizer ${optimizerId}`);
 
               const newRecord = {
                 optimizerId,
-                starttime: (occurance.from - TIME_TO_CONSIDER_AC_OFF_IN_SEC), // Assuming 'from' is the starttime
+                starttime: (occurance.from - TIME_TO_CONSIDER_AC_ON_IN_SEC), // Assuming 'from' is the starttime
                 endtime: null,     // Assuming 'to' is the endtime
                 acstatus: newacstatus, // Assuming 'compstatus' is equivalent to acstatus
                 lastmsgtime: occurance.from
@@ -121,35 +147,11 @@ const executeOnOffLogic = async (startTime, endTime) => {
               console.log(`New record inserted for optimizer ${optimizerId} with Id ${lastRecordId}`);
 
             }
-          } else if (newacstatus === 'ON' && (lastRecordAcStatus === "--" || lastRecordAcStatus === "OFF") && (occurance.from > lastRecordTime)) {
-            await OptimizerOnOff.updateOne(
-              { _id: lastRecordId }, // Find the specific last record by its ID
-              {
-                $set: {
-                  endtime: occurance.from - TIME_TO_CONSIDER_AC_ON_IN_SEC, // Update endtime field
-                  // lastmsgtime: occurance.from    // Update lastmsgtime field
-                }
-              }
-            );
-            console.log(`endtime updated for optimizer ${optimizerId}`);
-
-            const newRecord = {
-              optimizerId,
-              starttime: (occurance.from - TIME_TO_CONSIDER_AC_ON_IN_SEC), // Assuming 'from' is the starttime
-              endtime: null,     // Assuming 'to' is the endtime
-              acstatus: newacstatus, // Assuming 'compstatus' is equivalent to acstatus
-              lastmsgtime: occurance.from
-            };
-            // Insert the new record into the database
-            let newInsertedRecord = await OptimizerOnOff.create(newRecord);
-            lastRecordId = newInsertedRecord._id;
-            console.log(`New record inserted for optimizer ${optimizerId} with Id ${lastRecordId}`);
-
+            lastRecordAcStatus = newacstatus;
+            lastRecordStartTime = occurance.from;
           }
-          lastRecordAcStatus = newacstatus;
-          lastRecordTime = occurance.from;
         }
-      }
+    }
     }
     console.log("on off completed");
   } catch (error) {

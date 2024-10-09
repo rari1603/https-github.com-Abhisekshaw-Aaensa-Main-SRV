@@ -91,6 +91,9 @@ router.get('/get/user/data', [verifyToken, logMiddleware('info', 'info-read-ente
 // Add enterprise state
 router.post('/add/enterprise/state', [verifyToken, routeAccessMiddleware(), CheckEntState, logMiddleware('info', 'info-write-addEnterpriseState')], DeviceController.AddEnterpriseState);
 
+// states
+router.get('/get/all/states', [logMiddleware('info', 'info-read')], CommonController.getStates);
+
 // Update enterprise state
 router.post('/update/enterprise/state/:ent_state_id', [verifyToken, routeAccessMiddleware(), CheckEntState, logMiddleware('info', 'info-write-updateEnterpriseState')], DeviceController.UpdateEnterpriseState);
 /*********** END STATE ADD & UPDATE ***********/

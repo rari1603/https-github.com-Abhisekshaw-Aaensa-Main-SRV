@@ -13,10 +13,10 @@ const OptimizerByPass = new mongoose.Schema({
         type: String
     },
     ByPassType: { type: String, required: true },
-    startTime: { type: String },
-    endTime: { type: String },      // Updated to String
+    startTime: { type: Number },
+    endTime: { type: Number },      // Updated to String
     Status: { type: String },
-    deviceStatus: { type: String },
+    deviceStatus: { type: String, default: null },
 }, { timestamps: true });
 
 const OptimizerByPassModel = mongoose.model('OptimizerByPass', OptimizerByPass);

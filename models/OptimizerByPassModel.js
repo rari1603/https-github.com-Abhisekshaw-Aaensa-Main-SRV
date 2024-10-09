@@ -5,16 +5,19 @@ const OptimizerByPass = new mongoose.Schema({
 
     OptimizerId: {
         type: String,
-        required: true, 
+        required: true,
         index: true
     },
     GatewayID: {
-        type: String
-        },
+        type: String,
+        ref: "gateway",
+        index: true
+    },
     ByPassType: { type: String, required: true },
-    startTime: { type: String},  
-    endTime: { type: String },      // Updated to String
-    Status: { type: String}, 
+    startTime: { type: Number },
+    endTime: { type: Number },      // Updated to String
+    Status: { type: String },
+    deviceStatus: { type: String, default: null },
 }, { timestamps: true });
 
 const OptimizerByPassModel = mongoose.model('OptimizerByPass', OptimizerByPass);

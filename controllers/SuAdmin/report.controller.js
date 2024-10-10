@@ -2379,6 +2379,30 @@ exports.AcOnOff = async (req, res) => {
         }
 
         console.log("optimizerIds:" + optimizerIds + ", starttime:" + startIstTimestamp +", endtime:" + endIstTimestamp);
+
+        // some data is missed because the starttime is earlier than the passed time 
+        // and endtime is null or within the start and end passed
+        // based on the aggregation logic and onoff logic it should always not more than 1 record per 
+        // optimizer
+
+        const dataWithEarlierStartTime = await OptimizerOnOff.aggregate(    
+            [
+                {
+                  $match: {                    
+                  optimizerId: { $in: optimizerIds },
+                  $or: [
+                    { 
+                      endtime: { $gt: startIstTimestamp, $lte: endIstTimestamp } 
+                    },
+                    { 
+                      endtime: null 
+                    }
+                  ],
+                  starttime: { $lte: startIstTimestamp } 
+                }
+            }
+            ]);
+
         const data = await OptimizerOnOff.aggregate(    
         [
             {
@@ -2397,7 +2421,8 @@ exports.AcOnOff = async (req, res) => {
               }
             }
           ]);
-        if (!data.length) {
+        
+        if (!data.length && !dataWithEarlierStartTime.length) {
             return res.status(200).json({
                 success: true,
                 message: "No data found for the given criteria",
@@ -2405,11 +2430,8 @@ exports.AcOnOff = async (req, res) => {
             })
            // return res.status(404).json({ message: "No data found for the given criteria" });
         }
-
-        const splitDataAcrossDays = (data) => {
-        
-            const updatedData = [];
-        
+        const updatedData = [];
+        const splitDataAcrossDays = (windowdata, windowStartTime) => {        
             // Function to convert UTC timestamp to IST
             const convertToIST = (timestamp) => {
                 const date = new Date(timestamp * 1000); // Convert to Date object
@@ -2418,10 +2440,12 @@ exports.AcOnOff = async (req, res) => {
             };
             
             // Loop through each record in the data array
-            data.forEach((item) => {
-                
+            windowdata.forEach((item) => {
                 const recordEndTime = item.endtime? item.endtime: item.lastmsgtime;
-                const windows = getTimeWindows(item.starttime, recordEndTime, timeZone);
+                // if we are getting a window for the start time, then consider that window for the calculation
+                // this will start to fail if we get more than one record per optimizer
+                const recordStartTime = windowStartTime? windowStartTime: item.starttime;
+                const windows = getTimeWindows(recordStartTime, recordEndTime, timeZone);
                 windows.map(window => {
                     updatedData.push({
                         optimizerId: item.optimizerId,
@@ -2433,17 +2457,22 @@ exports.AcOnOff = async (req, res) => {
                     });
                 })
             });
-        
+            
+            console.log(JSON.stringify(updatedData));
             return updatedData;
         };
-  
+        // the order of data matters in the UI. so first call the earlier start time and then the regular data
+        // DO NOT CHANGE THE ORDER of the next 2 calls for split data across days
+        // store records for the windows which are before the start time
+        splitDataAcrossDays(dataWithEarlierStartTime, startIstTimestamp);
+        // store records for the data within windows
         splitDataAcrossDays(data);
 
         // Send the data as a JSON response
         return res.status(200).json({
             success: true,
             message: "Ac data fetched successfully",
-            data: splitDataAcrossDays(data)
+            data: updatedData
         });
 
     } catch (error) {

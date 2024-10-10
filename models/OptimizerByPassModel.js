@@ -10,7 +10,11 @@ const OptimizerByPass = new mongoose.Schema({
         index: true
     },
     GatewayID: {
-        type: String
+
+        type: String,
+        ref: "gateway",
+        index: true
+
     },
     ByPassType: { type: String, required: true },
     startTime: { type: Number },

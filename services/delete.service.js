@@ -79,8 +79,8 @@ exports.deleteGateway = async (id) => {
         }
 
         await OptimizerModel.deleteMany({ GatewayId: id });
-        await this.deleteGatewayLog(id);
-        await this.deleteOptimizerLog(id);
+        //await this.deleteGatewayLog(id);
+        //await this.deleteOptimizerLog(id);
 
         return ({ success: true, message: "Gateway and associated data deleted successfully." });
     } catch (err) {
@@ -93,13 +93,13 @@ exports.deleteGateway = async (id) => {
 exports.deleteOptimizer = async (id) => {
     try {
         const optimizerData = await OptimizerModel.findOne({ _id: id });
-        await NewApplianceLogModel.deleteMany({ OptimizerID: optimizerData.OptimizerID });
+        //await NewApplianceLogModel.deleteMany({ OptimizerID: optimizerData.OptimizerID });
         const optimizer = await OptimizerModel.findByIdAndDelete({ _id: id });
         if (!optimizer) {
             return ({ success: false, message: "Optimizer not found for deletion." });
         }
         // await this.deleteGatewayLog(id);
-        await this.deleteOptimizerLog(id);
+        //await this.deleteOptimizerLog(id);
         return ({ success: true, message: "Optimizer deleted successfully." });
     } catch (err) {
         console.error(err.message);

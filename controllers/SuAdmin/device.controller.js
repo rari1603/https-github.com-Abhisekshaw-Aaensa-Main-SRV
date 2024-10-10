@@ -273,13 +273,13 @@ exports.UpdateOptimizer = async (req, res) => {
 exports.DeleteAll = async (req, res) => {
 
     const { group, id } = req.body;
-
+    // take a snapshot of the enterprises data everytime that delete is called.
+    
     try {
 
         if (!(group && id)) {
             return res.status(400).json({ success: false, message: "Group and ID are required for deletion." });
         }
-
         let deleteResult;
         switch (group) {
             case 'enterprise':

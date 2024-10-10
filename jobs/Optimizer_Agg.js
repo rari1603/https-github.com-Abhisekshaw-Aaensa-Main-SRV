@@ -40,7 +40,7 @@ module.exports = function (agenda) {
                                 optimizerRecords.push({
                                     oid: item.oid,
                                     gid: item.gid,
-                                    compStatus: item.compStatus,
+                                    compStatus: item.compstatus,
                                     optmode: item.optmode,
                                     acstatus: item.acstatus,
                                     rtempfrom: item.rtempfrom,
@@ -64,8 +64,8 @@ module.exports = function (agenda) {
             }
             // Insert all records at once using insertMany
             if (optimizerRecords.length > 0) {
-                // console.log(optimizerRecords);
-                
+                // console.log(JSON.stringify(optimizerRecords));
+
                 await OptimizerAgg.insertMany(optimizerRecords);
 
                 console.log("All optimizer data inserted successfully!");
@@ -78,97 +78,7 @@ module.exports = function (agenda) {
     })
 
 
-    // const runAggregationInIntervals = async () => {
-    //     const date = '2024-09-27'; // Specify the target date
-
-    //     const intervals = [
-    //         { start: '00:00:00', end: '03:00:00' },
-    //         { start: '03:00:00', end: '06:00:00' },
-    //         { start: '06:00:00', end: '09:00:00' },
-    //         { start: '09:00:00', end: '12:00:00' },
-    //         { start: '12:00:00', end: '15:00:00' },
-    //         { start: '15:00:00', end: '18:00:00' },
-    //         { start: '18:00:00', end: '21:00:00' },
-    //         { start: '21:00:00', end: '23:59:59' }
-    //     ];
-
-    //     for (const interval of intervals) {
-    //         const startTime = `${date}T${interval.start}.000Z`;
-    //         const endTime = `${date}T${interval.end}.999Z`;
-
-    //         try {
-    //             const results = await findonoffRecord(startTime, endTime);
-    //             console.log(`Results for interval ${interval.start} to ${interval.end}:`, results);
-
-    //             if (results.length > 0) {
-    //                 const getLastRecordForOptimizer = async (optimizerId) => {
-    //                     return await OptimizerAgg.findOne({ oid:optimizerId })
-    //                         .sort({ createdAt: -1 }) // Sort by createdAt in descending order to get the most recent record
-    //                         .exec();
-    //                 };
-
-    //                 const optimizerRecords = [];
-
-    //                 for (const entry of results) {
-    //                     if (entry.optimizers && entry.optimizers.list && entry.optimizers.list.length > 0) {
-    //                         const firstItem = entry.optimizers.list[0];
-
-    //                         // Ensure the item has 'from' property
-    //                         if (firstItem && firstItem.from) {
-
-    //                             const lastRecord = await getLastRecordForOptimizer(firstItem.oid);
-    //                             console.log({ from: firstItem.from }, "First 'from' value of optimizer list:");
-    //                             // console.log(lastRecord.from, "Last record 'from' value:");
-
-    //                             // If lastRecord exists and its 'from' time is greater or equal to the current 'from' time, skip the entire entry
-    //                             if (lastRecord && lastRecord.from >= firstItem.from) {
-    //                                 console.log(`Skipping entry as it is a duplicate or older data. Entry 'from': ${firstItem.from}, Last record 'from': ${lastRecord.from}`);
-    //                                 break; // Exit the loop for this entry, continue to the next one
-    //                             }
-    //                             // Process each optimizer's list
-    //                             for (const item of entry.optimizers.list) {
-    //                                 if (item && item.from) {
-    //                                     optimizerRecords.push({
-    //                                         oid: item.oid,
-    //                                         gid: item.gid,
-    //                                         compStatus: item.compStatus,
-    //                                         optmode: item.optmode,
-    //                                         acstatus: item.acstatus,
-    //                                         rtempfrom: item.rtempfrom,
-    //                                         rtempto: item.rtempto,
-    //                                         ctempfrom: item.ctempfrom,
-    //                                         ctempto: item.ctempto,
-    //                                         humfrom: item.humfrom,
-    //                                         humto: item.humto,
-    //                                         from: item.from,
-    //                                         to: item.to,
-    //                                         counts: item.counts
-    //                                     });
-    //                                 }
-    //                             }
-    //                         } else {
-    //                             console.error("Missing 'from' property in entry.optimizers.list[0]", entry.optimizers.list[0]);
-    //                         }
-    //                     } else {
-    //                         console.error("Missing optimizers or list in entry: ", entry);
-    //                     }
-    //                 }
-
-    //                 // Insert records in bulk for each interval
-    //                 if (optimizerRecords.length > 0) {
-    //                     await OptimizerAgg.insertMany(optimizerRecords);
-    //                     console.log(`Optimizer data for ${interval.start} to ${interval.end} inserted successfully!`);
-    //                 } else {
-    //                     console.log(`No optimizer data to insert for ${interval.start} to ${interval.end}.`);
-    //                 }
-    //             }
-    //         } catch (error) {
-    //             console.error(`Error processing interval ${interval.start} to ${interval.end}:`, error);
-    //         }
-    //     }
-    // };
-
-
+    //Record from optimizerlogs
 
     async function findonoffRecord(startTime, endTime) {
         try {
@@ -176,26 +86,16 @@ module.exports = function (agenda) {
 
             const threeHoursAgo = new Date(new Date().getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
             const currentTime = new Date(); // Current time
-            // Convert string inputs to Date objects (if they are strings)
-            // const startDate = new Date(startTime);
-            // const endDate = new Date(endTime);
 
-            // const ObjectId = mongoose.Types.ObjectId;
+
             const pipeline = [
                 {
                     $match: {
-                        // OptimizerID: new ObjectId("6697d070dcf2f4839149aef2"),
-                        // GatewayID: new ObjectId("66ed1e8f14c36cb6547a410d"),
-                        // createdAt: {
-
-                        //     $gt: startDate,
-                        //     $lt: endDate
-                        // }
                         createdAt: {
-
                             $gt: threeHoursAgo,
                             $lt: currentTime
                         }
+
                     }
                 },
                 {
@@ -213,7 +113,7 @@ module.exports = function (agenda) {
                             $push: {
                                 oid: "$OptimizerID",
                                 gid: "$GatewayID",
-                                compStatus: {
+                                compstatus: {
                                     $ifNull: ["$CompStatus", "--"]
                                 },
                                 rtemp: "$RoomTemperature",
@@ -221,16 +121,16 @@ module.exports = function (agenda) {
                                 hum: "$Humidity",
                                 optmode: "$OptimizerMode",
                                 acstatus: "$DeviceStatus",
-                                time: "$TimeStamp"
-
+                                time: {
+                                    $toLong: "$TimeStamp"
+                                }
                             }
                         }
                     }
                 },
                 {
                     $project: {
-                        _id: 0,
-                        firstOccurrences: {
+                        activitiesWithIndexes: {
                             $reduce: {
                                 input: {
                                     $map: {
@@ -250,26 +150,66 @@ module.exports = function (agenda) {
                                                     "$$idx"
                                                 ]
                                             },
-                                            previous: {
+                                            previousIndex: {
                                                 $cond: {
                                                     if: {
-                                                        $eq: ["$$idx", 0]
+                                                        $gt: ["$$idx", 0]
                                                     },
-                                                    then: null,
-                                                    else: {
-                                                        $arrayElemAt: [
-                                                            "$activities",
-                                                            {
-                                                                $subtract: ["$$idx", 1]
-                                                            }
-                                                        ]
-                                                    }
+                                                    then: {
+                                                        $subtract: ["$$idx", 1]
+                                                    },
+                                                    else: -1
                                                 }
                                             },
                                             index: "$$idx"
                                         }
                                     }
                                 },
+                                initialValue: {
+                                    list: [],
+                                    previous: null
+                                },
+                                in: {
+                                    list: {
+                                        $concatArrays: [
+                                            "$$value.list",
+                                            [
+                                                {
+                                                    current: "$$this.current",
+                                                    previous: {
+                                                        $cond: {
+                                                            if: {
+                                                                $ne: [
+                                                                    "$$this.previousIndex",
+                                                                    -1
+                                                                ]
+                                                            },
+                                                            then: {
+                                                                $arrayElemAt: [
+                                                                    "$activities",
+                                                                    "$$this.previousIndex"
+                                                                ]
+                                                            },
+                                                            else: null
+                                                        }
+                                                    },
+                                                    index: "$$this.index"
+                                                }
+                                            ]
+                                        ]
+                                    },
+                                    previous: "$$this.current"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        firstOccurrences: {
+                            $reduce: {
+                                input: "$activitiesWithIndexes.list",
                                 initialValue: [],
                                 in: {
                                     $let: {
@@ -286,8 +226,8 @@ module.exports = function (agenda) {
                                                         $or: [
                                                             {
                                                                 $ne: [
-                                                                    "$$this.current.compStatus",
-                                                                    "$$this.previous.compStatus"
+                                                                    "$$this.current.compstatus",
+                                                                    "$$this.previous.compstatus"
                                                                 ]
                                                             },
                                                             {
@@ -308,7 +248,8 @@ module.exports = function (agenda) {
                                                             {
                                                                 $subtract: [
                                                                     {
-                                                                        $size: "$activities"
+                                                                        $size:
+                                                                            "$activitiesWithIndexes.list"
                                                                     },
                                                                     1
                                                                 ]
@@ -328,8 +269,8 @@ module.exports = function (agenda) {
                                                         "$$value",
                                                         [
                                                             {
-                                                                compStatus:
-                                                                    "$$this.previous.compStatus",
+                                                                compstatus:
+                                                                    "$$this.previous.compstatus",
                                                                 optmode:
                                                                     "$$this.previous.optmode",
                                                                 acstatus:
@@ -345,8 +286,8 @@ module.exports = function (agenda) {
                                                                 index: "$$this.index"
                                                             },
                                                             {
-                                                                compStatus:
-                                                                    "$$this.current.compStatus",
+                                                                compstatus:
+                                                                    "$$this.current.compstatus",
                                                                 optmode:
                                                                     "$$this.current.optmode",
                                                                 acstatus:
@@ -372,8 +313,8 @@ module.exports = function (agenda) {
                                                                 "$$value",
                                                                 [
                                                                     {
-                                                                        compStatus:
-                                                                            "$$this.current.compStatus",
+                                                                        compstatus:
+                                                                            "$$this.current.compstatus",
                                                                         optmode:
                                                                             "$$this.current.optmode",
                                                                         acstatus:
@@ -411,98 +352,82 @@ module.exports = function (agenda) {
                                 input: "$firstOccurrences",
                                 initialValue: {
                                     list: [],
-                                    previous: null,
-                                    index: -1
+                                    previous: null
                                 },
                                 in: {
-                                    $let: {
-                                        vars: {
-                                            current: "$$this",
-                                            previousRow: "$$value.previous",
-                                            currentIndex: {
-                                                $add: ["$$value.index", 1]
-                                            }
-                                        },
-                                        in: {
-                                            list: {
-                                                $cond: {
-                                                    if: {
-                                                        $and: [
-                                                            {
-                                                                $gt: [
-                                                                    "$$currentIndex",
-                                                                    1
+                                    list: {
+                                        $cond: {
+                                            if: {
+                                                $and: [
+                                                    {
+                                                        $ne: [
+                                                            "$$value.previous",
+                                                            null
+                                                        ]
+                                                    },
+                                                    {
+                                                        $eq: [
+                                                            "$$value.previous.compstatus",
+                                                            "$$this.compstatus"
+                                                        ]
+                                                    },
+                                                    {
+                                                        $eq: [
+                                                            "$$value.previous.optmode",
+                                                            "$$this.optmode"
+                                                        ]
+                                                    },
+                                                    {
+                                                        $eq: [
+                                                            "$$value.previous.acstatus",
+                                                            "$$this.acstatus"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            then: {
+                                                $concatArrays: [
+                                                    "$$value.list",
+                                                    [
+                                                        {
+                                                            oid: "$$value.previous.oid",
+                                                            gid: "$$value.previous.gid",
+                                                            compstatus:
+                                                                "$$value.previous.compstatus",
+                                                            optmode:
+                                                                "$$value.previous.optmode",
+                                                            acstatus:
+                                                                "$$value.previous.acstatus",
+                                                            rtempfrom:
+                                                                "$$value.previous.rtemp",
+                                                            rtempto: "$$this.rtemp",
+                                                            ctempfrom:
+                                                                "$$value.previous.ctemp",
+                                                            ctempto: "$$this.ctemp",
+                                                            humfrom:
+                                                                "$$value.previous.hum",
+                                                            humto: "$$this.hum",
+                                                            from: "$$value.previous.time",
+                                                            to: {
+                                                                $ifNull: [
+                                                                    "$$this.time",
+                                                                    0
                                                                 ]
                                                             },
-                                                            {
-                                                                $eq: [
-                                                                    "$$previousRow.compStatus",
-                                                                    "$$current.compStatus"
-                                                                ]
-                                                            },
-                                                            {
-                                                                $eq: [
-                                                                    "$$previousRow.optmode",
-                                                                    "$$current.optmode"
-                                                                ]
-                                                            },
-                                                            {
-                                                                $eq: [
-                                                                    "$$previousRow.acstatus",
-                                                                    "$$current.acstatus"
+                                                            counts: {
+                                                                $subtract: [
+                                                                    "$$this.index",
+                                                                    "$$value.previous.index"
                                                                 ]
                                                             }
-                                                        ]
-                                                    },
-                                                    then: {
-                                                        $concatArrays: [
-                                                            "$$value.list",
-                                                            [
-                                                                {
-                                                                    oid: "$$previousRow.oid",
-                                                                    gid: "$$previousRow.gid",
-                                                                    compStatus:
-                                                                        "$$previousRow.compStatus",
-                                                                    optmode:
-                                                                        "$$previousRow.optmode",
-                                                                    acstatus:
-                                                                        "$$previousRow.acstatus",
-                                                                    rtempfrom:
-                                                                        "$$previousRow.rtemp",
-                                                                    rtempto:
-                                                                        "$$current.rtemp",
-                                                                    ctempfrom:
-                                                                        "$$previousRow.ctemp",
-                                                                    ctempto:
-                                                                        "$$current.ctemp",
-                                                                    humfrom:
-                                                                        "$$previousRow.hum",
-                                                                    humto:
-                                                                        "$$current.hum",
-                                                                    from: "$$previousRow.time",
-                                                                    to: {
-                                                                        $ifNull: [
-                                                                            "$$current.time",
-                                                                            0
-                                                                        ]
-                                                                    },
-                                                                    counts: {
-                                                                        $subtract: [
-                                                                            "$$current.index",
-                                                                            "$$previousRow.index"
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ]
-                                                        ]
-                                                    },
-                                                    else: "$$value.list"
-                                                }
+                                                        }
+                                                    ]
+                                                ]
                                             },
-                                            previous: "$$current",
-                                            index: "$$currentIndex"
+                                            else: "$$value.list"
                                         }
-                                    }
+                                    },
+                                    previous: "$$this"
                                 }
                             }
                         }
@@ -511,7 +436,7 @@ module.exports = function (agenda) {
             ];
 
             const latestRecords = await OptimizerLogModel.aggregate(pipeline).exec();
-            // console.log(latestRecords, "+++++++++++++++++++++++++");
+
 
             return latestRecords;
         } catch (error) {

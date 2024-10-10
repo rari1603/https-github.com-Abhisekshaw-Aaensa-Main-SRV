@@ -6,6 +6,7 @@ const SuAdmin = require('./routes/super.admin.routes');
 const Enterprise = require('./routes/enterprise.routes');
 const SystemInt = require('./routes/system.int.routes');
 const Hardware = require('./routes/hardware.routes');
+const Bypass = require('./routes/bypass.route')
 const v1Router = require('./routes/v1.routes');
 const entRouter = require('./routes/enterprise.routes');
 const Metrics = require('./routes/metrics.routes');
@@ -99,6 +100,7 @@ app.use('/api/admin', SuAdmin);
 app.use('/api/enterprise', Enterprise);
 app.use('/api/system', SystemInt);
 app.use('/api/hardware', Hardware);
+app.use('/api/bypass', Bypass)
 app.use('/api/fake', v1Router);
 app.use('/api/metrics', Metrics);
 // app.use('/api/srv-1', entRouter);

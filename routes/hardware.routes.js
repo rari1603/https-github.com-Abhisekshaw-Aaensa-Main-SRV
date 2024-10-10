@@ -15,7 +15,10 @@ router.post('/device/status',HardwareController.deviceStatus);
 
 // Optimizer switch bypass
 router.post('/bypass/optimizers', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')], HardwareController.BypassOptimizers);
-
+router.post('/bypass/onoff', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')],
+ HardwareController.BypassOnOff);
+ router.post('/bypass/delete', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')],
+ HardwareController.BypassDelete);
 // Fetch Configureable Data
 router.get('/get/config/:gateway_id', [logMiddleware('info', 'info-read-configureable-data')], HardwareController.ConfigureableData);
 

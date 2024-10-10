@@ -11,14 +11,15 @@ const router = express.Router();
 router.post('/gateway/save/data', [logMiddleware('info', 'info-write-gateway-save-data')], HardwareController.Store);
 
 //device status -----
-router.post('/device/status',HardwareController.deviceStatus);
+router.post('/device/status', HardwareController.deviceStatus);
 
 // Optimizer switch bypass
-router.post('/bypass/optimizers', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')], HardwareController.BypassOptimizers);
-router.post('/bypass/onoff', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')],
- HardwareController.BypassOnOff);
- router.post('/bypass/delete', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')],
- HardwareController.BypassDelete);
+
+router.post('/bypass/schedule', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')], HardwareController.ScheduleByPass);
+router.post('/bypass/onoff', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')], HardwareController.TurnByPassOnOff);
+router.post('/bypass/delete', [verifyToken, routeAccessMiddleware(), logMiddleware('info', 'info-write-bypass-optimizers')], HardwareController.DeleteScheduleByPass);
+
+
 // Fetch Configureable Data
 router.get('/get/config/:gateway_id', [logMiddleware('info', 'info-read-configureable-data')], HardwareController.ConfigureableData);
 

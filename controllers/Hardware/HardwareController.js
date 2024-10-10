@@ -16,7 +16,9 @@ const fs = require('fs');
 const path = require('path');
 const DeviceStatusModel = require('../../models/deviceStatusModel')
 const DeviceRebootStatusModel = require('../../models/deviceRebootModel');
-const OptimizerByPassModel = require('../../models/OptimizerByPassModel')
+
+const OptimizerByPassModel = require('../../models/OptimizerByPassModel');
+
 
 // console.log({logger});
 
@@ -77,13 +79,84 @@ exports.CheckAllDevicesOnlineStatus = async (req, res) => {
     }
 };
 
+// // ConfigureableData
+// exports.ConfigureableData = async (req, res) => {
+//     try {
+//         const { gateway_id } = req.params;
+
+//         const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+//         console.log({ Gateway_id: gateway_id, ConfigureableData: Gateway });
+
+//         if (!Gateway) {
+//             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
+//         };
+
+//         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
+//         const optObject = await Promise.all(Optimizers.map(async (element) => {
+//             const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element._id });
+//             var bypassType = "default";
+//             if (element.isBypass.type === "true") {
+//                 if (element.isBypass.is_schedule) {
+//                     //  check current time with bypass time
+//                     var currentTimestamp = Math.floor(Date.now() / 1000);
+//                     var scheduleTimestamp = new Date(element.isBypass.time).getTime() / 1000;
+//                     if (currentTimestamp >= scheduleTimestamp) {
+//                         bypassType = element.isBypass.type;
+//                     } else {
+//                         bypassType = "default";
+//                     }
+//                 } else {
+//                     bypassType = element.isBypass.type;
+//                 }
+
+//             } else if (element.isBypass.type === "false") {
+//                 bypassType = "false"
+//             }
+
+//             return {
+//                 "optimizer_id": element.OptimizerID,
+//                 "is_bypass": bypassType,
+//                 "is_reset": element.isReset,
+//                 "is_setting": element.isSetting,
+//                 "settings": element.isSetting ? {
+//                     firstPowerOnObservationTime: OptimizerSettings?.firstPowerOnObservationTime,
+//                     maxObservatioTime: OptimizerSettings?.maxObservatioTime,
+//                     OptimizationOnTime: OptimizerSettings?.OptimizationOnTime,
+//                     thermostatMonitoringInterval: OptimizerSettings?.thermostatMonitoringInterval,
+//                     thermostatMonitoringTimeIncrement: OptimizerSettings?.thermostatMonitoringTimeIncrement,
+//                     steadyStateTimeRoomTempTolerance: OptimizerSettings?.steadyStateTimeRoomTempTolerance,
+//                     steadyStateCoilTempTolerance: OptimizerSettings?.steadyStateCoilTempTolerance
+//                 } : {}
+//             };
+//         }));
+
+//         const NewObj = {
+//             "gatewayID": Gateway.GatewayID,
+//             "config": Gateway.isConfigure,
+//             "is_Ready_toConfig": Gateway.is_Ready_toConfig,
+//             "optimizer": optObject
+
+//         };
+//         // console.log({ ConfigureableData: NewObj });
+//         // console.log({ Optimizers: NewObj.optimizer });
+//         return res.status(200).send(NewObj);
+//         // return res.status(200).json({ success: true, message: "Data fetched successfully.", data: NewObj });
+
+//     } catch (error) {
+//         console.log({ ConfigureableDataError: error.message });
+//         return res.status(500).json({ success: false, message: error.message });
+//     }
+// };
+
 // ConfigureableData
 exports.ConfigureableData = async (req, res) => {
     try {
+
         const { gateway_id } = req.params;
 
-        const Gateway = await GatewayModel.findOne({ _id: gateway_id });
-        logger.info({ Gateway_id: gateway_id, ConfigureableData: Gateway });
+        const Gateway = await GatewayModel.findOne({ GatewayID: gateway_id });
+        // logger.info({ Gateway_id: gateway_id, ConfigureableData: Gateway });
+
 
         if (!Gateway) {
             return res.status(401).json({ success: false, message: "Gateway ID not found!" });
@@ -92,25 +165,36 @@ exports.ConfigureableData = async (req, res) => {
         const Optimizers = await OptimizerModel.find({ GatewayId: Gateway._id });
         const optObject = await Promise.all(Optimizers.map(async (element) => {
             const OptimizerSettings = await OptimizerSettingValueModel.findOne({ optimizerID: element._id });
-            var bypassType = "default";
-            const OptimizerByPass = await OptimizerByPassModel.find({ OptimizerId: element._id, Status: "Active" });
+
+            let bypassType = "default";
+            const OptimizerByPass = await OptimizerByPassModel.find({
+                OptimizerId: element.OptimizerID,
+                deviceStatus: {
+                    $ne: "inactive"
+                }
+            });
+            
+            const now = Math.floor(Date.now() / 1000);
             // Process each optimizer
             OptimizerByPass.map(async (byPassElement) => {
-                if (byPassElement.Status === "Active") {
-                    // Check if ByPassTime is within the schedule
-                    if (byPassElement.ByPassTime > byPassElement.scheduleStartTime && byPassElement.ByPassTime < byPassElement.scheduleEndTime) {
-                        bypassType = "true";
-                    } else if (byPassElement.ByPassTime > byPassElement.scheduleEndTime) {
-                        bypassType = "false";
+                // Check if ByPassTime is within the schedule
+                if (now >= byPassElement.startTime && byPassElement.deviceStatus === null && byPassElement.Status === "active") {
+                    console.log("status updated");
+
+                    bypassType = "true";
+                } else if (now >= byPassElement.endTime && byPassElement.deviceStatus === "active") {
+                    bypassType = "false";
+                    if (byPassElement.Status === "active") {
                         // Update ByPass status in the database
                         await OptimizerByPassModel.updateOne(
                             { _id: byPassElement._id }, // Find by the element's ID
-                            { Status: "Inactive" } // Update the Status field
+                            { Status: "inactive" } // Update the Status field
                         );
                     }
                 }
             }
-            )
+            );
+
             return {
                 "optimizer_id": element.OptimizerID,
                 "is_bypass": bypassType,
@@ -232,8 +316,8 @@ exports.Store = async (req, res) => {
             errorCounts.set(gateway_id, 0);
             const deviceStatus = new DeviceRebootStatusModel({
                 GatewayID: gateway_id,
-                storeTime: currentServerTimeStamp*1000,  // Set storeTime as the currentServerTimeStamp in millis
-                receivedTime: TimeStamp*1000  // Set receivedTime as the TimeStamp in millis
+                storeTime: currentServerTimeStamp * 1000,  // Set storeTime as the currentServerTimeStamp in millis
+                receivedTime: TimeStamp * 1000  // Set receivedTime as the TimeStamp in millis
             });
             // Save the document to the database
             await deviceStatus.save()
@@ -900,23 +984,47 @@ exports.ResetOptimizerSettingValue = async (req, res) => {
     }
 };
 
+
+
+// -----------------------------------------------------------------------------------------
 ///API 1-----schedule
-exports.BypassOptimizers = async (req, res) => {
+
+exports.ScheduleByPass = async (req, res) => {
     logger.info("----------bypass optimizer api is running-------");
     const { OptimizerId, startTime, endTime, GatewayID } = req.body;
-  
+
+    const now = Math.floor(Date.now() / 1000);
+
     // Check if required fields are present in the request body
-    if (!startTime  || !endTime || !GatewayID) {
+    if (!startTime || !endTime || !GatewayID && (endTime > startTime)) {
         return res.status(400).json({
             success: false,
-            message: "Missing required fields: ByPassType, Status, startTime, endTime, or GatewayID"
+            message: "Missing required fields: startTime, endTime, or GatewayID"
         });
     }
-    let Status = "active";
-    let ByPassType = "schedule";
+    // Ensure startTime is greater than or equal to the current time (now)
+    if (startTime < now) {
+        return res.status(400).json({
+            success: false,
+            message: "startTime should be greater than or equal to the current time"
+        });
+    }
+
+    // Ensure startTime is less than endTime
+    if (startTime >= endTime) {
+        return res.status(400).json({
+            success: false,
+            message: "startTime should be less  endTime"
+        });
+    }
+
+
+    const Status = "active";
+    const ByPassType = "schedule";
     try {
         let optimizerIds = [];
-        if (!OptimizerId || !OptimizerId.length) {
+        if (!OptimizerId) {
+
             // If GatewayID is provided but OptimizerId is not, fetch optimizer IDs from the GatewayModel
             const optids = await GatewayModel.aggregate([
                 {
@@ -957,49 +1065,48 @@ exports.BypassOptimizers = async (req, res) => {
         } else {
             optimizerIds = [OptimizerId];
         }
-// Check if any existing bypass with Status "active" exists for the same GatewayID and OptimizerId
-const existingByPass = await OptimizerByPassModel.find({
-    GatewayID: GatewayID,
-    OptimizerId: { $in: optimizerIds },
-    Status: "active"
-});
 
-// If the existingByPass array contains documents, a bypass already exists
-if (existingByPass.length > 0) {
-    return res.status(400).json({
-        success: false,
-        message: "A bypass with Status 'active' already exists for the provided GatewayID and OptimizerId(s)."
-    });
-}
-     // If no existing bypass is found, proceed with creating the new bypass
-if (Status === "active" && ByPassType === "schedule" && startTime) {
-    const optimizerByPassDataArray = optimizerIds.map(optimizerId => ({
-        GatewayID: GatewayID,  
-        OptimizerId: optimizerId,
-        ByPassType,
-        Status,
-        startTime,  
-        endTime  
-    }));
+        console.log(optimizerIds, "+++++++++++++++++++");
 
-    await OptimizerByPassModel.insertMany(optimizerByPassDataArray);
+        // Check if any existing bypass with Status "active" exists for the same GatewayID and OptimizerId
+        const existingByPass = await OptimizerByPassModel.find({
+            GatewayID: GatewayID,
+            OptimizerId: { $in: optimizerIds },
+            Status: "active"
+        });
 
-    return res.status(200).json({ success: true, message: "Bypass schedule created successfully." });
-} else {
-    return res.status(400).json({
-        success: false,
-        message: "ByPassType must be 'schedule' and Status must be 'active' to create the bypass."
-    });
-}
+
+        // If the existingByPass array contains documents, a bypass already exists
+        if (existingByPass.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "A bypass with Status 'active' already exists for the provided GatewayID and OptimizerId(s)."
+            });
+        }
+        const optimizerByPassDataArray = optimizerIds.map(optimizerId => ({
+            GatewayID: GatewayID,
+            OptimizerId: optimizerId,
+            ByPassType,
+            Status,
+            startTime,
+            endTime,
+            deviceStatus: null
+        }));
+        console.log("this is working !!!!!!!!!!!!!");
+
+        await OptimizerByPassModel.insertMany(optimizerByPassDataArray);
+
+        return res.status(200).json({ success: true, message: "Bypass schedule created successfully." });
+
     } catch (error) {
         logger.error({ error: error.message });
         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
 ///for instant bypass on/off---------API 2--
-exports.BypassOnOff = async (req, res) => {
+exports.TurnByPassOnOff = async (req, res) => {
     const { OptimizerId, Status, GatewayID } = req.body;
-    
+
     if (!Status || !GatewayID) {
         return res.status(400).json({
             success: false,
@@ -1007,15 +1114,16 @@ exports.BypassOnOff = async (req, res) => {
         });
     }
 
-    let ByPassType = "instant";
+    const ByPassType = "instant";
+    let optimizerIds = [];
+    let message = "";
 
     try {
-        let optimizerIds = [];
-        if (!OptimizerId || !OptimizerId.length) {
+        // Fetch optimizerIds if not provided
+        if (!OptimizerId) {
             const optids = await GatewayModel.aggregate([
-                {
-                    $match: { GatewayID: GatewayID }
-                },
+                { $match: { GatewayID: GatewayID } },
+
                 {
                     $lookup: {
                         from: "optimizers",
@@ -1025,7 +1133,9 @@ exports.BypassOnOff = async (req, res) => {
                     }
                 },
                 { $unwind: "$optimizerInfo" },
-                {       
+
+                {
+
                     $group: {
                         _id: "$GatewayID",
                         optimizerIds: { $addToSet: "$optimizerInfo.OptimizerID" }
@@ -1039,6 +1149,7 @@ exports.BypassOnOff = async (req, res) => {
                     message: "No optimizer IDs found for the given Gateway ID",
                     data: []
                 });
+
             }
 
             optimizerIds = optids[0].optimizerIds;
@@ -1046,57 +1157,163 @@ exports.BypassOnOff = async (req, res) => {
             optimizerIds = [OptimizerId];
         }
 
-        // Condition: When status is "active"
-        if (Status === "active") {
+        // Handle turning bypass on (Status: "on")
+        if (Status === "on") {
             const existingActiveRecords = await OptimizerByPassModel.find({
                 OptimizerId: { $in: optimizerIds },
                 GatewayID: GatewayID,
                 Status: "active"
             });
 
-            // Log active records for debugging
-            console.log("Existing Active Records: ", existingActiveRecords);
-
-            if (!existingActiveRecords.length) {
-                const now = Math.floor(Date.now() / 1000);
-                const newByPassRecords = optimizerIds.map(optimizerId => ({
-                    GatewayID: GatewayID,
-                    OptimizerId: optimizerId,
-                    ByPassType,
-                    Status,
-                    startTime: now,
-                    endTime: ""
-                }));
-
-                await OptimizerByPassModel.insertMany(newByPassRecords);
-
-                return res.status(200).json({
-                    success: true,
-                    message: "Bypass created successfully with startTime as 'now'."
+            if (existingActiveRecords.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "A bypass with Status 'active' already exists for the provided GatewayID and OptimizerId(s)."
                 });
             }
-        } 
 
-        // Condition: When status is "inactive"
-        if (Status === "inactive") {
+            const now = Math.floor(Date.now() / 1000);
+            const newByPassRecords = optimizerIds.map(optimizerId => ({
+                GatewayID: GatewayID,
+                OptimizerId: optimizerId,
+                ByPassType,
+                Status: "active",
+                startTime: now,
+                endTime: ""
+            }));
+
+            await OptimizerByPassModel.insertMany(newByPassRecords);
+            message = "Bypass created successfully with startTime as 'now'.";
+        }
+
+        // Handle turning bypass off (Status: "off")
+        else if (Status === "off") {
             const activeRecords = await OptimizerByPassModel.find({
                 OptimizerId: { $in: optimizerIds },
                 GatewayID: GatewayID,
                 Status: "active"
             });
 
-            if (activeRecords.length) {
+            if (activeRecords.length > 0) {
                 const now = Math.floor(Date.now() / 1000);
                 await OptimizerByPassModel.updateMany(
                     { _id: { $in: activeRecords.map(record => record._id) } },
                     { $set: { endTime: now, Status: "inactive" } }
                 );
-
-                return res.status(200).json({
-                    success: true,
-                    message: "Active bypasses updated successfully with endTime as 'now'."
+                message = "Active bypasses updated successfully with endTime as 'now'.";
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: "No active bypasses found for the provided GatewayID and OptimizerId(s)."
                 });
             }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Status value. It must be either 'on' or 'off'."
+            });
+        }
+
+        // Return success response
+        return res.status(200).json({
+            success: true,
+            message: message
+        });
+
+    } catch (error) {
+        logger.error({ error: error.message });
+        return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
+    }
+};
+
+//for schedule delete ----API 3
+exports.DeleteScheduleByPass = async (req, res) => {
+    logger.info("----------bypass optimizer delete API is running-------");
+
+    const { OptimizerId, GatewayID } = req.body;
+    // console.log(OptimizerId, "+++++++++++++++");
+
+    // Check if required fields are present in the request body
+    if (!GatewayID) {
+        return res.status(400).json({
+            success: false,
+            message: "Missing required fields:  GatewayID"
+        });
+    }
+
+    try {
+
+        let optimizerIds = [];
+        if (!OptimizerId) {
+            // If GatewayID is provided but OptimizerId is not, fetch optimizer IDs from the GatewayModel
+            const optids = await GatewayModel.aggregate([
+                {
+                    $match: {
+                        GatewayID: GatewayID,
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "optimizers",
+                        localField: "_id",
+                        foreignField: "GatewayId",
+                        as: "optimizerInfo"
+                    }
+                },
+                {
+                    $unwind: "$optimizerInfo"
+                },
+                {
+                    $group: {
+                        _id: "$GatewayID",
+                        optimizerIds: {
+                            $addToSet: "$optimizerInfo.OptimizerID"
+                        }
+                    }
+                }
+            ]).exec();
+
+            if (!optids.length) {
+                return res.status(200).json({
+                    success: true,
+                    message: "No optimizer IDs found for the given Gateway ID",
+                    data: []
+
+                });
+            }
+
+            optimizerIds = optids[0].optimizerIds;
+        } else {
+            optimizerIds = [OptimizerId];
+        }
+        const now = Math.floor(Date.now() / 1000)
+
+        // Check if there is an active record with ByPassType = "schedule" and Status = "on"
+        const activeBypassRecord = await OptimizerByPassModel.find({
+            OptimizerId: { $in: optimizerIds },
+            GatewayID: GatewayID,
+            ByPassType: "schedule",
+            deviceStatus: null,
+            Status: "active"
+        });
+
+        // If an active bypass record exists, update it with endTime as "now"
+        if (activeBypassRecord.length === optimizerIds.length) {
+            // Update the record's endTime and Status to "off"
+            await OptimizerByPassModel.updateMany(
+                { OptimizerId: { $in: optimizerIds }, Status: "active" },  // Match active bypass records by OptimizerId
+                { $set: { endTime: now, Status: "inactive" } }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Scheduled bypass canceled successfully. EndTime set to 'now'."
+            });
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "No active scheduled bypass found for the given OptimizerId and GatewayID."
+            });
         }
 
         return res.status(400).json({
@@ -1109,6 +1326,7 @@ exports.BypassOnOff = async (req, res) => {
         return res.status(500).json({ success: false, message: `Internal Server Error: ${error.message}` });
     }
 };
+// ----------------------------------------------------------------------------------------
 
 //for schedule delete ----API 3
 exports.BypassDelete = async (req, res) => {
@@ -1160,6 +1378,8 @@ exports.BypassDelete = async (req, res) => {
 };
 // Settings acknowledgement after set/rest
 exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
+    console.log(req.body);
+
     const DATA = req.body;
     console.log({ Acknowledgement: DATA });
     try {
@@ -1184,7 +1404,6 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                     return { success: false, message: "No document found for this OptimizerID." };
                 }
             }
-
             if (purpose === "reset") {
                 const Optimizer = await OptimizerModel.findOne({ OptimizerID: OptimizerID });
 
@@ -1199,104 +1418,26 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
                     return { success: false, message: "No document found for this OptimizerID." };
                 }
             }
+            if (purpose === "bypass_on") {
+                await OptimizerByPassModel.updateOne(
+                    { OptimizerId: OptimizerID, Status: "active" }, // Query condition to find the document
+                    { $set: { deviceStatus: "active" } } // Update the Status to "Inactive"
+                );
+                return { success: true, message: `bypass_on updated successfully for '${OptimizerID}' this Optimizer.` };
 
-            if (purpose === "bypass_on" || purpose === "bypass_off") {
-                const optimizer = await OptimizerModel.findOne({ OptimizerID });
-                if (optimizer) {
-                    const gateway = await GatewayModel.findOne({ _id: optimizer.GatewayId });
-                    if (gateway) {
-                        const location = await LocationModel.findOne({ _id: gateway.EnterpriseInfo });
-                        if (location) {
-                            if (!gatewayLocationMap[gateway._id]) {
-                                gatewayLocationMap[gateway._id] = location._id;
-                            }
-                            // Update Optimizer bypass mode
-                            await OptimizerModel.findByIdAndUpdate(optimizer._id, {
-                                $set: {
-                                    BypassMode: (purpose === "bypass_on") ? "ON" : "OFF",
-                                    isBypass: { is_schedule: false, type: "default", time: "" }
-                                }
-                            });
-                            return { success: true, message: `IsBypass updated successfully for '${OptimizerID}' this Optimizer.` };
-                        }
-                    }
-                }
+            } else if (purpose === "bypass_off") {
+                console.log("This is not working");
+
+                await OptimizerByPassModel.updateOne(
+                    { OptimizerId: OptimizerID, Status: "inactive", deviceStatus: "active" }, // Query condition to find the document
+                    { $set: { deviceStatus: "inactive" } } // Update the Status to "Inactive"
+                );
+                return { success: true, message: `bypass_off updated successfully for '${OptimizerID}' this Optimizer.` };
             }
             return { success: false, message: "Invalid purpose." };
         }));
 
-        if (purpose === "bypass_on" || purpose === "bypass_off") {
-            const gatewayPromises = Object.keys(gatewayLocationMap).map(async gatewayID => {
-                const gateway = await GatewayModel.findById(gatewayID);
-                if (gateway) {
-                    const allOptimizersUpdated = await OptimizerModel.find({ GatewayId: gatewayID }).then(optimizers =>
-                        optimizers.every(optimizer => optimizer.BypassMode === (purpose === "bypass_on" ? "ON" : "OFF"))
-                    );
 
-                    if (allOptimizersUpdated) {
-                        // Update Gateway Bypass Mode
-                        await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: purpose === "bypass_on" ? "ON" : "OFF" } });
-                    } else {
-                        // Store the last known mode of the gateway
-                        const gatewayMode = gateway.BypassMode // "OFF" // "IN_PROGRESS";
-                        // Update Gateway Bypass Mode to the last known mode
-                        await GatewayModel.findByIdAndUpdate(gatewayID, { $set: { BypassMode: gatewayMode } });
-                    }
-                    return { gatewayID, locationID: gatewayLocationMap[gatewayID], allOptimizersUpdated };
-                }
-                return null;
-            });
-
-            const locationPromises = Promise.all(gatewayPromises).then(async gateways => {
-                // Extract location IDs from gateways
-                const locationIDs = gateways.map(gateway => gateway.locationID);
-
-                // Remove duplicate location IDs
-                const uniqueLocationIDs = [...new Set(locationIDs)];
-
-                // Iterate over unique location IDs
-                const locationUpdatePromises = uniqueLocationIDs.map(async locationID => {
-                    // Fetch all gateways for the current location
-                    const gatewaysForLocation = gateways.filter(gateway => gateway.locationID === locationID);
-
-                    // Check if all gateways for the location have their bypass modes updated
-                    const allGatewaysUpdated = gatewaysForLocation.every(gateway => gateway.allOptimizersUpdated);
-
-                    if (allGatewaysUpdated) {
-                        // Retrieve all gateways associated with the current location
-                        const locationGateways = await GatewayModel.find({ EnterpriseInfo: locationID });
-
-                        // Check the bypass mode of each gateway
-                        const gatewayStatuses = locationGateways.map(gateway => gateway.BypassMode);
-
-                        // Determine the overall bypass mode for the location
-                        let locationBypassMode = "";
-                        if (gatewayStatuses.every(status => status === "ON")) {
-                            locationBypassMode = "ON";
-                        } else if (gatewayStatuses.every(status => status === "OFF")) {
-                            locationBypassMode = "OFF";
-                        } else {
-                            // Retain previous bypass mode if neither all ON nor all OFF
-                            const locationModeDocument = await LocationModel.findById(locationID);
-                            locationBypassMode = locationModeDocument.BypassMode;
-                        }
-
-                        // Update Location Bypass Mode
-                        await LocationModel.findByIdAndUpdate(locationID, { $set: { BypassMode: locationBypassMode } });
-                    } else {
-                        // Store the last known mode of the location
-                        const locationModeDocument = await LocationModel.findById(locationID);
-                        const locationMode = locationModeDocument.BypassMode; // Access the mode after awaiting the document retrieval
-                        // Update Location Bypass Mode to the last known mode
-                        await LocationModel.findByIdAndUpdate(locationID, { $set: { BypassMode: locationMode } });
-                    }
-                });
-
-                return Promise.all(locationUpdatePromises);
-            });
-
-            await locationPromises;
-        }
 
         const isSuccess = results.every(result => result.success);
         const statusCode = isSuccess ? 200 : 500;
@@ -1308,7 +1449,9 @@ exports.BypassSetRestSettingsAcknowledgement = async (req, res) => {
     }
 };
 
+
 // GetOptimizerCurrentSettingValue 
+
 exports.GetOptimizerCurrentSettingValue = async (req, res) => {
     const { optimzerID } = req.params;
     try {

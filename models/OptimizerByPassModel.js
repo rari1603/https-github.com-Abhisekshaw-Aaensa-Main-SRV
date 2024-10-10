@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -9,9 +10,11 @@ const OptimizerByPass = new mongoose.Schema({
         index: true
     },
     GatewayID: {
+
         type: String,
         ref: "gateway",
         index: true
+
     },
     ByPassType: { type: String, required: true },
     startTime: { type: Number },

@@ -145,9 +145,6 @@ exports.ConfigureableData = async (req, res) => {
     }
 };
 
-
-
-
 const gatewayReceivedTimes = new Map();
 const gatewayStoredTimes = new Map();
 const errorCounts = new Map();
@@ -399,7 +396,6 @@ exports.Store = async (req, res) => {
     }
 };
 
-
 // Counter function
 
 async function CounterFlag(params) {
@@ -465,10 +461,6 @@ async function CounterFlag(params) {
     writeCounters(counters);
     return { success: 'Status updated successfully' };
 }
-
-
-
-
 
 // Installation property
 exports.InstallationProperty = async (req, res) => {

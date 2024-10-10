@@ -6,6 +6,7 @@ const EnterpriseController = require('../controllers/Enterprise/enterpriseContro
 const CommonController = require('../controllers/CommonController');
 const DeviceController = require('../controllers/SuAdmin/device.controller');
 const AuthController = require('../controllers/auth.controller');
+const ManualAcOnOffInsert = require ('../controllers/SuAdmin/ManualAcOnOff')
 const verifyToken = require('../middleware/authentication.middleware');
 const routeAccessMiddleware = require('../middleware/access.middleware');
 const { adminEmptyCheck, userEmptyCheck } = require('../middleware/enterprise/enterprise.middleware');
@@ -34,6 +35,9 @@ router.post('/download/all/devicedata/report', [logMiddleware('info', 'info-read
 router.post('/download/all/meterdata/report', [logMiddleware('info', 'info-read-meterDataReport')], ReportController.DownloadMeterDataReport);
 // Download usageTrend report
 router.post('/download/all/usagetrend/report', [logMiddleware('info', 'info-read-usageTrendsReport')], ReportController.DownloadUsageTrendsReport);
+
+// Manual Insertion Ac OnOf 
+router.post('/manual/insert/ac/onoff', [logMiddleware('info', 'info-read-usageTrendsReport')], ManualAcOnOffInsert.ManualAcOnOffInsertion);
 
 // Demo data log
 router.get('/get/all/demo/data', [logMiddleware('info', 'info-read-demoData')], ReportController.AllDataLogDemo);
@@ -136,5 +140,6 @@ router.get('/clone/all/data', [logMiddleware('info', 'info-clone-allData')], Rep
 
 /******* PAGINATION *******/
 router.get('/pagination', [logMiddleware('info', 'info-read-pagination')], ReportController.PaginationData);
+
 
 module.exports = router;

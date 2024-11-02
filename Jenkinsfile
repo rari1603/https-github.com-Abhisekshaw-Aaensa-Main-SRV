@@ -7,6 +7,7 @@ pipeline {
         VM_USERNAME = 'ubuntu'
         VM_IP = '192.168.7.238'
         SSH_CREDENTIAL_ID = '1'
+        VM_PATH = '/home/ubuntu/Aaensa-Main-SRV'
     }
  
     stages {

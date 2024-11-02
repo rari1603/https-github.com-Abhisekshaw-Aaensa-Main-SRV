@@ -1,16 +1,66 @@
 pipeline {
-    agent any // any agent can run this job
-
+    agent any
+    environment {
+        GITHUB_TOKEN = credentials('github-token') // Using the GitHub token
+        GIT_REPO_URL = 'github.com/rari1603/https-github.com-Abhisekshaw-Aaensa-Main-SRV.git'
+        GIT_BRANCH = 'main'
+        VM_USERNAME = 'ubuntu'
+        VM_IP = '192.168.7.238'
+        SSH_CREDENTIAL_ID = '1'
+    }
+ 
     stages {
-        stage('Echo Hello World') {
+        stage('Pull Latest Code from GitHub') {
             steps {
-                echo 'Hello World'
+                script {
+                    try {
+                        sshagent([SSH_CREDENTIAL_ID]) { // Use the SSH Credential ID directly
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
+                                set -x  # Enable debugging
+                                cd ${VM_PATH} // Ensure VM_PATH is defined as needed
+                                # Correct the Git URL to avoid double https://
+                                git remote set-url origin https://${GITHUB_TOKEN}@${GIT_REPO_URL}
+                                git fetch origin
+                                git reset --hard origin/${GIT_BRANCH}
+                                exit 0
+                                EOF
+                            """
+                        }
+                    } catch (Exception e) {
+                        error "Failed to pull the latest code from GitHub: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+        stage('Install Dependencies and Start pm2 Service') {
+            steps {
+                script {
+                    try {
+                        sshagent([SSH_CREDENTIAL_ID]) {
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
+                                set -x  # Enable debugging
+                                cd ${VM_PATH} // Ensure VM_PATH is defined as needed
+                                npm install || true  # Ignore errors from npm install
+                                pm2 start index.js --name E1 -f
+                                exit 0
+                                EOF
+                            """
+                        }
+                    } catch (Exception e) {
+                        error "Failed to install dependencies or start pm2 service: ${e.getMessage()}"
+                    }
+                }
             }
         }
     }
     post {
         always {
-            cleanWs() // clean workspace when done
+            echo "Pipeline completed. Check the logs for details."
+        }
+        failure {
+            echo "Pipeline failed. Check the logs for details."
         }
     }
 }

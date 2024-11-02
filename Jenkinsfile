@@ -19,8 +19,7 @@ pipeline {
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
                                 set -x  # Enable debugging
-                                cd ${VM_PATH} // Ensure VM_PATH is defined as needed
-                                # Correct the Git URL to avoid double https://
+                                cd ${VM_PATH}  
                                 git remote set-url origin https://${GITHUB_TOKEN}@${GIT_REPO_URL}
                                 git fetch origin
                                 git reset --hard origin/${GIT_BRANCH}

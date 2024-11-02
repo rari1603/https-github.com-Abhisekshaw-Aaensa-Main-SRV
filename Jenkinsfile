@@ -41,8 +41,8 @@ pipeline {
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
                                 set -x  # Enable debugging
-                                cd ${VM_PATH} // Ensure VM_PATH is defined as needed
-                                npm install || true  # Ignore errors from npm install
+                                cd ${VM_PATH}
+                                npm install 
                                 pm2 start index.js --name E1 -f
                                 exit 0
                                 EOF

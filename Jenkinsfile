@@ -1,6 +1,7 @@
 pipeline {
     agent any
     environment {
+        GITHUB_TOKEN = credentials('github-token') 
         GIT_REPO_URL = 'github.com/rari1603/https-github.com-Abhisekshaw-Aaensa-Main-SRV.git'
         GIT_BRANCH = 'main'
         VM_USERNAME = 'ubuntu'
@@ -13,24 +14,21 @@ pipeline {
         stage('Pull Latest Code from GitHub') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-                        try {
-                            sshagent([SSH_CREDENTIAL_ID]) {
-                                sh """
-                                    ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
-                                    set -x  # Enable debugging
-                                    export GITHUB_TOKEN='${GITHUB_TOKEN}'
-                                    cd ${VM_PATH}  
-                                    git remote set-url origin https://\$GITHUB_TOKEN@${GIT_REPO_URL}
-                                    git pull
-                                    git reset --hard origin/${GIT_BRANCH}
-                                    exit 0
-                                    EOF
-                                """
-                            }
-                        } catch (Exception e) {
-                            error "Failed to pull the latest code from GitHub: ${e.getMessage()}"
+                    try {
+                        sshagent([SSH_CREDENTIAL_ID]) { // Use the SSH Credential ID directly
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
+                                set -x  # Enable debugging
+                                cd ${VM_PATH}  
+                                git remote set-url origin https://${github-token}@${GIT_REPO_URL}
+                                git pull
+                                git reset --hard origin/${GIT_BRANCH}
+                                exit 0
+                                EOF
+                            """
                         }
+                    } catch (Exception e) {
+                        error "Failed to pull the latest code from GitHub: ${e.getMessage()}"
                     }
                 }
             }
@@ -38,16 +36,20 @@ pipeline {
         stage('Install Dependencies and Start pm2 Service') {
             steps {
                 script {
-                    sshagent([SSH_CREDENTIAL_ID]) {
-                        sh """
-                            ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
-                            set -x  # Enable debugging
-                            cd ${VM_PATH}
-                            npm install 
-                            pm2 start index.js --name E1 -f
-                            exit 0
-                            EOF
-                        """
+                    try {
+                        sshagent([SSH_CREDENTIAL_ID]) {
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
+                                set -x  # Enable debugging
+                                cd ${VM_PATH}
+                                npm install 
+                                pm2 start index.js --name E1 -f
+                                exit 0
+                                EOF
+                            """
+                        }
+                    } catch (Exception e) {
+                        error "Failed to install dependencies or start pm2 service: ${e.getMessage()}"
                     }
                 }
             }

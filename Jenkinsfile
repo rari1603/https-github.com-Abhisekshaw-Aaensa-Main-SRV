@@ -5,9 +5,10 @@ pipeline {
         GIT_REPO_URL = 'github.com/rari1603/https-github.com-Abhisekshaw-Aaensa-Main-SRV.git'
         GIT_BRANCH = 'main'
         VM_USERNAME = 'ubuntu'
-        VM_IP = '192.168.7.238'
         SSH_CREDENTIAL_ID = '1'
         VM_PATH = '/home/ubuntu/Aaensa-Main-SRV'
+        // Automatically use the private IP from the first pipeline
+        VM_IP = "${env.INSTANCE_PRIVATE_IP}" // Reference the variable set in the first pipeline
     }
  
     stages {
@@ -15,7 +16,7 @@ pipeline {
             steps {
                 script {
                     try {
-                        sshagent([SSH_CREDENTIAL_ID]) { // Use the SSH Credential ID directly
+                        sshagent([SSH_CREDENTIAL_ID]) {
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
                                 set -x  # Enable debugging

@@ -21,7 +21,7 @@ pipeline {
                                 set -x  # Enable debugging
                                 cd ${VM_PATH}  
                                 git remote set-url origin https://${GITHUB_TOKEN}@${GIT_REPO_URL}
-                                git fetch origin
+                                git pull
                                 git reset --hard origin/${GIT_BRANCH}
                                 exit 0
                                 EOF

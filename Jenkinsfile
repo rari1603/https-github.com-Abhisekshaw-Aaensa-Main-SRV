@@ -20,7 +20,7 @@ pipeline {
                                 ssh -o StrictHostKeyChecking=no ${VM_USERNAME}@${VM_IP} << 'EOF'
                                 set -x  # Enable debugging
                                 cd ${VM_PATH}  
-                                git remote set-url origin https://${GITHUB_TOKEN}@${GIT_REPO_URL}
+                                git remote set-url origin https://${github-token}@${GIT_REPO_URL}
                                 git pull
                                 git reset --hard origin/${GIT_BRANCH}
                                 exit 0

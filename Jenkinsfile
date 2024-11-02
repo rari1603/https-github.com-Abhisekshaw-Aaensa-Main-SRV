@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    parameters {
+        string(name: 'INSTANCE_PRIVATE_IP', defaultValue: '', description: 'Private IP Address of the EC2 Instance')
+    }
     environment {
         GITHUB_TOKEN = credentials('github-token') // Using the GitHub token
         GIT_REPO_URL = 'github.com/rari1603/https-github.com-Abhisekshaw-Aaensa-Main-SRV.git'
@@ -7,8 +10,8 @@ pipeline {
         VM_USERNAME = 'ubuntu'
         SSH_CREDENTIAL_ID = '1'
         VM_PATH = '/home/ubuntu/Aaensa-Main-SRV'
-        // Automatically use the private IP from the first pipeline
-        VM_IP = "${env.INSTANCE_PRIVATE_IP}" // Reference the variable set in the first pipeline
+        // Use the private IP passed as a parameter
+        VM_IP = "${params.INSTANCE_PRIVATE_IP}" 
     }
  
     stages {
